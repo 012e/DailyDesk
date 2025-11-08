@@ -12,6 +12,8 @@
 		"cf-typegen": "wrangler types"
 	},
 	"dependencies": {
+		"@clerk/clerk-react": "^5.53.8",
+		"@clerk/react-router": "^2.1.10",
 		"@radix-ui/react-alert-dialog": "^1.1.15",
 		"@radix-ui/react-dialog": "^1.1.15",
 		"@radix-ui/react-separator": "^1.1.8",
