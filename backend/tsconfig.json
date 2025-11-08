@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    /* Basic Options */
+    "target": "es2020" /* Specify ECMAScript target version */,
+    "module": "commonjs" /* Specify module code generation */,
+    "rootDir": "./src" /* Specify the root directory of source files */,
+    "outDir": "./dist" /* Redirect output structure to this directory */,
+
+    /* Strict Type-Checking Options */
+    "strict": true /* Enable all strict type-checking options */,
+    "esModuleInterop": true /* Enables compatibility for default imports */,
+    "skipLibCheck": true /* Skip type checking of declaration files */,
+    "forceConsistentCasingInFileNames": true /* Disallow inconsistently-cased references to the same file */,
+
+    /* Module Resolution Options */
+    "moduleResolution": "node" /* Resolve modules using Node.js style */,
+    "resolveJsonModule": true /* Include modules imported from .json files */,
+
+    /* Advanced Options */
+    "sourceMap": true /* Generate corresponding .map files */
+  },
+  "include": ["src/**/*"] /* Specify which files to include in compilation */,
+  "exclude": ["node_modules"] /* Specify files to exclude from compilation */
+}
