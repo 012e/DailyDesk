@@ -11,10 +11,18 @@ DailyDesk is a personal productivity companion that combines a Trello-inspired t
 
 ## Quick Start
 
-Ensure Node.js ≥ 18 and pnpm ≥ 9 are installed.
+Ensure you installed nodejs
 
+1. Install pnpm (if you don’t have it yet):
 ```bash
-pnpm install
+npm install -g pnpm@latest
+```
+2. Install dependencies:
+```bash
+pnpm insatll
+```
+3. Run the development server: 
+```bash
 pnpm dev
 ```
 
