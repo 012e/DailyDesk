@@ -15,7 +15,7 @@ Ensure Node.js ≥ 18 and pnpm ≥ 9 are installed.
 
 ```bash
 pnpm install
-pnpm --filter frontend dev
+pnpm dev
 ```
 
 Visit http://localhost:5173 to explore the DailyDesk workspace shell.
