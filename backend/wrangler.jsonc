@@ -2,10 +2,8 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "backend-hono",
   "main": "src/index.ts",
-  "compatibility_date": "2025-11-08"
-  // "compatibility_flags": [
-  //   "nodejs_compat"
-  // ],
+  "compatibility_date": "2025-11-08",
+  "compatibility_flags": ["nodejs_compat"],
   // "vars": {
   //   "MY_VAR": "my-variable"
   // },
@@ -36,3 +34,4 @@
   //   "head_sampling_rate": 1
   // }
 }
+

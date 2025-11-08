@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "concurrently  --prefix-colors red,blue --names backend,frontend 'pnpm --filter backend dev' 'pnpm --filter frontend dev'"
+    "dev": "concurrently --kill-others --prefix-colors red,blue --names backend,frontend 'pnpm --filter backend dev' 'pnpm --filter frontend dev'",
+    "update-db": "pnpm --filter backend db:push"
   },
   "keywords": [],
   "author": "",

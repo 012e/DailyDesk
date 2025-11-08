@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { useTheme } from "./components/theme-provider";
+import { useTheme } from "@/components/theme-provider";
 
 export default function AlertDialogDemo() {
   const theme = useTheme();
