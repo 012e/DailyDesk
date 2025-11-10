@@ -1,7 +1,12 @@
-import { BrowserRouter, Routes, Route } from "react-router";
+import {
+  SignedIn,
+  SignedOut,
+  SignInButton,
+  UserButton,
+} from "@clerk/react-router";
+import { Route, Routes } from "react-router";
 import Home from "./Home";
 import Layout from "./Layout";
-import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/react-router';
 
 function App() {
   return (
