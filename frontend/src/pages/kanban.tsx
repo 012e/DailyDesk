@@ -44,7 +44,7 @@ import {
   Trash2Icon,
   XIcon,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Card = {
   id: string;
@@ -131,6 +131,27 @@ export default function Kanban() {
   const [editingCardId, setEditingCardId] = useState<string | null>(null);
   const [editingCardTitle, setEditingCardTitle] = useState("");
   const [editingCardDescription, setEditingCardDescription] = useState("");
+
+  const addListRef = useRef<HTMLDivElement>(null);
+
+  // Handle clicking outside the "Add List" form
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        isAddingList &&
+        addListRef.current &&
+        !addListRef.current.contains(event.target as Node)
+      ) {
+        setIsAddingList(false);
+        setNewListTitle("");
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isAddingList]);
 
   const handleDropOverColumn = (columnId: string, dataTransferData: string) => {
     const cardData = JSON.parse(dataTransferData) as Card;
@@ -445,7 +466,7 @@ export default function Kanban() {
 
           {/* Add New List Button/Form */}
           {isAddingList ? (
-            <div className={kanbanBoardColumnClassNames}>
+            <div ref={addListRef} className={kanbanBoardColumnClassNames}>
               <div className="space-y-2 px-2">
                 <Input
                   autoFocus
