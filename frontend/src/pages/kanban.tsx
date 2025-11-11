@@ -134,7 +134,6 @@ export default function Kanban() {
 
   const addListRef = useRef<HTMLDivElement>(null);
 
-  // Handle clicking outside the "Add List" form
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
