@@ -1,11 +1,9 @@
-import { BrowserRouter, Routes, Route } from "react-router";
-import Home from "./Home";
-import Layout from "./Layout";
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/react-router';
+import Home from './Home';
 
 function App() {
   return (
-    <header className="p-4 bg-background border-b border-border">
+    <>
       <SignedOut>
         <div className="flex items-center justify-center min-h-screen">
           <SignInButton>
@@ -16,14 +14,12 @@ function App() {
         </div>
       </SignedOut>
       <SignedIn>
-        <UserButton />
-        <Routes>
-          <Route element={<Layout />}>
-            <Route path="/" element={<Home />} />
-          </Route>
-        </Routes>
+        <div className="absolute top-4 right-4 z-50">
+          <UserButton />
+        </div>
+        <Home />
       </SignedIn>
-    </header>
+    </>
   );
 }
 
