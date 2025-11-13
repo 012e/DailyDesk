@@ -1,17 +1,13 @@
-import { Hono } from "hono";
-import db from "@/lib/db/";
-import { usersTable } from "@/lib/db/schema";
+import { OpenAPIHono } from "@hono/zod-openapi";
+import { clerkMiddleware } from "@hono/clerk-auth";
 import { serve } from "@hono/node-server";
+import setupRoutes from "@/routes";
+import "dotenv/config";
 
-const app = new Hono();
+const app = new OpenAPIHono();
 
-app.post("/test", async (c) => {
-  const { name, age, email } = await c.req.json();
-  const result = await db
-    .insert(usersTable)
-    .values({ name, age, email })
-    .returning();
-  return c.json(result);
-});
+app.use("*", clerkMiddleware());
+
+setupRoutes(app);
 
 serve(app);
