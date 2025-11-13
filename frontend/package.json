@@ -12,6 +12,7 @@
 		"cf-typegen": "wrangler types"
 	},
 	"dependencies": {
+		"@auth0/auth0-react": "^2.8.0",
 		"@clerk/clerk-react": "^5.53.8",
 		"@clerk/react-router": "^2.1.10",
 		"@dnd-kit/core": "^6.3.1",
