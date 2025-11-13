@@ -3,15 +3,16 @@ import { relations } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 // Boards table
-export const boards = sqliteTable("boards", {
+export const boardsTable = sqliteTable("boards", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => randomUUID()),
   name: text("name").notNull(),
+  userId: text("user_id").notNull(), // Clerk user ID
 });
 
 // Lists table with foreign key to boards
-export const lists = sqliteTable("lists", {
+export const listsTable = sqliteTable("lists", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => randomUUID()),
@@ -19,11 +20,11 @@ export const lists = sqliteTable("lists", {
   order: integer("order").notNull(),
   boardId: text("board_id")
     .notNull()
-    .references(() => boards.id, { onDelete: "cascade" }),
+    .references(() => boardsTable.id, { onDelete: "cascade" }),
 });
 
 // Cards table with foreign key to lists
-export const cards = sqliteTable("cards", {
+export const cardsTable = sqliteTable("cards", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => randomUUID()),
@@ -31,11 +32,11 @@ export const cards = sqliteTable("cards", {
   order: integer("order").notNull(),
   listId: text("list_id")
     .notNull()
-    .references(() => lists.id, { onDelete: "cascade" }),
+    .references(() => listsTable.id, { onDelete: "cascade" }),
 });
 
 // Labels table
-export const labels = sqliteTable("labels", {
+export const labelsTable = sqliteTable("labels", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => randomUUID()),
@@ -43,23 +44,23 @@ export const labels = sqliteTable("labels", {
 });
 
 // Relations - Board to Lists (one-to-many)
-export const boardRelations = relations(boards, ({ many }) => ({
-  lists: many(lists),
+export const boardRelations = relations(boardsTable, ({ many }) => ({
+  lists: many(listsTable),
 }));
 
 // Relations - List to Board (many-to-one) and List to Cards (one-to-many)
-export const listRelations = relations(lists, ({ one, many }) => ({
-  board: one(boards, {
-    fields: [lists.boardId],
-    references: [boards.id],
+export const listRelations = relations(listsTable, ({ one, many }) => ({
+  board: one(boardsTable, {
+    fields: [listsTable.boardId],
+    references: [boardsTable.id],
   }),
-  cards: many(cards),
+  cards: many(cardsTable),
 }));
 
 // Relations - Card to List (many-to-one)
-export const cardRelations = relations(cards, ({ one }) => ({
-  list: one(lists, {
-    fields: [cards.listId],
-    references: [lists.id],
+export const cardRelations = relations(cardsTable, ({ one }) => ({
+  list: one(listsTable, {
+    fields: [cardsTable.listId],
+    references: [listsTable.id],
   }),
 }));

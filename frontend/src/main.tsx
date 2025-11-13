@@ -8,6 +8,7 @@ import "./index.css";
 import Layout from "./Layout.tsx";
 import Kanban from "./pages/kanban.tsx";
 import SignInPage from "./pages/sign-in.tsx";
+import Doc from "@/pages/doc/doc.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -25,9 +26,10 @@ createRoot(document.getElementById("root")!).render(
             <Route path="/kanban" element={<Kanban />} />
           </Route>
 
-          <Route path="/sign-in" element={<SignInPage />} />
+          <Route path="/sign-in/*" element={<SignInPage />} />
+          <Route path="/doc" element={<Doc />} />
         </Routes>
       </Auth0Provider>
     </BrowserRouter>
-  </StrictMode>
+  </StrictMode>,
 );
