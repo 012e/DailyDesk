@@ -31,7 +31,7 @@ function ensureFolderExistsSync(relativeFolderPath: string): void {
 
 export default function getConfig(): Config {
   const config: Config = {
-    databaseUrl: process.env.DATABASE_URL || "./tmp/pglite-data",
+    databaseUrl: process.env.DATABASE_URL || "file:./tmp/database",
     isProduction: process.env.NODE_ENV === "production",
   };
 

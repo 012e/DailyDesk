@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import db from "@/lib/db/";
 import { usersTable } from "@/lib/db/schema";
+import { serve } from "@hono/node-server";
 
 const app = new Hono();
 
@@ -13,4 +14,4 @@ app.post("/test", async (c) => {
   return c.json(result);
 });
 
-export default app;
+serve(app);
