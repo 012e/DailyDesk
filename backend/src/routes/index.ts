@@ -1,8 +1,8 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
-import setupBoardsRoute from "./boards";
+import createBoardRoutes from "./boards";
 
 export default function setupRoutes(app: OpenAPIHono) {
-  setupBoardsRoute(app);
+  app.route("/boards", createBoardRoutes());
 
   return app;
 }

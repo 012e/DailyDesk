@@ -3,13 +3,17 @@ import { serve } from "@hono/node-server";
 import setupRoutes from "@/routes";
 import "dotenv/config";
 import { cors } from "hono/cors";
-import { authMiddleware, setupBearerAuth } from "@/lib/auth";
+import { setupBearerAuth } from "@/lib/auth";
+import { logger } from "hono/logger";
+import { poweredBy } from "hono/powered-by";
+import { HTTPException } from "hono/http-exception";
 
 const app = new OpenAPIHono();
 export const bearerAuth = setupBearerAuth(app);
 
+app.use(logger());
+app.use(poweredBy());
 app.use("*", cors());
-app.use("/boards/*", authMiddleware());
 
 app.doc("/doc", {
   openapi: "3.0.0",
@@ -22,7 +26,12 @@ app.doc("/doc", {
 setupRoutes(app);
 
 app.onError((error, c) => {
-  console.error(error);
+  if (error instanceof HTTPException && error.status < 500) {
+    return c.json({
+      message: error.message,
+      cause: error.cause,
+    });
+  }
   return c.json(
     {
       message:
