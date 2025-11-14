@@ -1,5 +1,10 @@
-import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/react-router';
-import Home from './Home';
+import {
+  SignedIn,
+  SignedOut,
+  SignInButton,
+  UserButton,
+} from "@clerk/react-router";
+import Home from "./Home";
 
 function App() {
   return (
@@ -14,7 +19,7 @@ function App() {
         </div>
       </SignedOut>
       <SignedIn>
-        <div className="absolute top-4 right-4 z-50">
+        <div className="absolute top-4 right-4 z-50  ">
           <UserButton />
         </div>
         <Home />

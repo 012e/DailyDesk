@@ -5,7 +5,8 @@ import { ClerkProvider } from "@clerk/react-router";
 import { BrowserRouter, Route, Routes } from "react-router";
 import Kanban from "./pages/kanban.tsx";
 import Layout from "./Layout.tsx";
-import Home from "./Home.tsx";
+
+import App from "./App.tsx";
 import SignInPage from "./pages/sign-in.tsx";
 import SignUpPage from "./pages/sign-up.tsx";
 
@@ -21,9 +22,8 @@ createRoot(document.getElementById("root")!).render(
       signUpUrl="/sign-up" afterSignOutUrl={"/sign-in"}>
         <Routes>
           <Route element={<Layout />}>
-            <Route path="/" element={<App />}>
-            <Route path="/kanban" element={<Kanban />} />
-            </Route>
+            <Route path="/" element={<App />}/>
+            <Route path="/board/kanban" element={<Kanban />} />
           </Route>
           
           <Route path="/sign-in/*" element={<SignInPage />} />
