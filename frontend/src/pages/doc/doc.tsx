@@ -12,7 +12,6 @@ function rtrim(str: string, ch: string) {
 
 const config = getConfig();
 export default function Doc() {
-  console.log("fuck");
   const [token, setToken] = useAtom(accessTokenAtom);
   return (
     <div className="">
