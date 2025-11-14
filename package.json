@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "concurrently --kill-others --prefix-colors red,blue --names backend,frontend 'pnpm --filter backend dev' 'pnpm --filter frontend dev'",
+    "dev": "concurrently --kill-others --prefix-colors red,blue --names backend,frontend \"pnpm --filter backend dev\" \"pnpm --filter frontend dev\"",
     "update-db": "pnpm --filter backend db:push"
   },
   "keywords": [],
@@ -14,5 +14,9 @@
   "packageManager": "pnpm@10.13.1",
   "devDependencies": {
     "concurrently": "^9.2.1"
+  },
+  "dependencies": {
+    "lucide-react": "^0.553.0",
+    "react-colorful": "^5.6.1"
   }
 }
