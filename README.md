@@ -19,7 +19,7 @@ npm install -g pnpm@latest
 ```
 2. Install dependencies:
 ```bash
-pnpm insatll
+pnpm install
 ```
 3. Run the development server: 
 ```bash

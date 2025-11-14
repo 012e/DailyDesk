@@ -1,12 +1,14 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
-import App from "./App.tsx";
-import Layout from "./Layout.tsx";
 import { ClerkProvider } from "@clerk/react-router";
-import { BrowserRouter, Routes, Route } from "react-router";
+import { BrowserRouter, Route, Routes } from "react-router";
+import Kanban from "./pages/kanban.tsx";
+import Layout from "./Layout.tsx";
+import Home from "./Home.tsx";
 import SignInPage from "./pages/sign-in.tsx";
 import SignUpPage from "./pages/sign-up.tsx";
+import App from "./App.tsx";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 if (!PUBLISHABLE_KEY) {
@@ -20,10 +22,10 @@ createRoot(document.getElementById("root")!).render(
       signUpUrl="/sign-up" afterSignOutUrl={"/sign-in"}>
         <Routes>
           <Route element={<Layout />}>
-            <Route path="/" element={<App />}>
-            </Route>
+            <Route path="/" element={<App />}/>
+            <Route path="/kanban" element={<Kanban />} />
           </Route>
-
+          
           <Route path="/sign-in/*" element={<SignInPage />} />
           <Route path="/sign-up/*" element={<SignUpPage />} />
         </Routes>
