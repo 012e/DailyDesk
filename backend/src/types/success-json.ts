@@ -1,6 +1,6 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 export function successJson(
-  schema: z.ZodObject,
+  schema: any,
   options: { description?: string } = {},
 ) {
   return {

@@ -5,7 +5,6 @@ import { successJson } from "@/types/success-json";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { eq } from "drizzle-orm";
 import { bearerAuth } from "@/index";
-import { HTTPException } from "hono/http-exception";
 
 export const BoardSchema = z.object({
   id: z.uuid(),
@@ -19,16 +18,18 @@ export default function setupBoardsRoute(app: OpenAPIHono) {
       path: "/boards",
       security: [{ [bearerAuth.name]: [] }],
       responses: {
-        200: successJson(BoardSchema, { description: "Tạo Board thành công" }),
+        200: successJson(BoardSchema.array(), {
+          description: "Tạo Board thành công",
+        }),
       },
     }),
 
     async (c) => {
       const user = ensureUserAuthenticated(c);
-      const boards = db
+      const boards = await db
         .select()
         .from(boardsTable)
-        .where(eq(boardsTable.userId, user.userId));
+        .where(eq(boardsTable.userId, user.sub));
 
       return c.json(boards);
     },

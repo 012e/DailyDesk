@@ -2,28 +2,27 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import { serve } from "@hono/node-server";
 import setupRoutes from "@/routes";
 import "dotenv/config";
-import { swaggerUI } from "@hono/swagger-ui";
 import { cors } from "hono/cors";
-import { setupBearerAuth } from "@/lib/auth";
+import { authMiddleware, setupBearerAuth } from "@/lib/auth";
 
 const app = new OpenAPIHono();
 export const bearerAuth = setupBearerAuth(app);
 
 app.use("*", cors());
-
-setupRoutes(app);
+app.use("/boards/*", authMiddleware());
 
 app.doc("/doc", {
   openapi: "3.0.0",
   info: {
     version: "1.0.0",
-    title: "My API",
+    title: "Daily Desk API Documentation",
   },
 });
 
-app.get("/doc/ui", swaggerUI({ url: "/api/doc" }));
+setupRoutes(app);
 
 app.onError((error, c) => {
+  console.error(error);
   return c.json(
     {
       message:

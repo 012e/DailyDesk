@@ -8,7 +8,7 @@ export const boardsTable = sqliteTable("boards", {
     .primaryKey()
     .$defaultFn(() => randomUUID()),
   name: text("name").notNull(),
-  userId: text("user_id").notNull(), // Clerk user ID
+  userId: text("user_id").notNull(),
 });
 
 // Lists table with foreign key to boards
