@@ -1,6 +1,8 @@
+import { Button } from "@/components/ui/button";
 import getConfig from "@/lib/config";
-import SwaggerUI from "swagger-ui-react";
-import "swagger-ui-react/swagger-ui.css";
+import { ApiReferenceReact } from "@scalar/api-reference-react";
+import "@scalar/api-reference-react/style.css";
+import { useState } from "react";
 
 function rtrim(str: string, ch: string) {
   let i = str.length;
@@ -10,7 +12,26 @@ function rtrim(str: string, ch: string) {
 
 const config = getConfig();
 export default function Doc() {
+  const [token, setToken] = useState("shit");
+  function updateToken() {
+    setToken("fucking hell");
+  }
   return (
-    <SwaggerUI url={rtrim(config.backendUrl, "/") + "/doc"} withCredentials />
+    <div className="">
+      <Button onClick={updateToken}>Update Token</Button>
+      <ApiReferenceReact
+        configuration={{
+          url: rtrim(config.backendUrl, "/") + "/doc",
+          authentication: {
+            preferredSecurityScheme: ["bearerAuth"],
+            securitySchemes: {
+              bearerAuth: {
+                token: token,
+              },
+            },
+          },
+        }}
+      />
+    </div>
   );
 }

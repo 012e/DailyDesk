@@ -4,6 +4,7 @@ import { ensureUserAuthenticated } from "@/lib/utils";
 import { successJson } from "@/types/success-json";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { eq } from "drizzle-orm";
+import { bearerAuth } from "@/index";
 
 export const BoardSchema = z.object({
   id: z.uuid(),
@@ -15,6 +16,7 @@ export default function setupBoardsRoute(app: OpenAPIHono) {
     createRoute({
       method: "get",
       path: "/boards",
+      security: [{ [bearerAuth.name]: [] }],
       responses: {
         200: successJson(BoardSchema, { description: "Tạo Board thành công" }),
       },
