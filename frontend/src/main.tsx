@@ -8,7 +8,6 @@ import "./index.css";
 import Layout from "./Layout.tsx";
 import Kanban from "./pages/kanban.tsx";
 import SignInPage from "./pages/sign-in.tsx";
-import Doc from "@/pages/doc/doc.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -24,10 +23,17 @@ createRoot(document.getElementById("root")!).render(
           <Route element={<Layout />}>
             <Route path="/" element={<App />} />
             <Route path="/kanban" element={<Kanban />} />
+            <Route path="/sign-in/*" element={<SignInPage />} />
           </Route>
 
-          <Route path="/sign-in/*" element={<SignInPage />} />
-          <Route path="/doc" element={<Doc />} />
+          <Route
+            path="/doc"
+            lazy={() =>
+              import("./pages/doc/doc").then((module) => ({
+                Component: module.default,
+              }))
+            }
+          />
         </Routes>
       </Auth0Provider>
     </BrowserRouter>

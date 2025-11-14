@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import getConfig from "@/lib/config";
 import { accessTokenAtom } from "@/stores/access-token";
 import { ApiReferenceReact } from "@scalar/api-reference-react";
