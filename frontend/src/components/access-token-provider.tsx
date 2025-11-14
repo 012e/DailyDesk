@@ -3,6 +3,7 @@ import { getAccessTokenFnAtom } from "@/stores/auth";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useAtom } from "jotai";
 import { useEffect, useRef } from "react";
+import PleaseLogin from "./please-login";
 
 export default function AccessTokenProvider({
   children,
@@ -20,24 +21,19 @@ export default function AccessTokenProvider({
   );
 
   useEffect(() => {
-    if (!auth.isAuthenticated) {
-      auth.loginWithRedirect();
-    } else if (auth.isAuthenticated && auth.getAccessTokenSilently) {
+    if (auth.isAuthenticated) {
       setGetAcessTokenFn(auth.getAccessTokenSilently);
       getAccessTokenFnRef.current = auth.getAccessTokenSilently;
     }
   }, [auth, setGetAcessTokenFn]);
 
   useEffect(() => {
-    if (isUpdating.current) {
+    if (isUpdating.current || !auth.isAuthenticated) {
       return;
     }
 
     async function updateAccessToken() {
       const getAccessToken = getAccessTokenFnRef.current;
-      console.log(getAccessToken);
-      console.log("access token", accessToken);
-      console.log("cond", !accessToken && getAccessToken);
 
       if (!accessToken && getAccessToken) {
         isUpdating.current = true;
@@ -54,6 +50,10 @@ export default function AccessTokenProvider({
     }
     updateAccessToken();
   }, [accessToken, setAccessToken]);
+
+  if (!auth.isAuthenticated) {
+    return <PleaseLogin onClick={() => auth.loginWithRedirect()}></PleaseLogin>;
+  }
 
   return children;
 }

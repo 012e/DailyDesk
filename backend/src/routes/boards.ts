@@ -5,6 +5,7 @@ import { successJson } from "@/types/success-json";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { eq } from "drizzle-orm";
 import { bearerAuth } from "@/index";
+import { HTTPException } from "hono/http-exception";
 
 export const BoardSchema = z.object({
   id: z.uuid(),

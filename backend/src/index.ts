@@ -1,5 +1,4 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
-import { clerkMiddleware } from "@hono/clerk-auth";
 import { serve } from "@hono/node-server";
 import setupRoutes from "@/routes";
 import "dotenv/config";
@@ -10,7 +9,6 @@ import { setupBearerAuth } from "@/lib/auth";
 const app = new OpenAPIHono();
 export const bearerAuth = setupBearerAuth(app);
 
-app.use("*", clerkMiddleware());
 app.use("*", cors());
 
 setupRoutes(app);
@@ -24,5 +22,16 @@ app.doc("/doc", {
 });
 
 app.get("/doc/ui", swaggerUI({ url: "/api/doc" }));
+
+app.onError((error, c) => {
+  return c.json(
+    {
+      message:
+        "Server is busy drinking tà tữa. Please contact backend developer for solution.",
+      detail: error.cause,
+    },
+    500,
+  );
+});
 
 serve(app);
