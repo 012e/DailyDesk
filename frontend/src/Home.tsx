@@ -7,9 +7,11 @@ import CreateBoardDialog from "@/components/create-board-dialog";
 import type { BoardCardProps as Board } from "@/components/board-card";
 import { BoardCard } from "@/components/board-card";
 import { Clock, Clipboard } from "lucide-react";
+import { useNavigate } from "react-router";
 
 export default function Home() {
   const theme = useTheme();
+  const navigate = useNavigate();
 
   const [boards, setBoards] = useState<Board[]>([
     {
