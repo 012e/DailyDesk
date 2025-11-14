@@ -26,11 +26,14 @@ app.doc("/doc", {
 setupRoutes(app);
 
 app.onError((error, c) => {
-  if (error instanceof HTTPException && error.status < 500) {
-    return c.json({
-      message: error.message,
-      cause: error.cause,
-    });
+  if (error instanceof HTTPException) {
+    return c.json(
+      {
+        message: error.message,
+        cause: error.cause,
+      },
+      error.status,
+    );
   }
   return c.json(
     {

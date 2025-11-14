@@ -20,6 +20,39 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
+                /** @description Lấy Board thành công */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            name: string;
+                            userId: string;
+                        }[];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        name: string;
+                        userId: string;
+                    };
+                };
+            };
+            responses: {
                 /** @description Tạo Board thành công */
                 200: {
                     headers: {
@@ -30,13 +63,12 @@ export interface paths {
                             /** Format: uuid */
                             id: string;
                             name: string;
+                            userId: string;
                         };
                     };
                 };
             };
         };
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
