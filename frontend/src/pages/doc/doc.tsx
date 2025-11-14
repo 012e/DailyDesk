@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
 import getConfig from "@/lib/config";
+import { accessTokenAtom } from "@/stores/access-token";
 import { ApiReferenceReact } from "@scalar/api-reference-react";
 import "@scalar/api-reference-react/style.css";
-import { useState } from "react";
+import { useAtom } from "jotai/react";
 
 function rtrim(str: string, ch: string) {
   let i = str.length;
@@ -12,13 +13,9 @@ function rtrim(str: string, ch: string) {
 
 const config = getConfig();
 export default function Doc() {
-  const [token, setToken] = useState("shit");
-  function updateToken() {
-    setToken("fucking hell");
-  }
+  const [token, setToken] = useAtom(accessTokenAtom);
   return (
     <div className="">
-      <Button onClick={updateToken}>Update Token</Button>
       <ApiReferenceReact
         configuration={{
           url: rtrim(config.backendUrl, "/") + "/doc",
