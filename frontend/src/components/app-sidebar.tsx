@@ -1,4 +1,12 @@
-import { Calendar, Home, Inbox, Search, Settings } from "lucide-react";
+import {
+  BookOpen,
+  Calendar,
+  Home,
+  Inbox,
+  Search,
+  Settings,
+} from "lucide-react";
+import { Link } from "react-router";
 
 import {
   Sidebar,
@@ -34,6 +42,11 @@ const items = [
     icon: Search,
   },
   {
+    title: "API",
+    url: "/doc",
+    icon: BookOpen,
+  },
+  {
     title: "Settings",
     url: "#",
     icon: Settings,
@@ -51,10 +64,10 @@ export function AppSidebar() {
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <a href={item.url}>
+                    <Link to={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

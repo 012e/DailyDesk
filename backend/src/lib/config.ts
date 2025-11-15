@@ -1,11 +1,14 @@
+import { z } from "zod";
+import "dotenv/config";
+import path from "path";
 import * as fs from "fs";
-import * as path from "path";
-import { isValidUri } from "@/lib/utils";
 
-export type Config = {
-  databaseUrl: string;
-  isProduction: boolean;
-};
+export const configSchema = z.object({
+  databaseUrl: z.url().default("file:./tmp/database"),
+  isProduction: z.boolean().default(false),
+  authIssuerUrl: z.url().nonempty(), // Required, non-empty URL
+  authAudience: z.string().nonempty(),
+});
 
 /**
  * Ensures that a folder exists synchronously. If the folder does not exist, it is created,
@@ -29,15 +32,16 @@ function ensureFolderExistsSync(relativeFolderPath: string): void {
   }
 }
 
+export type Config = z.infer<typeof configSchema>;
+
 export default function getConfig(): Config {
-  const config: Config = {
-    databaseUrl: process.env.DATABASE_URL || "./tmp/pglite-data",
+  ensureFolderExistsSync("tmp");
+  const rawConfig: Config = {
+    databaseUrl: process.env.DATABASE_URL!,
     isProduction: process.env.NODE_ENV === "production",
+    authIssuerUrl: "https://" + process.env.AUTH0_DOMAIN! + "/",
+    authAudience: process.env.AUTH0_API_AUDIENCE!,
   };
 
-  if (!isValidUri(config.databaseUrl)) {
-    ensureFolderExistsSync(config.databaseUrl); // Ensure the database storage folder exists in development
-  }
-
-  return config;
+  return configSchema.parse(rawConfig);
 }
