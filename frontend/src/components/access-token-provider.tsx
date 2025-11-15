@@ -49,7 +49,7 @@ export default function AccessTokenProvider({
       }
     }
     updateAccessToken();
-  }, [accessToken, setAccessToken]);
+  }, [auth, accessToken, setAccessToken]);
 
   if (!auth.isAuthenticated) {
     return <PleaseLogin onClick={() => auth.loginWithRedirect()}></PleaseLogin>;
