@@ -48,7 +48,6 @@ export interface paths {
                 content: {
                     "application/json": {
                         name: string;
-                        userId: string;
                     };
                 };
             };
