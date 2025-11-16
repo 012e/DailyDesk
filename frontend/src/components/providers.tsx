@@ -18,10 +18,11 @@ export default function Providers({ children }: { children: React.ReactNode }) {
           authorizationParams={{
             redirect_uri: window.location.origin,
             audience: authConfig.audience,
-            scope: "openid profile email",
+            scope: "openid profile email offline_access",
           }}
           cacheLocation="localstorage"
           useRefreshTokens
+          useRefreshTokensFallback={true}
         >
           <QueryClientProvider client={queryClient}>
             <AccessTokenProvider>{children}</AccessTokenProvider>
