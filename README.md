@@ -33,7 +33,6 @@ Trước hết ta xem có API nào để gọi. Có thể truy cập trang http:
 
 Sau khi biết có API thì sử dụng httpClient từ `@/lib/client`
 ```tsx
-import { useAuth0 } from "@auth0/auth0-react";
 import { Button } from "./components/ui/button";
 import httpClient from "@/lib/client";
 
