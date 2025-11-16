@@ -1,16 +1,48 @@
-import { Hono } from "hono";
-import db from "@/lib/db/";
-import { usersTable } from "@/lib/db/schema";
+import { OpenAPIHono } from "@hono/zod-openapi";
+import { serve } from "@hono/node-server";
+import setupRoutes from "@/routes";
+import "dotenv/config";
+import { cors } from "hono/cors";
+import { setupBearerAuth } from "@/lib/auth";
+import { logger } from "hono/logger";
+import { poweredBy } from "hono/powered-by";
+import { HTTPException } from "hono/http-exception";
 
-const app = new Hono();
+const app = new OpenAPIHono();
+export const bearerAuth = setupBearerAuth(app);
 
-app.post("/test", async (c) => {
-  const { name, age, email } = await c.req.json();
-  const result = await db
-    .insert(usersTable)
-    .values({ name, age, email })
-    .returning();
-  return c.json(result);
+app.use(logger());
+app.use(poweredBy());
+app.use("*", cors());
+
+app.doc("/doc", {
+  openapi: "3.0.0",
+  info: {
+    version: "1.0.0",
+    title: "Daily Desk API Documentation",
+  },
 });
 
-export default app;
+setupRoutes(app);
+
+app.onError((error, c) => {
+  if (error instanceof HTTPException) {
+    return c.json(
+      {
+        message: error.message,
+        cause: error.cause,
+      },
+      error.status,
+    );
+  }
+  return c.json(
+    {
+      message:
+        "Server is busy drinking tà tữa. Please contact backend developer for solution.",
+      detail: error.cause,
+    },
+    500,
+  );
+});
+
+serve(app);
