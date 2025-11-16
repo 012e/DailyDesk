@@ -5,20 +5,11 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { eq } from "drizzle-orm";
 import { authMiddleware } from "@/lib/auth";
 import { defaultSecurityScheme, jsonBody, successJson } from "@/types/openapi";
-
-export const BoardSchema = z.object({
-  id: z.uuid(),
-  name: z.string().nonempty(),
-  userId: z.string().nonempty(),
-});
-
-export const CreateBoardSchema = z.object({
-  name: z.string().nonempty(),
-});
-
-export const UpdateBoardSchema = z.object({
-  name: z.string().nonempty(),
-});
+import {
+  BoardSchema,
+  CreateBoardSchema,
+  UpdateBoardSchema,
+} from "@/types/boards";
 
 const TAGS = ["Boards"];
 export default function createBoardRoutes() {
@@ -106,7 +97,7 @@ export default function createBoardRoutes() {
     async (c) => {
       const user = ensureUserAuthenticated(c);
       const { id } = c.req.valid("param");
-      
+
       const board = await db
         .select()
         .from(boardsTable)
