@@ -1,7 +1,8 @@
 import { z } from "zod";
-import "dotenv/config";
 import path from "path";
 import * as fs from "fs";
+import dotenv from "dotenv";
+dotenv.config({ path: [".env", ".env.local"] });
 
 export const configSchema = z.object({
   databaseUrl: z.url().default("file:./tmp/database"),

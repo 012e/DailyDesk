@@ -1,12 +1,14 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { serve } from "@hono/node-server";
 import setupRoutes from "@/routes";
-import "dotenv/config";
 import { cors } from "hono/cors";
 import { setupBearerAuth } from "@/lib/auth";
 import { logger } from "hono/logger";
 import { poweredBy } from "hono/powered-by";
 import { HTTPException } from "hono/http-exception";
+
+import dotenv from "dotenv";
+dotenv.config({ path: [".env", ".env.local"] });
 
 const app = new OpenAPIHono();
 export const bearerAuth = setupBearerAuth(app);
