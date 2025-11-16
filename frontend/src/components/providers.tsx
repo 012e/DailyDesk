@@ -21,6 +21,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
             scope: "openid profile email",
           }}
           cacheLocation="localstorage"
+          useRefreshTokens
         >
           <QueryClientProvider client={queryClient}>
             <AccessTokenProvider>{children}</AccessTokenProvider>
