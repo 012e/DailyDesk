@@ -1,37 +1,53 @@
 # DailyDesk
 
-DailyDesk is a personal productivity companion that combines a Trello-inspired task board with a focused daily calendar. The repository is organised as a pnpm monorepo with separate frontend and backend packages.
+## Cách chạy
 
-> Frontend documentation and run instructions are available now. Backend docs will be added in a future update.
-
-## Packages
-
-- [`frontend/`](frontend/README.md) – React + Vite application that powers the board and calendar experience.
-- `backend/` – Cloudflare Workers API layer (documentation coming soon).
-
-## Quick Start
-
-Ensure you installed nodejs
-
-1. Install pnpm (if you don’t have it yet):
+Lần đầu chạy sẽ cần cài đặt `pnpm`. Chạy lệnh sau:
 ```bash
 npm install -g pnpm@latest
 ```
-2. Install dependencies:
+
+Sau đó chạy dự án bình thường:
+1. Cài đặt dependency:
 ```bash
 pnpm install
 ```
-3. Run the development server: 
+
+2. Cập nhật database
+```bash
+pnpm update-db
+```
+
+3. Chạy code: 
 ```bash
 pnpm dev
 ```
 
-Visit http://localhost:5173 to explore the DailyDesk workspace shell.
+Trang web giờ đang ở http://localhost:5173.
 
-## Project Goals
+## Cách gọi api
 
-- Build a light-weight personal board for tracking tasks and goals.
-- Overlay a calendar and daily planner for time-blocking work.
-- Keep the interface fast, keyboard-friendly, and theme-aware.
 
-For more details, see the [`frontend/README.md`](frontend/README.md).
+Trước hết ta xem có API nào để gọi. Có thể truy cập trang http://localhost:5173/doc để xem danh sách tất cả API của backend.
+<img width="1609" height="1012" alt="image" src="https://github.com/user-attachments/assets/15294ae1-5039-4380-926f-3b0024ce9391" />
+
+Sau khi biết có API thì sử dụng httpClient từ `@/lib/client`
+```tsx
+import { useAuth0 } from "@auth0/auth0-react";
+import { Button } from "./components/ui/button";
+import httpClient from "@/lib/client";
+
+function App() {
+  async function doSomething() {
+    await httpClient.get("/boards");
+  }
+  return (
+    <div>
+      <h1>Welcome to the App!</h1>
+      <Button onClick={doSomething}>Hello</Button>
+    </div>
+  );
+}
+
+export default App;
+```
