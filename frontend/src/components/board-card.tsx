@@ -18,7 +18,7 @@ export function BoardCard({
   return (
     <Card
       key={id}
-      className="cursor-pointer pt-4 pb-14 overflow-hidden gap-0 relative transition-all hover:shadow-md dark:hover:shadow-md-white  hover:scale-[1.02] "
+      className="cursor-pointer pt-4 pb-14 overflow-hidden gap-0 relative transition-all hover:shadow-md dark:hover:shadow-md-white  hover:scale-[1.02] border-0"
       style={
         isBackgroundImage
           ? {
@@ -28,7 +28,7 @@ export function BoardCard({
           : { backgroundColor: background }
       }
     >
-      <div className="absolute inset-0 mb-8 bg-white/5  backdrop-blur-md dark:bg-black/20  pointer-events-none" />
+      <div className="absolute inset-0 mb-8 backdrop-blur-sm  dark:bg-black/25  pointer-events-none" />
 
       <CardHeader className="flex items-center justify-between p-4 py-0 z-5">
         <CardTitle className="text-md font-medium overflow-hidden text-ellipsis max-w-[80%] z-10">
@@ -46,7 +46,7 @@ export function BoardCard({
         />
       </CardHeader>
       <CardContent className="p-4 pt-0 z-10 ">
-        <p className="text-sm text-muted-foreground dark:text-gray-200">
+        <p className="text-sm text-muted-foreground text-black dark:text-gray-200">
           Click to open board
         </p>
       </CardContent>
