@@ -5,6 +5,7 @@ import App from "./App.tsx";
 import "./index.css";
 import Layout from "./Layout.tsx";
 import Kanban from "./pages/kanban.tsx";
+
 import SignInPage from "./pages/sign-in.tsx";
 
 const Doc = lazy(() => import("@/pages/doc/doc.tsx"));
@@ -21,5 +22,5 @@ createRoot(document.getElementById("root")!).render(
         </Route>
       </Routes>
     </BrowserRouter>
-  </StrictMode>,
+  </StrictMode>
 );
