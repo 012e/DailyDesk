@@ -17,8 +17,9 @@ export default function Home() {
     {
       id: 1,
       title: "Project Alpha",
-      isBackgroundImage: false,
-      background: "#ffffff",
+      isBackgroundImage: true,
+      background:
+        "https://i.pinimg.com/1200x/c0/52/9c/c0529ca16ac269033d672c1a3eb16b97.jpg",
     },
     {
       id: 2,
@@ -29,8 +30,9 @@ export default function Home() {
     {
       id: 3,
       title: "Team Collaboration",
-      isBackgroundImage: false,
-      background: "#8bffecff",
+      isBackgroundImage: true,
+      background:
+        "https://i.pinimg.com/1200x/85/c4/f3/85c4f3fb4b0f6ca9d149da89bc7f9528.jpg",
     },
   ]);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
