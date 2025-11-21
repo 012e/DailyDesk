@@ -11,13 +11,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { AdvancedColorPicker } from "./color-picker";
+import ImageCropper from "./image-cropper";
 
 interface CreateBoardDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  // changed: include background color/image in callback
   onCreate: (
     title: string,
     isBackgroundImage: boolean,
@@ -30,10 +30,8 @@ export default function CreateBoardDialog({
   onOpenChange,
   onCreate,
 }: CreateBoardDialogProps) {
-  // ...existing code...
   const [title, setTitle] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  // new: selected background color with a nicer default
   const colorPalette = [
     "#ffffff",
     "#fde68a",
@@ -44,21 +42,22 @@ export default function CreateBoardDialog({
     "#fef3c7",
     "#d1fae5",
   ];
-  const [selectedColor, setSelectedColor] = useState<string>("#ffffff"); // default chosen
+  const [selectedColor, setSelectedColor] = useState<string>("#ffffff");
 
-  // New: allow choosing between color or image background
   type BackgroundType = "color" | "image";
   const [backgroundType, setBackgroundType] = useState<BackgroundType>("color");
 
-  // Image inputs: either a link or a picked file (from file explorer)
   const [imageLink, setImageLink] = useState<string>("");
-  const [imagePreview, setImagePreview] = useState<string>(""); // object URL or link preview
+  const [imagePreview, setImagePreview] = useState<string>("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [showCropper, setShowCropper] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleFilePick = (file?: File) => {
     if (!file) return;
     const url = URL.createObjectURL(file);
     setImagePreview(url);
+    setSelectedFile(file); // gán trực tiếp file cục bộ
     setImageLink("");
   };
 
@@ -70,6 +69,12 @@ export default function CreateBoardDialog({
   const handleImageLinkChange = (value: string) => {
     setImageLink(value);
     setImagePreview(value);
+    setSelectedFile(null); // link chưa có File, sẽ fetch sau
+  };
+
+  const handleCropComplete = (croppedImage: string) => {
+    setImagePreview(croppedImage);
+    setShowCropper(false);
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
@@ -79,7 +84,6 @@ export default function CreateBoardDialog({
 
     setIsSubmitting(true);
     setTimeout(() => {
-      // decide which background to send
       let background: string | undefined = undefined;
       if (backgroundType === "color") {
         background = selectedColor;
@@ -88,13 +92,14 @@ export default function CreateBoardDialog({
       }
 
       onCreate(trimmedTitle, backgroundType === "image", background);
-      // reset
+
       setTitle("");
       setSelectedColor("#bfdbfe");
       setBackgroundType("color");
       setImageLink("");
       setImagePreview("");
       setIsSubmitting(false);
+      setShowCropper(false);
     }, 300);
   };
 
@@ -104,8 +109,30 @@ export default function CreateBoardDialog({
     setImageLink("");
     setImagePreview("");
     setBackgroundType("color");
+    setShowCropper(false);
   };
 
+  // CHỈNH SỬA PHẦN fetch link → tạo File
+  useEffect(() => {
+    if (!imagePreview || selectedFile) return;
+
+    const fetchFileFromLink = async () => {
+      try {
+        const response = await fetch(imagePreview);
+        const blob = await response.blob();
+        const filename = imagePreview.split("/").pop() || "image.jpg";
+        const file = new File([blob], filename, { type: blob.type });
+        setSelectedFile(file);
+      } catch (err) {
+        console.error("Cannot fetch image", err);
+        setSelectedFile(null);
+      }
+    };
+
+    fetchFileFromLink();
+  }, [imagePreview, selectedFile]);
+
+  //#region Render
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md min-h-[60vh] max-h-[90vh] overflow-auto">
@@ -123,22 +150,15 @@ export default function CreateBoardDialog({
               <Label htmlFor="board-title">Board Title</Label>
               <Input
                 id="board-title"
-                className="
-                    border border-gray-300 rounded-md px-3 py-2
-                    focus:outline-none focus:ring-0 focus:border-sky-400
-                    [&:focus]:ring-1 [&:focus]:ring-sky-100 
-                  "
+                className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-0 focus:border-sky-400 [&:focus]:ring-1 [&:focus]:ring-sky-100"
                 placeholder="e.g. Marketing Campaign 2025"
                 value={title}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setTitle(e.target.value)
-                }
+                onChange={(e) => setTitle(e.target.value)}
                 autoFocus
                 disabled={isSubmitting}
               />
             </div>
 
-            {/* Background type selector */}
             <div className="grid gap-2">
               <Label>Background</Label>
               <div className="flex gap-3">
@@ -165,16 +185,14 @@ export default function CreateBoardDialog({
                   Image
                 </button>
               </div>
-
               {backgroundType === "color" ? (
-                //#region Color picker
-                <div className="grid gap-2 mt-6 ">
+                //#region Background:Color selection
+                <div className="grid gap-2 mt-6">
                   <AdvancedColorPicker
                     color={selectedColor}
                     onChange={setSelectedColor}
                   />
-
-                  <div className="flex items-center gap-3 mt-6 mb-10 ">
+                  <div className="flex items-center gap-3 mt-6 mb-10">
                     <div className="grid grid-cols-9 gap-2">
                       {colorPalette.map((c) => (
                         <button
@@ -184,19 +202,15 @@ export default function CreateBoardDialog({
                           aria-label={`Select ${c}`}
                           onClick={() => setSelectedColor(c)}
                           disabled={isSubmitting}
-                          className={`w-8 h-8 rounded-md border-1 transform transition 
-                                ${
-                                  selectedColor === c
-                                    ? "border-sky-300 ring-2 ring-sky-200 scale-110 z-10 shadow-lg"
-                                    : "border-transparent"
-                                }
-                                hover:scale-110 hover:z-10 hover:shadow-md`}
+                          className={`w-8 h-8 rounded-md border-1 transform transition ${
+                            selectedColor === c
+                              ? "border-sky-300 ring-2 ring-sky-200 scale-110 z-10 shadow-lg"
+                              : "border-transparent"
+                          } hover:scale-110 hover:z-10 hover:shadow-md`}
                           style={{ backgroundColor: c }}
                         />
                       ))}
                     </div>
-
-                    {/* Preview */}
                     <div className="ml-3 flex items-center gap-2">
                       <span className="text-sm text-muted-foreground">
                         Preview
@@ -209,21 +223,14 @@ export default function CreateBoardDialog({
                   </div>
                 </div>
               ) : (
-                //#endregion
-                //#region Image picker
+                //#region Background:Image selection
                 <div className="grid gap-2 mt-2">
                   <div className="flex gap-2">
                     <Input
                       placeholder="Paste image link (https://...)"
                       value={imageLink}
-                      className="
-                    border border-gray-300 rounded-md px-3 py-2
-                    focus:outline-none focus:ring-0 focus:border-sky-400
-                    [&:focus]:ring-1 [&:focus]:ring-sky-100 
-                  "
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        handleImageLinkChange(e.target.value)
-                      }
+                      className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-0 focus:border-sky-400 [&:focus]:ring-1 [&:focus]:ring-sky-100"
+                      onChange={(e) => handleImageLinkChange(e.target.value)}
                       disabled={isSubmitting}
                     />
                     <input
@@ -248,7 +255,17 @@ export default function CreateBoardDialog({
                     <span className="text-sm text-muted-foreground">
                       Preview
                     </span>
-                    <div className="w-34 h-24 rounded-md border bg-gray-50 overflow-hidden flex items-center justify-center">
+                    <div
+                      onClick={() => {
+                        if (imagePreview && selectedFile?.type !== "image/gif")
+                          setShowCropper(true);
+                      }}
+                      className={`w-34 h-24 rounded-md border bg-gray-50 overflow-hidden flex items-center justify-center ${
+                        imagePreview
+                          ? "cursor-pointer hover:opacity-80 transition-opacity"
+                          : ""
+                      }`}
+                    >
                       {imagePreview ? (
                         <img
                           src={imagePreview}
@@ -262,6 +279,11 @@ export default function CreateBoardDialog({
                       )}
                     </div>
                   </div>
+                  {imagePreview && selectedFile?.type !== "image/gif" && (
+                    <p className="text-xs text-muted-foreground">
+                      Click preview to crop image
+                    </p>
+                  )}
                 </div>
               )}
             </div>
@@ -282,6 +304,14 @@ export default function CreateBoardDialog({
           </DialogFooter>
         </form>
       </DialogContent>
+
+      <ImageCropper
+        open={showCropper}
+        onOpenChange={setShowCropper}
+        file={selectedFile}
+        onCropComplete={handleCropComplete}
+        onCancel={() => setShowCropper(false)}
+      />
     </Dialog>
   );
 }

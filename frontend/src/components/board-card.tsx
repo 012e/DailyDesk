@@ -18,20 +18,20 @@ export function BoardCard({
   return (
     <Card
       key={id}
-      className="cursor-pointer pt-4 pb-14 overflow-hidden gap-0 relative transition-all hover:shadow-md dark:hover:shadow-md-white  hover:scale-[1.02] border-0"
+      className="cursor-pointer pt-4 pb-14 bg-cover bg-center bg-no-repeat overflow-hidden gap-0 relative transition-all hover:shadow-md dark:hover:shadow-md-white  hover:scale-[1.02] border-0"
       style={
         isBackgroundImage
           ? {
               backgroundImage: `url(${background})`,
-              backgroundSize: "cover",
+              backgroundSize: "center",
             }
           : { backgroundColor: background }
       }
     >
-      <div className="absolute inset-0 mb-8 backdrop-blur-sm  dark:bg-black/25  pointer-events-none" />
+      <div className="absolute inset-0 mb-16 backdrop-blur-sm  dark:bg-black/25  pointer-events-none" />
 
       <CardHeader className="flex items-center justify-between p-4 py-0 z-5">
-        <CardTitle className="text-md font-medium overflow-hidden text-ellipsis max-w-[80%] z-10">
+        <CardTitle className="text-md font-medium overflow-hidden text-ellipsis max-w-[80%] z-10 text-">
           {title}
         </CardTitle>
         <div
