@@ -1,32 +1,35 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTheme } from "@/components/theme-provider";
+import type { HTMLAttributes } from "react";
 
 export interface BoardCardProps {
   id: string;
   name: string;
-  isBackgroundImage: boolean;
-  background?: string;
+  backgroundUrl?: string;
+  backgroundColor?: string;
 }
 
 export function BoardCard({
   id,
   name: title,
-  isBackgroundImage,
-  background,
+  backgroundUrl,
+  backgroundColor,
 }: BoardCardProps) {
   const theme = useTheme();
+  let backgroundStyle: HTMLAttributes<HTMLDivElement>["style"];
+  if (backgroundUrl) {
+    backgroundStyle = {
+      backgroundImage: `url(${backgroundUrl})`,
+      backgroundSize: "center",
+    };
+  } else {
+    backgroundStyle = { backgroundColor };
+  }
   return (
     <Card
       key={id}
       className="overflow-hidden relative gap-0 pt-4 pb-14 bg-center bg-no-repeat bg-cover border-0 transition-all cursor-pointer hover:shadow-md dark:hover:shadow-md-white hover:scale-[1.02]"
-      style={
-        isBackgroundImage
-          ? {
-              backgroundImage: `url(${background})`,
-              backgroundSize: "center",
-            }
-          : { backgroundColor: background }
-      }
+      style={backgroundStyle}
     >
       <div className="absolute inset-0 mb-16 pointer-events-none backdrop-blur-sm dark:bg-black/25" />
 
@@ -36,13 +39,7 @@ export function BoardCard({
         </CardTitle>
         <div
           className="top-4 right-4 w-4 h-4 rounded-full pointer-events-none"
-          style={
-            isBackgroundImage
-              ? theme.theme === "dark"
-                ? { backgroundColor: "white" }
-                : { backgroundColor: "black" }
-              : { backgroundColor: background, backgroundSize: "cover" }
-          }
+          style={backgroundStyle}
         />
       </CardHeader>
       <CardContent className="z-10 p-4 pt-0">

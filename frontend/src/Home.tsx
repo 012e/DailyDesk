@@ -13,10 +13,12 @@ export default function Home() {
   const handleCreateBoard = (
     title: string,
     backgroundColor?: string,
-    backgroundImage?: string,
+    backgroundUrl?: string,
   ): void => {
     createBoard({
       name: title,
+      backgroundColor,
+      backgroundUrl,
     });
     setIsDialogOpen(false);
   };
@@ -39,8 +41,8 @@ export default function Home() {
             <BoardCard
               id={board.id}
               name={board.name}
-              isBackgroundImage={board.isBackgroundImage}
-              background={board.background}
+              backgroundUrl={board.backgroundUrl}
+              backgroundColor={board.backgroundColor}
             />
           ))}
 

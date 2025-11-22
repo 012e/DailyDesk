@@ -5,8 +5,8 @@ import { uuidv7 } from "uuidv7";
 
 export const CreateBoardSchema = z.object({
   name: z.string().nonempty(),
-  backgroundColor: board.name,
-  backgroundUrl: board.name,
+  backgroundColor: z.string().optional(),
+  backgroundUrl: z.string().optional(),
 });
 
 export type CreateBoardType = z.infer<typeof CreateBoardSchema>;
@@ -16,8 +16,8 @@ export function useBoardActions() {
     boardCollection.insert({
       id: uuidv7(),
       name: board.name,
-      backgroundColor: board.name,
-      backgroundUrl: board.name,
+      backgroundColor: board.backgroundColor,
+      backgroundUrl: board.backgroundUrl,
     });
   }
 
@@ -32,8 +32,10 @@ export const boardLiveQuery = createCollection(
       q.from({ boardCollection }).select(({ boardCollection }) => ({
         id: boardCollection.id,
         name: boardCollection.name,
-        isBackgroundImage: false,
-        background: "#e992ffff",
+        backgroundUrl: boardCollection.backgroundUrl,
+        backgroundColor:
+          boardCollection.backgroundColor ??
+          (!boardCollection.backgroundUrl && "#e992ffff"),
       })),
     startSync: true,
   }),
