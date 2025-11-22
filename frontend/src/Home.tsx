@@ -38,7 +38,7 @@ export default function Home() {
   const handleCreateBoard = (
     title: string,
     isBackgroundImage: boolean,
-    background?: string
+    background?: string,
   ): void => {
     const newBoard: Board = {
       id: Math.max(...boards.map((b) => b.id)) + 1,
@@ -51,26 +51,19 @@ export default function Home() {
   };
 
   return (
-    <div className=" container mx-auto p-6 grid grid-rows-4 gap-8 ">
-      <div id="all-board" className=" container  flex-col ">
-        <header className="mb-8 ">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-black ">My Boards</h1>
+    <div className="container grid grid-rows-4 gap-8 p-6 mx-auto">
+      <div id="all-board" className="container flex-col">
+        <header className="mb-8">
+          <div className="flex gap-3 items-center">
+            <h1 className="text-2xl font-bold text-black">My Boards</h1>
             <Clipboard className="w-5" />
           </div>
-          <p className="text-muted-foreground mt-1  ">
+          <p className="mt-1 text-muted-foreground">
             Organize your work and life
           </p>
         </header>
 
-        {/* Toggle Theme */}
-        <div className="mb-6">
-          <Button variant="outline" onClick={theme.toggleTheme}>
-            Toggle Theme
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {boards.map((board) => (
             <BoardCard
               id={board.id}
@@ -82,11 +75,11 @@ export default function Home() {
 
           {/* Create New Board Card */}
           <Card
-            className="flex flex-col items-center justify-center  border-2 border-dashed border-gray-500 hover:border-gray-400 hover:bg-gray-300/20  cursor-pointer transition-all"
+            className="flex flex-col justify-center items-center border-2 border-gray-500 border-dashed transition-all cursor-pointer hover:border-gray-400 hover:bg-gray-300/20"
             onClick={() => setIsDialogOpen(true)}
           >
-            <CardContent className="flex flex-col items-center py-4 ">
-              <Plus className="w-8 h-8 text-gray-500 mb-2" />
+            <CardContent className="flex flex-col items-center py-4">
+              <Plus className="mb-2 w-8 h-8 text-gray-500" />
               <p className="text-sm font-medium text-gray-700 dark:text-white">
                 Create new board
               </p>
@@ -101,12 +94,12 @@ export default function Home() {
         />
       </div>
       <div id="recently-viewed" className="container mb-20">
-        <header className="flex items-center gap-3 mt-8">
-          <h1 className=" text-2xl font-bold text-black  ">Recently Viewed</h1>
+        <header className="flex gap-3 items-center mt-8">
+          <h1 className="text-2xl font-bold text-black">Recently Viewed</h1>
           <Clock className="w-5 text-black dark:text-white" />
         </header>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 my-5 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 my-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {boards.map((board) => (
             <BoardCard
               id={board.id}
@@ -120,11 +113,11 @@ export default function Home() {
       </div>
 
       {/* <div id="project" className="container">
-        <header className="flex items-center gap-3 ">
-          <h1 className=" text-3xl font-bold text-black  ">Your projects</h1>
+        <header className="flex gap-3 items-center">
+          <h1 className="text-3xl font-bold text-black">Your projects</h1>
         </header>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 my-5 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 my-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {boards.map((board) => (
             <BoardCard
               id={board.id}
