@@ -21,8 +21,13 @@ export function useBoardActions() {
     });
   }
 
+  function deleteBoard(id: string) {
+    boardCollection.delete(id);
+  }
+
   return {
     createBoard,
+    deleteBoard,
   };
 }
 
