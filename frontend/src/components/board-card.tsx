@@ -2,15 +2,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTheme } from "@/components/theme-provider";
 
 export interface BoardCardProps {
-  id: number;
-  title: string;
+  id: string;
+  name: string;
   isBackgroundImage: boolean;
   background?: string;
 }
 
 export function BoardCard({
   id,
-  title,
+  name: title,
   isBackgroundImage,
   background,
 }: BoardCardProps) {
@@ -18,7 +18,7 @@ export function BoardCard({
   return (
     <Card
       key={id}
-      className="cursor-pointer pt-4 pb-14 bg-cover bg-center bg-no-repeat overflow-hidden gap-0 relative transition-all hover:shadow-md dark:hover:shadow-md-white  hover:scale-[1.02] border-0"
+      className="overflow-hidden relative gap-0 pt-4 pb-14 bg-center bg-no-repeat bg-cover border-0 transition-all cursor-pointer hover:shadow-md dark:hover:shadow-md-white hover:scale-[1.02]"
       style={
         isBackgroundImage
           ? {
@@ -28,14 +28,14 @@ export function BoardCard({
           : { backgroundColor: background }
       }
     >
-      <div className="absolute inset-0 mb-16 backdrop-blur-sm  dark:bg-black/25  pointer-events-none" />
+      <div className="absolute inset-0 mb-16 pointer-events-none backdrop-blur-sm dark:bg-black/25" />
 
-      <CardHeader className="flex items-center justify-between p-4 py-0 z-5">
+      <CardHeader className="flex justify-between items-center p-4 py-0 z-5">
         <CardTitle className="text-md font-medium overflow-hidden text-ellipsis max-w-[80%] z-10 text-">
           {title}
         </CardTitle>
         <div
-          className="top-4 right-4 h-4 w-4 rounded-full  pointer-events-none"
+          className="top-4 right-4 w-4 h-4 rounded-full pointer-events-none"
           style={
             isBackgroundImage
               ? theme.theme === "dark"
@@ -45,8 +45,8 @@ export function BoardCard({
           }
         />
       </CardHeader>
-      <CardContent className="p-4 pt-0 z-10 ">
-        <p className="text-sm text-muted-foreground text-black dark:text-gray-200">
+      <CardContent className="z-10 p-4 pt-0">
+        <p className="text-sm dark:text-gray-200 text-muted-foreground">
           Click to open board
         </p>
       </CardContent>

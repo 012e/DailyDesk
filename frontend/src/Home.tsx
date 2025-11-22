@@ -1,52 +1,23 @@
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus } from "lucide-react";
 import { useState } from "react";
-import { useTheme } from "@/components/theme-provider";
 import CreateBoardDialog from "@/components/create-board-dialog";
-import type { BoardCardProps as Board } from "@/components/board-card";
 import { BoardCard } from "@/components/board-card";
-import { Clock, Clipboard } from "lucide-react";
+import { Clipboard } from "lucide-react";
+import { boardLiveQuery as boards, useBoardActions } from "@/hooks/use-board";
 
 export default function Home() {
-  const theme = useTheme();
-
-  const [boards, setBoards] = useState<Board[]>([
-    {
-      id: 1,
-      title: "Project Alpha",
-      isBackgroundImage: true,
-      background:
-        "https://i.pinimg.com/1200x/c0/52/9c/c0529ca16ac269033d672c1a3eb16b97.jpg",
-    },
-    {
-      id: 2,
-      title: "Personal Tasks",
-      isBackgroundImage: false,
-      background: "#e992ffff",
-    },
-    {
-      id: 3,
-      title: "Team Collaboration",
-      isBackgroundImage: true,
-      background:
-        "https://i.pinimg.com/1200x/85/c4/f3/85c4f3fb4b0f6ca9d149da89bc7f9528.jpg",
-    },
-  ]);
+  const { createBoard } = useBoardActions();
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
 
   const handleCreateBoard = (
     title: string,
-    isBackgroundImage: boolean,
-    background?: string,
+    backgroundColor?: string,
+    backgroundImage?: string,
   ): void => {
-    const newBoard: Board = {
-      id: Math.max(...boards.map((b) => b.id)) + 1,
-      title,
-      isBackgroundImage,
-      background,
-    };
-    setBoards((prev) => [...prev, newBoard]);
+    createBoard({
+      name: title,
+    });
     setIsDialogOpen(false);
   };
 
@@ -67,7 +38,7 @@ export default function Home() {
           {boards.map((board) => (
             <BoardCard
               id={board.id}
-              title={board.title}
+              name={board.name}
               isBackgroundImage={board.isBackgroundImage}
               background={board.background}
             />
@@ -93,41 +64,24 @@ export default function Home() {
           onCreate={handleCreateBoard}
         />
       </div>
-      <div id="recently-viewed" className="container mb-20">
-        <header className="flex gap-3 items-center mt-8">
-          <h1 className="text-2xl font-bold text-black">Recently Viewed</h1>
-          <Clock className="w-5 text-black dark:text-white" />
-        </header>
-
-        <div className="grid grid-cols-1 gap-4 my-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {boards.map((board) => (
-            <BoardCard
-              id={board.id}
-              title={board.title}
-              isBackgroundImage={board.isBackgroundImage}
-              background={board.background}
-            />
-          ))}
-        </div>
-        <hr />
-      </div>
-
-      {/* <div id="project" className="container">
-        <header className="flex gap-3 items-center">
-          <h1 className="text-3xl font-bold text-black">Your projects</h1>
-        </header>
-
-        <div className="grid grid-cols-1 gap-4 my-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {boards.map((board) => (
-            <BoardCard
-              id={board.id}
-              title={board.title}
-              isBackgroundImage={board.isBackgroundImage}
-              background={board.background}
-            />
-          ))}
-        </div>
-      </div> */}
+      {/* <div id="recently-viewed" className="container mb-20"> */}
+      {/*   <header className="flex gap-3 items-center mt-8"> */}
+      {/*     <h1 className="text-2xl font-bold text-black">Recently Viewed</h1> */}
+      {/*     <Clock className="w-5 text-black dark:text-white" /> */}
+      {/*   </header> */}
+      {/**/}
+      {/*   <div className="grid grid-cols-1 gap-4 my-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"> */}
+      {/*     {boards.map((board) => ( */}
+      {/*       <BoardCard */}
+      {/*         id={board.id} */}
+      {/*         name={board.name} */}
+      {/*         isBackgroundImage={board.isBackgroundImage} */}
+      {/*         background={board.background} */}
+      {/*       /> */}
+      {/*     ))} */}
+      {/*   </div> */}
+      {/*   <hr /> */}
+      {/* </div> */}
     </div>
   );
 }
