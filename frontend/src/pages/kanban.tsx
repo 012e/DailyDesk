@@ -45,6 +45,8 @@ import {
   XIcon,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { listLiveQuery as lists, useListActions } from "@/hooks/use-list";
+import { useParams } from "react-router";
 
 type Card = {
   id: string;
@@ -122,7 +124,9 @@ const initialColumns: Column[] = [
 ];
 
 export default function Kanban() {
-  const [lists, setLists] = useState<Column[]>(initialColumns);
+  const { boardId } = useParams();
+
+  const { createList } = useListActions(boardId!);
   const [isAddingList, setIsAddingList] = useState(false);
   const [newListTitle, setNewListTitle] = useState("");
   const [editingListId, setEditingListId] = useState<string | null>(null);
@@ -153,49 +157,47 @@ export default function Kanban() {
   }, [isAddingList]);
 
   const handleDropOverColumn = (columnId: string, dataTransferData: string) => {
-    const cardData = JSON.parse(dataTransferData) as Card;
-
-    setLists((prevColumns) => {
-      const newColumns = prevColumns.map((col) => ({
-        ...col,
-        cards: col.cards.filter((card) => card.id !== cardData.id),
-      }));
-
-      const targetColumn = newColumns.find((col) => col.id === columnId);
-      if (targetColumn) {
-        targetColumn.cards.push(cardData);
-      }
-
-      return newColumns;
-    });
+    // const cardData = JSON.parse(dataTransferData) as Card;
+    // setLists((prevColumns) => {
+    //   const newColumns = prevColumns.map((col) => ({
+    //     ...col,
+    //     cards: col.cards.filter((card) => card.id !== cardData.id),
+    //   }));
+    //
+    //   const targetColumn = newColumns.find((col) => col.id === columnId);
+    //   if (targetColumn) {
+    //     targetColumn.cards.push(cardData);
+    //   }
+    // return newColumns;
+    // });
   };
 
   const handleDropOverListItem = (
     columnId: string,
     targetCardId: string,
     dataTransferData: string,
-    dropDirection: KanbanBoardDropDirection
+    dropDirection: KanbanBoardDropDirection,
   ) => {
-    const cardData = JSON.parse(dataTransferData) as Card;
-
-    setLists((prevColumns) => {
-      const newColumns = prevColumns.map((col) => ({
-        ...col,
-        cards: col.cards.filter((card) => card.id !== cardData.id),
-      }));
-
-      const targetColumn = newColumns.find((col) => col.id === columnId);
-      if (targetColumn) {
-        const targetIndex = targetColumn.cards.findIndex(
-          (card) => card.id === targetCardId
-        );
-        const insertIndex =
-          dropDirection === "top" ? targetIndex : targetIndex + 1;
-        targetColumn.cards.splice(insertIndex, 0, cardData);
-      }
-
-      return newColumns;
-    });
+    // const cardData = JSON.parse(dataTransferData) as Card;
+    //
+    // setLists((prevColumns) => {
+    //   const newColumns = prevColumns.map((col) => ({
+    //     ...col,
+    //     cards: col.cards.filter((card) => card.id !== cardData.id),
+    //   }));
+    //
+    //   const targetColumn = newColumns.find((col) => col.id === columnId);
+    //   if (targetColumn) {
+    //     const targetIndex = targetColumn.cards.findIndex(
+    //       (card) => card.id === targetCardId,
+    //     );
+    //     const insertIndex =
+    //       dropDirection === "top" ? targetIndex : targetIndex + 1;
+    //     targetColumn.cards.splice(insertIndex, 0, cardData);
+    //   }
+    //
+    //   return newColumns;
+    // });
   };
 
   const addCard = (columnId: string) => {
@@ -205,24 +207,19 @@ export default function Kanban() {
       description: "Add description here...",
     };
 
-    setLists((prevColumns) =>
-      prevColumns.map((col) =>
-        col.id === columnId ? { ...col, cards: [...col.cards, newCard] } : col
-      )
-    );
+    // setLists((prevColumns) =>
+    //   prevColumns.map((col) =>
+    //     col.id === columnId ? { ...col, cards: [...col.cards, newCard] } : col,
+    //   ),
+    // );
   };
 
   const addColumn = () => {
     if (!newListTitle.trim()) return;
 
-    const newColumn: Column = {
-      id: `column-${Date.now()}`,
-      title: newListTitle,
-      color: "primary",
-      cards: [],
-    };
-
-    setLists([...lists, newColumn]);
+    createList({
+      name: newListTitle,
+    });
     setNewListTitle("");
     setIsAddingList(false);
   };
@@ -243,15 +240,15 @@ export default function Kanban() {
   };
 
   const saveColumnEdit = () => {
-    if (!editingListTitle.trim() || !editingListId) return;
-
-    setLists((prevColumns) =>
-      prevColumns.map((col) =>
-        col.id === editingListId ? { ...col, title: editingListTitle } : col
-      )
-    );
-    setEditingListId(null);
-    setEditingListTitle("");
+    // if (!editingListTitle.trim() || !editingListId) return;
+    //
+    // setLists((prevColumns) =>
+    //   prevColumns.map((col) =>
+    //     col.id === editingListId ? { ...col, title: editingListTitle } : col,
+    //   ),
+    // );
+    // setEditingListId(null);
+    // setEditingListTitle("");
   };
 
   const cancelColumnEdit = () => {
@@ -260,7 +257,7 @@ export default function Kanban() {
   };
 
   const deleteColumn = (columnId: string) => {
-    setLists((prevColumns) => prevColumns.filter((col) => col.id !== columnId));
+    // setLists((prevColumns) => prevColumns.filter((col) => col.id !== columnId));
   };
 
   // Card editing functions
@@ -273,20 +270,20 @@ export default function Kanban() {
   const saveChanges = () => {
     if (!editingCardId) return;
 
-    setLists((prevColumns) =>
-      prevColumns.map((col) => ({
-        ...col,
-        cards: col.cards.map((card) =>
-          card.id === editingCardId
-            ? {
-                ...card,
-                title: editingCardTitle,
-                description: editingCardDescription,
-              }
-            : card
-        ),
-      }))
-    );
+    // setLists((prevColumns) =>
+    //   prevColumns.map((col) => ({
+    //     ...col,
+    //     cards: col.cards.map((card) =>
+    //       card.id === editingCardId
+    //         ? {
+    //             ...card,
+    //             title: editingCardTitle,
+    //             description: editingCardDescription,
+    //           }
+    //         : card,
+    //     ),
+    //   })),
+    // );
 
     setEditingCardId(null);
     setEditingCardTitle("");
@@ -295,7 +292,7 @@ export default function Kanban() {
 
   return (
     <KanbanBoardProvider>
-      <div className="h-full w-full p-4">
+      <div className="p-4 w-full h-full">
         <KanbanBoard>
           {lists.map((column) => (
             <KanbanBoardColumn
@@ -305,7 +302,7 @@ export default function Kanban() {
             >
               <KanbanBoardColumnHeader>
                 {editingListId === column.id ? (
-                  <div className="flex w-full items-center gap-2">
+                  <div className="flex gap-2 items-center w-full">
                     <Input
                       autoFocus
                       value={editingListTitle}
@@ -329,18 +326,18 @@ export default function Kanban() {
                 ) : (
                   <>
                     <KanbanBoardColumnTitle columnId={column.id}>
-                      {column.color && (
-                        <KanbanColorCircle color={column.color} />
-                      )}
-                      {column.title}
+                      {/* {column.color && ( */}
+                      {/*   <KanbanColorCircle color={column.color} /> */}
+                      {/* )} */}
+                      {column.name}
                       <span className="ml-2 text-muted-foreground">
-                        {column.cards.length}
+                        {/* {column.cards.length} */}
                       </span>
                     </KanbanBoardColumnTitle>
                     <div className="flex gap-1">
                       <KanbanBoardColumnIconButton
                         onClick={() =>
-                          startEditingColumn(column.id, column.title)
+                          startEditingColumn(column.id, column.name)
                         }
                       >
                         <Edit2Icon className="size-3.5" />
@@ -349,7 +346,7 @@ export default function Kanban() {
                         onClick={() => {
                           if (
                             confirm(
-                              `Delete "${column.title}" list and all its cards?`
+                              `Delete "${column.name}" list and all its cards?`,
                             )
                           ) {
                             deleteColumn(column.id);
@@ -373,7 +370,7 @@ export default function Kanban() {
                         column.id,
                         card.id,
                         data,
-                        direction
+                        direction,
                       )
                     }
                   >
@@ -386,9 +383,9 @@ export default function Kanban() {
                               onClick={() => startEditingCard(card)}
                             >
                               <KanbanBoardCardTitle>
-                                {card.color && (
-                                  <KanbanColorCircle color={card.color} />
-                                )}
+                                {/* {card.color && ( */}
+                                {/*   <KanbanColorCircle color={card.color} /> */}
+                                {/* )} */}
                                 {card.title}
                               </KanbanBoardCardTitle>
                               {card.description && (
@@ -466,7 +463,7 @@ export default function Kanban() {
           {/* Add New List Button/Form */}
           {isAddingList ? (
             <div ref={addListRef} className={kanbanBoardColumnClassNames}>
-              <div className="space-y-2 px-2">
+              <div className="px-2 space-y-2">
                 <Input
                   autoFocus
                   placeholder="Enter list title..."
@@ -500,7 +497,7 @@ export default function Kanban() {
           ) : (
             <Button
               variant="ghost"
-              className="h-fit shrink-0 justify-start px-3 py-2"
+              className="justify-start py-2 px-3 h-fit shrink-0"
               onClick={() => setIsAddingList(true)}
             >
               <PlusIcon className="mr-2 size-4" />

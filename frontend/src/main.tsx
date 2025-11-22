@@ -17,7 +17,7 @@ createRoot(document.getElementById("root")!).render(
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<App />} />
-          <Route path="/board/:id" element={<Kanban />} />
+          <Route path="/board/:boardId" element={<Kanban />} />
           <Route path="/sign-in/*" element={<SignInPage />} />
           <Route path="/doc" element={<Doc />} />
           <Route path="*" element={<NotFound />} />
