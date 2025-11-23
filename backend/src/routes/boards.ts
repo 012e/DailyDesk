@@ -1,5 +1,5 @@
 import db from "@/lib/db";
-import { boardsTable } from "@/lib/db/schema";
+import { boardsTable, listsTable, cardsTable } from "@/lib/db/schema";
 import { ensureUserAuthenticated } from "@/lib/utils";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { eq } from "drizzle-orm";
@@ -10,6 +10,8 @@ import {
   CreateBoardSchema,
   UpdateBoardSchema,
 } from "@/types/boards";
+import { ListSchema } from "@/types/lists";
+import { CardSchema } from "@/types/cards";
 
 const TAGS = ["Boards"];
 export default function createBoardRoutes() {
@@ -226,6 +228,118 @@ export default function createBoardRoutes() {
       await db.delete(boardsTable).where(eq(boardsTable.id, id));
 
       return c.json({ message: "Xóa Board thành công" });
+    },
+  );
+
+  app.openapi(
+    createRoute({
+      method: "get",
+      tags: TAGS,
+      path: "/{id}/lists",
+      security: defaultSecurityScheme(),
+      request: {
+        params: z.object({
+          id: z.uuid(),
+        }),
+      },
+      responses: {
+        200: successJson(ListSchema.array(), {
+          description: "Lấy danh sách Lists thành công",
+        }),
+        404: {
+          description: "Board không tồn tại",
+        },
+        403: {
+          description: "Không có quyền truy cập Board này",
+        },
+      },
+    }),
+
+    async (c) => {
+      const user = ensureUserAuthenticated(c);
+      const { id } = c.req.valid("param");
+
+      // Check if board exists and user owns it
+      const board = await db
+        .select()
+        .from(boardsTable)
+        .where(eq(boardsTable.id, id))
+        .limit(1);
+
+      if (board.length === 0) {
+        return c.json({ error: "Board không tồn tại" }, 404);
+      }
+
+      if (board[0].userId !== user.sub) {
+        return c.json({ error: "Không có quyền truy cập Board này" }, 403);
+      }
+
+      // Get all lists for this board
+      const lists = await db
+        .select()
+        .from(listsTable)
+        .where(eq(listsTable.boardId, id));
+
+      return c.json(lists);
+    },
+  );
+
+  app.openapi(
+    createRoute({
+      method: "get",
+      tags: TAGS,
+      path: "/{id}/cards",
+      security: defaultSecurityScheme(),
+      request: {
+        params: z.object({
+          id: z.uuid(),
+        }),
+      },
+      responses: {
+        200: successJson(CardSchema.array(), {
+          description: "Lấy danh sách Cards thành công",
+        }),
+        404: {
+          description: "Board không tồn tại",
+        },
+        403: {
+          description: "Không có quyền truy cập Board này",
+        },
+      },
+    }),
+
+    async (c) => {
+      const user = ensureUserAuthenticated(c);
+      const { id } = c.req.valid("param");
+
+      // Check if board exists and user owns it
+      const board = await db
+        .select()
+        .from(boardsTable)
+        .where(eq(boardsTable.id, id))
+        .limit(1);
+
+      if (board.length === 0) {
+        return c.json({ error: "Board không tồn tại" }, 404);
+      }
+
+      if (board[0].userId !== user.sub) {
+        return c.json({ error: "Không có quyền truy cập Board này" }, 403);
+      }
+
+      // Get all cards for this board by joining with lists
+      const cards = await db
+        .select({
+          id: cardsTable.id,
+          name: cardsTable.name,
+          order: cardsTable.order,
+          listId: cardsTable.listId,
+        })
+        .from(cardsTable)
+        .innerJoin(listsTable, eq(cardsTable.listId, listsTable.id))
+        .where(eq(listsTable.boardId, id));
+
+      return c.json(cards);
     },
   );
 
