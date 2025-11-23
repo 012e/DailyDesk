@@ -6,6 +6,10 @@ import { Button } from "./components/ui/button";
 import httpClient from "./lib/client";
 import Home from "./Home.tsx";
 
+interface AppProps {
+  children?: React.ReactNode;
+}
+
 function App({ children }: AppProps) {
   const { isAuthenticated } = useAuth0();
   async function doSomething() {

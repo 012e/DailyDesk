@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTheme } from "@/components/theme-provider";
+import { useNavigate } from "react-router";
 
 export interface BoardCardProps {
   id: number;
@@ -15,9 +16,16 @@ export function BoardCard({
   background,
 }: BoardCardProps) {
   const theme = useTheme();
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate(`/kanban/${id}`);
+  };
+
   return (
     <Card
       key={id}
+      onClick={handleClick}
       className="cursor-pointer pt-4 pb-14 bg-cover bg-center bg-no-repeat overflow-hidden gap-0 relative transition-all hover:shadow-md dark:hover:shadow-md-white  hover:scale-[1.02] border-0"
       style={
         isBackgroundImage
