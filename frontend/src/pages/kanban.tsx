@@ -14,7 +14,6 @@ import {
   KanbanBoardColumnTitle,
   KanbanBoardExtraMargin,
   KanbanBoardProvider,
-  KanbanColorCircle,
   type KanbanBoardCircleColor,
   type KanbanBoardDropDirection,
 } from "@/components/kanban";
@@ -45,7 +44,7 @@ import {
   XIcon,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { listLiveQuery as lists, useListActions } from "@/hooks/use-list";
+import { useListActions } from "@/hooks/use-list";
 import { useParams } from "react-router";
 
 type Card = {

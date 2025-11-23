@@ -1,4 +1,8 @@
-import { createCollection, liveQueryCollectionOptions } from "@tanstack/db";
+import {
+  createCollection,
+  liveQueryCollectionOptions,
+  localStorageCollectionOptions,
+} from "@tanstack/db";
 import listCollection from "@/lib/collections/list";
 import { uuidv7 } from "uuidv7";
 import * as z from "zod";
@@ -9,6 +13,12 @@ export const CreateListSchema = z.object({
 
 export type CreateListType = z.infer<typeof CreateListSchema>;
 
+export const ListSchema = z.object({
+  id: z.uuidv7(),
+  boardId: z.uuidv7(),
+  name: z.string().nonempty(),
+});
+
 export function useListActions(boardId: string) {
   function createList(list: CreateListType) {
     listCollection.insert({
@@ -18,9 +28,21 @@ export function useListActions(boardId: string) {
       cards: [],
     });
   }
+
   return {
     createList,
   };
+}
+
+export function useLists({ boardId }: { boardId: string }) {
+  const listCollection = createCollection(
+    localStorageCollectionOptions({
+      schema: ListSchema,
+      id: "list-collection",
+      storageKey: "list-collection",
+      getKey: (item) => item.id,
+    }),
+  );
 }
 
 export const listLiveQuery = createCollection(

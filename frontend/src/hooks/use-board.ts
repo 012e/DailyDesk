@@ -1,7 +1,7 @@
 import boardCollection from "@/lib/collections/board";
-import { createCollection, liveQueryCollectionOptions } from "@tanstack/db";
 import * as z from "zod";
 import { uuidv7 } from "uuidv7";
+import { useLiveSuspenseQuery } from "@tanstack/react-db";
 
 export const CreateBoardSchema = z.object({
   name: z.string().nonempty(),
@@ -31,17 +31,16 @@ export function useBoardActions() {
   };
 }
 
-export const boardLiveQuery = createCollection(
-  liveQueryCollectionOptions({
-    query: (q) =>
-      q.from({ boardCollection }).select(({ boardCollection }) => ({
-        id: boardCollection.id,
-        name: boardCollection.name,
-        backgroundUrl: boardCollection.backgroundUrl,
-        backgroundColor:
-          boardCollection.backgroundColor ??
-          (!boardCollection.backgroundUrl && "#e992ffff"),
-      })),
-    startSync: true,
-  }),
-);
+export default function useBoards() {
+  const { data } = useLiveSuspenseQuery((q) =>
+    q.from({ boardCollection }).select(({ boardCollection }) => ({
+      id: boardCollection.id,
+      name: boardCollection.name,
+      backgroundUrl: boardCollection.backgroundUrl,
+      backgroundColor:
+        boardCollection.backgroundColor ??
+        (!boardCollection.backgroundUrl && "#e992ffff"),
+    })),
+  );
+  return data;
+}
