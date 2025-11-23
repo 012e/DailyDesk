@@ -13,7 +13,7 @@ const accessTokenInjectMiddleware = {
     return request;
   },
 
-  async onResponse({ response, request, options }) {
+  async onResponse({ response, request, options: _options }) {
     if (response.status === 401) {
       const response = await fetch(request.url, {
         ...request,
