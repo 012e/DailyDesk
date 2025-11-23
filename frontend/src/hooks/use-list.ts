@@ -1,11 +1,8 @@
-import {
-  createCollection,
-  liveQueryCollectionOptions,
-  localStorageCollectionOptions,
-} from "@tanstack/db";
-import listCollection from "@/lib/collections/list";
+import { eq } from "@tanstack/db";
 import { uuidv7 } from "uuidv7";
 import * as z from "zod";
+import { useLiveSuspenseQuery } from "@tanstack/react-db";
+import { boardCollection } from "./use-board";
 
 export const CreateListSchema = z.object({
   name: z.string().nonempty(),
@@ -13,20 +10,28 @@ export const CreateListSchema = z.object({
 
 export type CreateListType = z.infer<typeof CreateListSchema>;
 
-export const ListSchema = z.object({
-  id: z.uuidv7(),
-  boardId: z.uuidv7(),
-  name: z.string().nonempty(),
-});
-
 export function useListActions(boardId: string) {
   function createList(list: CreateListType) {
-    listCollection.insert({
-      id: uuidv7(),
+    boardCollection.update(
       boardId,
-      name: list.name,
-      cards: [],
-    });
+      {
+        metadata: {
+          type: "create-list",
+        },
+      },
+      (draft) => {
+        console.log("fuckkkkk");
+        draft.lists = [
+          ...draft.lists,
+          {
+            id: uuidv7(),
+            name: list.name,
+            boardId: boardId,
+            cards: [],
+          },
+        ];
+      },
+    );
   }
 
   return {
@@ -35,24 +40,13 @@ export function useListActions(boardId: string) {
 }
 
 export function useLists({ boardId }: { boardId: string }) {
-  const listCollection = createCollection(
-    localStorageCollectionOptions({
-      schema: ListSchema,
-      id: "list-collection",
-      storageKey: "list-collection",
-      getKey: (item) => item.id,
-    }),
+  const listCollection = useLiveSuspenseQuery(
+    (q) =>
+      q
+        .from({ board: boardCollection })
+        .where(({ board }) => eq(board.id, boardId))
+        .findOne(),
+    [boardId],
   );
+  return listCollection.data!.lists;
 }
-
-export const listLiveQuery = createCollection(
-  liveQueryCollectionOptions({
-    query: (q) =>
-      q.from({ list: listCollection }).select(({ list }) => ({
-        id: list.id,
-        name: list.name,
-        cards: list.cards,
-      })),
-    startSync: true,
-  }),
-);

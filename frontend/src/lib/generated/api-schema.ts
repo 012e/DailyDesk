@@ -31,6 +31,22 @@ export interface paths {
                             id: string;
                             name: string;
                             userId: string;
+                            lists: {
+                                /** Format: uuid */
+                                id: string;
+                                name: string;
+                                order: number;
+                                /** Format: uuid */
+                                boardId: string;
+                                cards: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    name: string;
+                                    order: number;
+                                    /** Format: uuid */
+                                    listId: string;
+                                }[];
+                            }[];
                         }[];
                     };
                 };
@@ -105,6 +121,22 @@ export interface paths {
                             id: string;
                             name: string;
                             userId: string;
+                            lists: {
+                                /** Format: uuid */
+                                id: string;
+                                name: string;
+                                order: number;
+                                /** Format: uuid */
+                                boardId: string;
+                                cards: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    name: string;
+                                    order: number;
+                                    /** Format: uuid */
+                                    listId: string;
+                                }[];
+                            }[];
                         };
                     };
                 };

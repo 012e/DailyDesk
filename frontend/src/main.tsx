@@ -1,4 +1,4 @@
-import { lazy, StrictMode } from "react";
+import { lazy, StrictMode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Routes } from "react-router";
 import App from "./App.tsx";
@@ -17,7 +17,14 @@ createRoot(document.getElementById("root")!).render(
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<App />} />
-          <Route path="/board/:boardId" element={<Kanban />} />
+          <Route
+            path="/board/:boardId"
+            element={
+              <Suspense>
+                <Kanban />
+              </Suspense>
+            }
+          />
           <Route path="/sign-in/*" element={<SignInPage />} />
           <Route path="/doc" element={<Doc />} />
           <Route path="*" element={<NotFound />} />

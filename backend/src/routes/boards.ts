@@ -2,13 +2,14 @@ import db from "@/lib/db";
 import { boardsTable, listsTable, cardsTable } from "@/lib/db/schema";
 import { ensureUserAuthenticated } from "@/lib/utils";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { eq } from "drizzle-orm";
+import { eq, asc } from "drizzle-orm";
 import { authMiddleware } from "@/lib/auth";
 import { defaultSecurityScheme, jsonBody, successJson } from "@/types/openapi";
 import {
   BoardSchema,
   CreateBoardSchema,
   UpdateBoardSchema,
+  BoardWithListsAndCardsSchema,
 } from "@/types/boards";
 import { ListSchema } from "@/types/lists";
 import { CardSchema } from "@/types/cards";
@@ -24,7 +25,7 @@ export default function createBoardRoutes() {
       path: "/",
       security: defaultSecurityScheme(),
       responses: {
-        200: successJson(BoardSchema.array(), {
+        200: successJson(BoardWithListsAndCardsSchema.array(), {
           description: "Lấy Board thành công",
         }),
       },
@@ -32,10 +33,19 @@ export default function createBoardRoutes() {
 
     async (c) => {
       const user = ensureUserAuthenticated(c);
-      const boards = await db
-        .select()
-        .from(boardsTable)
-        .where(eq(boardsTable.userId, user.sub));
+      const boards = await db.query.boardsTable.findMany({
+        where: eq(boardsTable.userId, user.sub),
+        with: {
+          lists: {
+            orderBy: asc(listsTable.order),
+            with: {
+              cards: {
+                orderBy: asc(cardsTable.order),
+              },
+            },
+          },
+        },
+      });
 
       return c.json(boards);
     },
@@ -85,7 +95,7 @@ export default function createBoardRoutes() {
         }),
       },
       responses: {
-        200: successJson(BoardSchema, {
+        200: successJson(BoardWithListsAndCardsSchema, {
           description: "Lấy Board thành công",
         }),
         404: {
@@ -101,21 +111,29 @@ export default function createBoardRoutes() {
       const user = ensureUserAuthenticated(c);
       const { id } = c.req.valid("param");
 
-      const board = await db
-        .select()
-        .from(boardsTable)
-        .where(eq(boardsTable.id, id))
-        .limit(1);
+      const board = await db.query.boardsTable.findFirst({
+        where: eq(boardsTable.id, id),
+        with: {
+          lists: {
+            orderBy: asc(listsTable.order),
+            with: {
+              cards: {
+                orderBy: asc(cardsTable.order),
+              },
+            },
+          },
+        },
+      });
 
-      if (board.length === 0) {
+      if (!board) {
         return c.json({ error: "Board không tồn tại" }, 404);
       }
 
-      if (board[0].userId !== user.sub) {
+      if (board.userId !== user.sub) {
         return c.json({ error: "Không có quyền truy cập Board này" }, 403);
       }
 
-      return c.json(board[0]);
+      return c.json(board);
     },
   );
 
