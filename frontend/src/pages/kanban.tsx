@@ -25,18 +25,7 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { DialogTrigger } from "@radix-ui/react-dialog";
 import {
   CheckIcon,
   Edit2Icon,
@@ -45,12 +34,21 @@ import {
   XIcon,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useParams } from "react-router";
+import { CardEditDialog } from "@/components/card-edit-dialog";
+import type { Card as CardType, Label, Member } from "@/types/card";
 
 type Card = {
   id: string;
   title: string;
   description?: string;
   color?: KanbanBoardCircleColor;
+  labels?: Label[];
+  members?: Member[];
+  dueDate?: Date;
+  cover?: string;
+  attachments?: any[];
+  comments?: any[];
 };
 
 type Column = {
@@ -122,17 +120,22 @@ const initialColumns: Column[] = [
 ];
 
 export default function Kanban() {
+  const { boardId } = useParams<{ boardId: string }>();
   const [lists, setLists] = useState<Column[]>(initialColumns);
   const [isAddingList, setIsAddingList] = useState(false);
   const [newListTitle, setNewListTitle] = useState("");
   const [editingListId, setEditingListId] = useState<string | null>(null);
   const [editingListTitle, setEditingListTitle] = useState("");
 
-  const [editingCardId, setEditingCardId] = useState<string | null>(null);
-  const [editingCardTitle, setEditingCardTitle] = useState("");
-  const [editingCardDescription, setEditingCardDescription] = useState("");
+  const [selectedCard, setSelectedCard] = useState<CardType | null>(null);
+  const [isCardDialogOpen, setIsCardDialogOpen] = useState(false);
 
   const addListRef = useRef<HTMLDivElement>(null);
+
+  // Log boardId for debugging
+  useEffect(() => {
+    console.log("Current board ID:", boardId);
+  }, [boardId]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -264,33 +267,60 @@ export default function Kanban() {
   };
 
   // Card editing functions
-  const startEditingCard = (card: Card) => {
-    setEditingCardId(card.id);
-    setEditingCardTitle(card.title);
-    setEditingCardDescription(card.description || "");
+  const openCardDialog = (card: Card) => {
+    // Convert local Card type to CardType
+    const fullCard: CardType = {
+      id: card.id,
+      title: card.title,
+      description: card.description,
+      listId: lists.find((col) => col.cards.some((c) => c.id === card.id))?.id || "",
+      position: 0,
+      labels: card.labels || [],
+      members: card.members || [],
+      dueDate: card.dueDate,
+      cover: card.cover,
+      attachments: card.attachments || [],
+      comments: card.comments || [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    setSelectedCard(fullCard);
+    setIsCardDialogOpen(true);
   };
 
-  const saveChanges = () => {
-    if (!editingCardId) return;
-
+  const handleUpdateCard = (updatedCard: CardType) => {
     setLists((prevColumns) =>
       prevColumns.map((col) => ({
         ...col,
         cards: col.cards.map((card) =>
-          card.id === editingCardId
+          card.id === updatedCard.id
             ? {
                 ...card,
-                title: editingCardTitle,
-                description: editingCardDescription,
+                title: updatedCard.title,
+                description: updatedCard.description,
+                labels: updatedCard.labels,
+                members: updatedCard.members,
+                dueDate: updatedCard.dueDate,
+                cover: updatedCard.cover,
+                attachments: updatedCard.attachments,
+                comments: updatedCard.comments,
               }
             : card
         ),
       }))
     );
+    setSelectedCard(updatedCard);
+  };
 
-    setEditingCardId(null);
-    setEditingCardTitle("");
-    setEditingCardDescription("");
+  const handleDeleteCard = (cardId: string) => {
+    setLists((prevColumns) =>
+      prevColumns.map((col) => ({
+        ...col,
+        cards: col.cards.filter((card) => card.id !== cardId),
+      }))
+    );
+    setIsCardDialogOpen(false);
+    setSelectedCard(null);
   };
 
   return (
@@ -379,75 +409,36 @@ export default function Kanban() {
                   >
                     <ContextMenu>
                       <ContextMenuTrigger>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <KanbanBoardCard
-                              data={card}
-                              onClick={() => startEditingCard(card)}
-                            >
-                              <KanbanBoardCardTitle>
-                                {card.color && (
-                                  <KanbanColorCircle color={card.color} />
-                                )}
-                                {card.title}
-                              </KanbanBoardCardTitle>
-                              {card.description && (
-                                <KanbanBoardCardDescription>
-                                  {card.description}
-                                </KanbanBoardCardDescription>
-                              )}
-                            </KanbanBoardCard>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-[425px]">
-                            <DialogHeader>
-                              <DialogTitle>Edit Card</DialogTitle>
-                              <DialogDescription>
-                                Make changes to your card here. Click save when
-                                you&apos;re done.
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="grid gap-4">
-                              <div className="grid gap-3">
-                                <Label htmlFor="card-id">Title</Label>
-                                <Input
-                                  id={editingCardId || "card-id"}
-                                  name="title"
-                                  value={editingCardTitle}
-                                  onChange={(e) =>
-                                    setEditingCardTitle(e.target.value)
-                                  }
-                                />
-                              </div>
-                              <div className="grid gap-3">
-                                <Label htmlFor="description-1">
-                                  Description
-                                </Label>
-                                <Input
-                                  id="description-1"
-                                  name="description"
-                                  value={editingCardDescription}
-                                  onChange={(e) =>
-                                    setEditingCardDescription(e.target.value)
-                                  }
-                                />
-                              </div>
-                            </div>
-                            <DialogFooter>
-                              <DialogClose asChild>
-                                <Button variant="outline">Cancel</Button>
-                              </DialogClose>
-                              <DialogClose asChild>
-                                <Button onClick={saveChanges}>
-                                  Save changes
-                                </Button>
-                              </DialogClose>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
+                        <KanbanBoardCard
+                          data={card}
+                          onClick={() => openCardDialog(card)}
+                        >
+                          <KanbanBoardCardTitle>
+                            {card.color && (
+                              <KanbanColorCircle color={card.color} />
+                            )}
+                            {card.title}
+                          </KanbanBoardCardTitle>
+                          {card.description && (
+                            <KanbanBoardCardDescription>
+                              {card.description}
+                            </KanbanBoardCardDescription>
+                          )}
+                        </KanbanBoardCard>
                       </ContextMenuTrigger>
                       <ContextMenuContent>
-                        <ContextMenuItem>Edit</ContextMenuItem>
-                        <ContextMenuItem>Remove</ContextMenuItem>
+                        <ContextMenuItem onClick={() => openCardDialog(card)}>
+                          Edit
+                        </ContextMenuItem>
+                        <ContextMenuItem
+                          onClick={() => {
+                            if (confirm("Delete this card?")) {
+                              handleDeleteCard(card.id);
+                            }
+                          }}
+                        >
+                          Remove
+                        </ContextMenuItem>
                       </ContextMenuContent>
                     </ContextMenu>
                   </KanbanBoardColumnListItem>
@@ -510,6 +501,18 @@ export default function Kanban() {
 
           <KanbanBoardExtraMargin />
         </KanbanBoard>
+
+        {/* Card Edit Dialog */}
+        <CardEditDialog
+          card={selectedCard}
+          isOpen={isCardDialogOpen}
+          onClose={() => {
+            setIsCardDialogOpen(false);
+            setSelectedCard(null);
+          }}
+          onUpdate={handleUpdateCard}
+          onDelete={handleDeleteCard}
+        />
       </div>
     </KanbanBoardProvider>
   );

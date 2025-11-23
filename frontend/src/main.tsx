@@ -16,7 +16,7 @@ createRoot(document.getElementById("root")!).render(
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<App />} />
-          <Route path="/kanban" element={<Kanban />} />
+          <Route path="/kanban/:boardId" element={<Kanban />} />
           <Route path="/sign-in/*" element={<SignInPage />} />
           <Route path="/doc" element={<Doc />} />
         </Route>

@@ -12,7 +12,7 @@ function rtrim(str: string, ch: string) {
 
 const config = getConfig();
 export default function Doc() {
-  const [token, setToken] = useAtom(accessTokenAtom);
+  const [token, _setToken] = useAtom(accessTokenAtom);
   return (
     <div className="">
       <ApiReferenceReact
