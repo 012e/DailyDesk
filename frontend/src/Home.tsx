@@ -4,7 +4,7 @@ import { Suspense, useState } from "react";
 import CreateBoardDialog from "@/components/create-board-dialog";
 import { BoardCard } from "@/components/board-card";
 import { Clipboard } from "lucide-react";
-import useBoards, { useBoardActions } from "@/hooks/use-board";
+import { useBoardActions, useBoards } from "@/hooks/use-board";
 import PageLoader from "./components/full-page-loader";
 
 export default function Home() {
