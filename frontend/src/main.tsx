@@ -15,7 +15,7 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
       <Routes>
-        <Route element={<Layout />}>
+        <Route element={<Layout />} errorElement={<h1>error</h1>}>
           <Route path="/" element={<App />} />
           <Route
             path="/board/:boardId"

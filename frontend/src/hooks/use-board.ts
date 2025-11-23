@@ -4,7 +4,6 @@ import { createCollection, eq, useLiveSuspenseQuery } from "@tanstack/react-db";
 import { queryCollectionOptions } from "@tanstack/query-db-collection";
 import { queryClient } from "@/lib/query-client";
 import api from "@/lib/api";
-import { MessageSquareTextIcon } from "lucide-react";
 
 export const CreateBoardSchema = z.object({
   name: z.string().nonempty(),
