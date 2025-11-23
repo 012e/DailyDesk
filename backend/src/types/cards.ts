@@ -8,6 +8,7 @@ export const CardSchema = z.object({
 });
 
 export const CreateCardSchema = z.object({
+  id: z.uuidv7(),
   name: z.string().nonempty(),
   order: z.number().int(),
 });

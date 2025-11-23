@@ -63,6 +63,7 @@ export default function createBoardRoutes() {
       const board = await db
         .insert(boardsTable)
         .values({
+          id: req.id,
           name: req.name,
           userId: user.sub,
         })

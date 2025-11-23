@@ -119,6 +119,7 @@ export default function createListRoutes() {
       const list = await db
         .insert(listsTable)
         .values({
+          id: req.id,
           name: req.name,
           order: req.order,
           boardId: boardId,

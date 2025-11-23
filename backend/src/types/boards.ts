@@ -7,6 +7,7 @@ export const BoardSchema = z.object({
 });
 
 export const CreateBoardSchema = z.object({
+  id: z.uuid(),
   name: z.string().nonempty(),
 });
 

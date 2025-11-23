@@ -145,6 +145,7 @@ export default function createCardRoutes() {
       const card = await db
         .insert(cardsTable)
         .values({
+          id: req.id,
           name: req.name,
           order: req.order,
           listId: req.listId,

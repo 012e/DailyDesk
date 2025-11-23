@@ -47,6 +47,8 @@ export interface paths {
             requestBody?: {
                 content: {
                     "application/json": {
+                        /** Format: uuid */
+                        id: string;
                         name: string;
                     };
                 };
@@ -392,6 +394,8 @@ export interface paths {
             requestBody?: {
                 content: {
                     "application/json": {
+                        /** Format: uuid */
+                        id: string;
                         name: string;
                         order: number;
                     };
@@ -646,6 +650,8 @@ export interface paths {
             requestBody?: {
                 content: {
                     "application/json": {
+                        /** Format: uuid */
+                        id: string;
                         name: string;
                         order: number;
                         /** Format: uuid */

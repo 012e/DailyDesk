@@ -8,6 +8,7 @@ export const ListSchema = z.object({
 });
 
 export const CreateListSchema = z.object({
+  id: z.uuidv7(),
   name: z.string().nonempty(),
   order: z.number().int(),
 });
