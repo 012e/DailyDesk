@@ -40,7 +40,6 @@ export const boardCollection = createCollection(
   queryCollectionOptions({
     queryKey: ["boards"],
     schema: BoardSchema,
-    syncMode: "on-demand",
     startSync: true,
     queryFn: async () => {
       const { data, error } = await api.GET("/boards");
