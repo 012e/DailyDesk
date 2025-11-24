@@ -1,7 +1,5 @@
-import { eq } from "@tanstack/db";
 import { uuidv7 } from "uuidv7";
 import * as z from "zod";
-import { useLiveSuspenseQuery } from "@tanstack/react-db";
 import api from "@/lib/api";
 import { useAtomValue } from "jotai";
 import { boardIdAtom } from "@/stores/board";

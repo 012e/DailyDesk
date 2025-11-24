@@ -1,5 +1,4 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useTheme } from "@/components/theme-provider";
 import type { HTMLAttributes } from "react";
 import { Link } from "react-router";
 
