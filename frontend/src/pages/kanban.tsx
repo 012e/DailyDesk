@@ -230,7 +230,7 @@ export default function Kanban() {
     <BoardIdProivder>
       <KanbanBoardProvider>
         <div className="p-4 w-full h-full">
-          <h1>{board.name}</h1>
+          <h2 className="text-lg tracking-tight">{board.name}</h2>
           <KanbanBoard>
             {lists.map((column) => (
               <KanbanBoardColumn
