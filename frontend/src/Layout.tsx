@@ -3,6 +3,9 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { Outlet } from "react-router";
 import Providers from "./components/providers";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { Suspense } from "react";
+import { ErrorBoundary } from "react-error-boundary";
+import PageLoader from "./components/full-page-loader";
 
 export default function Layout() {
   return (
@@ -12,7 +15,17 @@ export default function Layout() {
         <main className="flex flex-col w-full h-screen bg-background">
           <ReactQueryDevtools initialIsOpen={false} />
           <SidebarTrigger />
-          <Outlet />
+          <ErrorBoundary
+            fallback={
+              <div className="flex justify-center items-center w-full h-full">
+                Something went wrong
+              </div>
+            }
+          >
+            <Suspense fallback={<PageLoader />}>
+              <Outlet />
+            </Suspense>
+          </ErrorBoundary>
         </main>
       </SidebarProvider>
     </Providers>

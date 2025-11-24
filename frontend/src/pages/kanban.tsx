@@ -14,7 +14,6 @@ import {
   KanbanBoardColumnTitle,
   KanbanBoardExtraMargin,
   KanbanBoardProvider,
-  KanbanColorCircle,
   type KanbanBoardCircleColor,
   type KanbanBoardDropDirection,
 } from "@/components/kanban";
@@ -29,12 +28,16 @@ import { Input } from "@/components/ui/input";
 import {
   CheckIcon,
   Edit2Icon,
+  Loader,
   PlusIcon,
   Trash2Icon,
   XIcon,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { useListActions } from "@/hooks/use-list";
 import { useParams } from "react-router";
+import { useBoard } from "@/hooks/use-board";
+import BoardIdProivder from "@/components/board-id-provider";
 import { CardEditDialog } from "@/components/card-edit-dialog";
 import type { Card as CardType, Label, Member } from "@/types/card";
 
@@ -51,77 +54,15 @@ type Card = {
   comments?: any[];
 };
 
-type Column = {
-  id: string;
-  title: string;
-  color?: KanbanBoardCircleColor;
-  cards: Card[];
-};
-
-const initialColumns: Column[] = [
-  {
-    id: "backlog",
-    title: "Backlog",
-    color: "gray",
-    cards: [
-      {
-        id: "0",
-        title: "Research new features",
-        description: "Investigate user feedback and feature requests",
-        color: "indigo",
-      },
-    ],
-  },
-  {
-    id: "todo",
-    title: "To Do",
-    color: "blue",
-    cards: [
-      {
-        id: "1",
-        title: "Design landing page",
-        description: "Create mockups for the new landing page design",
-        color: "blue",
-      },
-      {
-        id: "2",
-        title: "Set up database",
-        description: "Configure PostgreSQL and create initial schema",
-        color: "green",
-      },
-    ],
-  },
-  {
-    id: "in-progress",
-    title: "In Progress",
-    color: "yellow",
-    cards: [
-      {
-        id: "3",
-        title: "Implement authentication",
-        description: "Add user login and registration functionality",
-        color: "purple",
-      },
-    ],
-  },
-  {
-    id: "done",
-    title: "Done",
-    color: "green",
-    cards: [
-      {
-        id: "4",
-        title: "Project setup",
-        description: "Initialize repository and configure build tools",
-        color: "cyan",
-      },
-    ],
-  },
-];
-
 export default function Kanban() {
-  const { boardId } = useParams<{ boardId: string }>();
-  const [lists, setLists] = useState<Column[]>(initialColumns);
+  const { boardId } = useParams();
+
+  // HEAD: Use hooks for data and actions
+  const { createList } = useListActions();
+  const board = useBoard({ boardId: boardId! });
+  const lists = board.lists;
+
+  // Main: UI State for dialogs and inputs
   const [isAddingList, setIsAddingList] = useState(false);
   const [newListTitle, setNewListTitle] = useState("");
   const [editingListId, setEditingListId] = useState<string | null>(null);
@@ -156,76 +97,29 @@ export default function Kanban() {
   }, [isAddingList]);
 
   const handleDropOverColumn = (columnId: string, dataTransferData: string) => {
-    const cardData = JSON.parse(dataTransferData) as Card;
-
-    setLists((prevColumns) => {
-      const newColumns = prevColumns.map((col) => ({
-        ...col,
-        cards: col.cards.filter((card) => card.id !== cardData.id),
-      }));
-
-      const targetColumn = newColumns.find((col) => col.id === columnId);
-      if (targetColumn) {
-        targetColumn.cards.push(cardData);
-      }
-
-      return newColumns;
-    });
+    // Drop logic to be implemented with hooks/backend
   };
 
   const handleDropOverListItem = (
     columnId: string,
     targetCardId: string,
     dataTransferData: string,
-    dropDirection: KanbanBoardDropDirection
+    dropDirection: KanbanBoardDropDirection,
   ) => {
-    const cardData = JSON.parse(dataTransferData) as Card;
-
-    setLists((prevColumns) => {
-      const newColumns = prevColumns.map((col) => ({
-        ...col,
-        cards: col.cards.filter((card) => card.id !== cardData.id),
-      }));
-
-      const targetColumn = newColumns.find((col) => col.id === columnId);
-      if (targetColumn) {
-        const targetIndex = targetColumn.cards.findIndex(
-          (card) => card.id === targetCardId
-        );
-        const insertIndex =
-          dropDirection === "top" ? targetIndex : targetIndex + 1;
-        targetColumn.cards.splice(insertIndex, 0, cardData);
-      }
-
-      return newColumns;
-    });
+    // Drop logic to be implemented with hooks/backend
   };
 
   const addCard = (columnId: string) => {
-    const newCard: Card = {
-      id: `card-${Date.now()}`,
-      title: "New Task",
-      description: "Add description here...",
-    };
-
-    setLists((prevColumns) =>
-      prevColumns.map((col) =>
-        col.id === columnId ? { ...col, cards: [...col.cards, newCard] } : col
-      )
-    );
+    // This needs to be connected to a useCardActions hook or similar
+    console.log("Add card to column:", columnId);
   };
 
   const addColumn = () => {
     if (!newListTitle.trim()) return;
 
-    const newColumn: Column = {
-      id: `column-${Date.now()}`,
-      title: newListTitle,
-      color: "primary",
-      cards: [],
-    };
-
-    setLists([...lists, newColumn]);
+    createList({
+      name: newListTitle,
+    });
     setNewListTitle("");
     setIsAddingList(false);
   };
@@ -246,13 +140,7 @@ export default function Kanban() {
   };
 
   const saveColumnEdit = () => {
-    if (!editingListTitle.trim() || !editingListId) return;
-
-    setLists((prevColumns) =>
-      prevColumns.map((col) =>
-        col.id === editingListId ? { ...col, title: editingListTitle } : col
-      )
-    );
+    // Implement updateList hook logic here
     setEditingListId(null);
     setEditingListTitle("");
   };
@@ -263,17 +151,18 @@ export default function Kanban() {
   };
 
   const deleteColumn = (columnId: string) => {
-    setLists((prevColumns) => prevColumns.filter((col) => col.id !== columnId));
+    // Implement deleteList hook logic here
   };
 
   // Card editing functions
   const openCardDialog = (card: Card) => {
-    // Convert local Card type to CardType
+    // Convert local Card type to CardType for the Dialog
     const fullCard: CardType = {
       id: card.id,
       title: card.title,
       description: card.description,
-      listId: lists.find((col) => col.cards.some((c) => c.id === card.id))?.id || "",
+      listId:
+        lists.find((col) => col.cards.some((c) => c.id === card.id))?.id || "",
       position: 0,
       labels: card.labels || [],
       members: card.members || [],
@@ -289,231 +178,218 @@ export default function Kanban() {
   };
 
   const handleUpdateCard = (updatedCard: CardType) => {
-    setLists((prevColumns) =>
-      prevColumns.map((col) => ({
-        ...col,
-        cards: col.cards.map((card) =>
-          card.id === updatedCard.id
-            ? {
-                ...card,
-                title: updatedCard.title,
-                description: updatedCard.description,
-                labels: updatedCard.labels,
-                members: updatedCard.members,
-                dueDate: updatedCard.dueDate,
-                cover: updatedCard.cover,
-                attachments: updatedCard.attachments,
-                comments: updatedCard.comments,
-              }
-            : card
-        ),
-      }))
-    );
+    // TODO: Connect this to a backend mutation/hook.
+    // The logic below only worked when 'lists' was local state.
+    // Since 'lists' now comes from useBoard(), you need an API call here.
+    console.log("Update card:", updatedCard);
+
     setSelectedCard(updatedCard);
   };
 
   const handleDeleteCard = (cardId: string) => {
-    setLists((prevColumns) =>
-      prevColumns.map((col) => ({
-        ...col,
-        cards: col.cards.filter((card) => card.id !== cardId),
-      }))
-    );
+    // TODO: Connect this to a backend mutation/hook.
+    console.log("Delete card:", cardId);
+
     setIsCardDialogOpen(false);
     setSelectedCard(null);
   };
 
   return (
-    <KanbanBoardProvider>
-      <div className="h-full w-full p-4">
-        <KanbanBoard>
-          {lists.map((column) => (
-            <KanbanBoardColumn
-              key={column.id}
-              columnId={column.id}
-              onDropOverColumn={(data) => handleDropOverColumn(column.id, data)}
-            >
-              <KanbanBoardColumnHeader>
-                {editingListId === column.id ? (
-                  <div className="flex w-full items-center gap-2">
-                    <Input
-                      autoFocus
-                      value={editingListTitle}
-                      onChange={(e) => setEditingListTitle(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") saveColumnEdit();
-                        if (e.key === "Escape") cancelColumnEdit();
-                      }}
-                      className="h-7 text-sm"
-                    />
-                    <KanbanBoardColumnIconButton
-                      onClick={saveColumnEdit}
-                      disabled={!editingListTitle.trim()}
-                    >
-                      <CheckIcon className="size-3.5" />
-                    </KanbanBoardColumnIconButton>
-                    <KanbanBoardColumnIconButton onClick={cancelColumnEdit}>
-                      <XIcon className="size-3.5" />
-                    </KanbanBoardColumnIconButton>
-                  </div>
-                ) : (
-                  <>
-                    <KanbanBoardColumnTitle columnId={column.id}>
-                      {column.color && (
-                        <KanbanColorCircle color={column.color} />
-                      )}
-                      {column.title}
-                      <span className="ml-2 text-muted-foreground">
-                        {column.cards.length}
-                      </span>
-                    </KanbanBoardColumnTitle>
-                    <div className="flex gap-1">
-                      <KanbanBoardColumnIconButton
-                        onClick={() =>
-                          startEditingColumn(column.id, column.title)
-                        }
-                      >
-                        <Edit2Icon className="size-3.5" />
-                      </KanbanBoardColumnIconButton>
-                      <KanbanBoardColumnIconButton
-                        onClick={() => {
-                          if (
-                            confirm(
-                              `Delete "${column.title}" list and all its cards?`
-                            )
-                          ) {
-                            deleteColumn(column.id);
-                          }
+    <BoardIdProivder>
+      <KanbanBoardProvider>
+        <div className="p-4 w-full h-full">
+          <h2 className="text-lg tracking-tight">{board.name}</h2>
+          <KanbanBoard>
+            {lists.map((column) => (
+              <KanbanBoardColumn
+                key={column.id}
+                columnId={column.id}
+                onDropOverColumn={(data) =>
+                  handleDropOverColumn(column.id, data)
+                }
+              >
+                <KanbanBoardColumnHeader>
+                  {editingListId === column.id ? (
+                    <div className="flex gap-2 items-center w-full">
+                      <Input
+                        autoFocus
+                        value={editingListTitle}
+                        onChange={(e) => setEditingListTitle(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") saveColumnEdit();
+                          if (e.key === "Escape") cancelColumnEdit();
                         }}
+                        className="h-7 text-sm"
+                      />
+                      <KanbanBoardColumnIconButton
+                        onClick={saveColumnEdit}
+                        disabled={!editingListTitle.trim()}
                       >
-                        <Trash2Icon className="size-3.5" />
+                        <CheckIcon className="size-3.5" />
+                      </KanbanBoardColumnIconButton>
+                      <KanbanBoardColumnIconButton onClick={cancelColumnEdit}>
+                        <XIcon className="size-3.5" />
                       </KanbanBoardColumnIconButton>
                     </div>
-                  </>
-                )}
-              </KanbanBoardColumnHeader>
-
-              <KanbanBoardColumnList>
-                {column.cards.map((card) => (
-                  <KanbanBoardColumnListItem
-                    key={card.id}
-                    cardId={card.id}
-                    onDropOverListItem={(data, direction) =>
-                      handleDropOverListItem(
-                        column.id,
-                        card.id,
-                        data,
-                        direction
-                      )
-                    }
-                  >
-                    <ContextMenu>
-                      <ContextMenuTrigger>
-                        <KanbanBoardCard
-                          data={card}
-                          onClick={() => openCardDialog(card)}
+                  ) : (
+                    <>
+                      <KanbanBoardColumnTitle columnId={column.id}>
+                        {/* {column.color && ( */}
+                        {/* <KanbanColorCircle color={column.color} /> */}
+                        {/* )} */}
+                        {column.name}
+                        <span className="ml-2 text-muted-foreground">
+                          {/* {column.cards.length} */}
+                        </span>
+                      </KanbanBoardColumnTitle>
+                      <div className="flex gap-1">
+                        <KanbanBoardColumnIconButton
+                          onClick={() =>
+                            startEditingColumn(column.id, column.name)
+                          }
                         >
-                          <KanbanBoardCardTitle>
-                            {card.color && (
-                              <KanbanColorCircle color={card.color} />
-                            )}
-                            {card.title}
-                          </KanbanBoardCardTitle>
-                          {card.description && (
-                            <KanbanBoardCardDescription>
-                              {card.description}
-                            </KanbanBoardCardDescription>
-                          )}
-                        </KanbanBoardCard>
-                      </ContextMenuTrigger>
-                      <ContextMenuContent>
-                        <ContextMenuItem onClick={() => openCardDialog(card)}>
-                          Edit
-                        </ContextMenuItem>
-                        <ContextMenuItem
+                          <Edit2Icon className="size-3.5" />
+                        </KanbanBoardColumnIconButton>
+                        <KanbanBoardColumnIconButton
                           onClick={() => {
-                            if (confirm("Delete this card?")) {
-                              handleDeleteCard(card.id);
+                            if (
+                              confirm(
+                                `Delete "${column.name}" list and all its cards?`,
+                              )
+                            ) {
+                              deleteColumn(column.id);
                             }
                           }}
                         >
-                          Remove
-                        </ContextMenuItem>
-                      </ContextMenuContent>
-                    </ContextMenu>
-                  </KanbanBoardColumnListItem>
-                ))}
-              </KanbanBoardColumnList>
+                          <Trash2Icon className="size-3.5" />
+                        </KanbanBoardColumnIconButton>
+                      </div>
+                    </>
+                  )}
+                </KanbanBoardColumnHeader>
 
-              <KanbanBoardColumnFooter>
-                <KanbanBoardColumnButton onClick={() => addCard(column.id)}>
-                  <PlusIcon className="mr-2 size-4" />
-                  Add Card
-                </KanbanBoardColumnButton>
-              </KanbanBoardColumnFooter>
-            </KanbanBoardColumn>
-          ))}
+                <KanbanBoardColumnList>
+                  {column.cards.map((card) => (
+                    <KanbanBoardColumnListItem
+                      key={card.id}
+                      cardId={card.id}
+                      onDropOverListItem={(data, direction) =>
+                        handleDropOverListItem(
+                          column.id,
+                          card.id,
+                          data,
+                          direction,
+                        )
+                      }
+                    >
+                      <ContextMenu>
+                        <ContextMenuTrigger>
+                          <KanbanBoardCard
+                            data={card}
+                            onClick={() => openCardDialog(card)}
+                          >
+                            <KanbanBoardCardTitle>
+                              {card.color && (
+                                <KanbanColorCircle color={card.color} />
+                              )}
+                              {card.title}
+                            </KanbanBoardCardTitle>
+                            {card.description && (
+                              <KanbanBoardCardDescription>
+                                {card.description}
+                              </KanbanBoardCardDescription>
+                            )}
+                          </KanbanBoardCard>
+                        </ContextMenuTrigger>
+                        <ContextMenuContent>
+                          <ContextMenuItem onClick={() => openCardDialog(card)}>
+                            Edit
+                          </ContextMenuItem>
+                          <ContextMenuItem
+                            onClick={() => {
+                              if (confirm("Delete this card?")) {
+                                handleDeleteCard(card.id);
+                              }
+                            }}
+                          >
+                            Remove
+                          </ContextMenuItem>
+                        </ContextMenuContent>
+                      </ContextMenu>
+                    </KanbanBoardColumnListItem>
+                  ))}
+                </KanbanBoardColumnList>
 
-          {/* Add New List Button/Form */}
-          {isAddingList ? (
-            <div ref={addListRef} className={kanbanBoardColumnClassNames}>
-              <div className="space-y-2 px-2">
-                <Input
-                  autoFocus
-                  placeholder="Enter list title..."
-                  value={newListTitle}
-                  onChange={(e) => setNewListTitle(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  className="bg-background"
-                />
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    onClick={addColumn}
-                    disabled={!newListTitle.trim()}
-                  >
-                    Add
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => {
-                      setIsAddingList(false);
-                      setNewListTitle("");
-                    }}
-                    className="ml-auto"
-                  >
-                    Cancel
-                  </Button>
+                <KanbanBoardColumnFooter>
+                  <KanbanBoardColumnButton onClick={() => addCard(column.id)}>
+                    <PlusIcon className="mr-2 size-4" />
+                    Add Card
+                  </KanbanBoardColumnButton>
+                </KanbanBoardColumnFooter>
+              </KanbanBoardColumn>
+            ))}
+
+            {/* Add New List Button/Form */}
+            {isAddingList ? (
+              <div ref={addListRef} className={kanbanBoardColumnClassNames}>
+                <div className="px-2 space-y-2">
+                  <Input
+                    autoFocus
+                    placeholder="Enter list title..."
+                    value={newListTitle}
+                    onChange={(e) => setNewListTitle(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    className="bg-background"
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      onClick={addColumn}
+                      disabled={!newListTitle.trim()}
+                    >
+                      Add
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setIsAddingList(false);
+                        setNewListTitle("");
+                      }}
+                      className="ml-auto"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ) : (
-            <Button
-              variant="ghost"
-              className="h-fit shrink-0 justify-start px-3 py-2"
-              onClick={() => setIsAddingList(true)}
-            >
-              <PlusIcon className="mr-2 size-4" />
-              Add List
-            </Button>
-          )}
+            ) : (
+              <Button
+                variant="ghost"
+                className="justify-start py-2 px-3 h-fit shrink-0"
+                onClick={() => setIsAddingList(true)}
+              >
+                <PlusIcon className="mr-2 size-4" />
+                Add List
+              </Button>
+            )}
 
-          <KanbanBoardExtraMargin />
-        </KanbanBoard>
+            <KanbanBoardExtraMargin />
+          </KanbanBoard>
 
-        {/* Card Edit Dialog */}
-        <CardEditDialog
-          card={selectedCard}
-          isOpen={isCardDialogOpen}
-          onClose={() => {
-            setIsCardDialogOpen(false);
-            setSelectedCard(null);
-          }}
-          onUpdate={handleUpdateCard}
-          onDelete={handleDeleteCard}
-        />
-      </div>
-    </KanbanBoardProvider>
+          {/* Card Edit Dialog from origin/main */}
+          <CardEditDialog
+            card={selectedCard}
+            isOpen={isCardDialogOpen}
+            onClose={() => {
+              setIsCardDialogOpen(false);
+              setSelectedCard(null);
+            }}
+            onUpdate={handleUpdateCard}
+            onDelete={handleDeleteCard}
+          />
+        </div>
+      </KanbanBoardProvider>
+    </BoardIdProivder>
   );
 }
