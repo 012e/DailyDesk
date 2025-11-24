@@ -4,6 +4,7 @@ import { createCollection, eq, useLiveSuspenseQuery } from "@tanstack/react-db";
 import { queryCollectionOptions } from "@tanstack/query-db-collection";
 import { queryClient } from "@/lib/query-client";
 import api from "@/lib/api";
+import { useSuspenseQuery } from "@tanstack/react-query";
 
 export const CreateBoardSchema = z.object({
   name: z.string().nonempty(),
@@ -120,19 +121,21 @@ export function useBoards() {
 }
 
 export function useBoard({ boardId }: { boardId: string }) {
-  const { data } = useLiveSuspenseQuery(
-    (q) =>
-      q
-        .from({ boardCollection })
-        .where(({ boardCollection }) => eq(boardCollection.id, boardId))
-        .select(({ boardCollection: board }) => ({
-          id: board.id,
-          lists: board.lists,
-          name: board.name,
-        }))
-        .findOne(),
-    [boardId],
-  );
-  console.log("data", data);
-  return data!;
+  const board = useSuspenseQuery({
+    queryKey: ["board", boardId],
+    queryFn: async () => {
+      const result = await api.GET("/boards/{id}", {
+        params: {
+          path: {
+            id: boardId,
+          },
+        },
+      });
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      return result.data!;
+    },
+  });
+  return board.data;
 }

@@ -22,12 +22,13 @@ httpClient.interceptors.response.use(
   async (error) => {
     const refresher = store.get(getAccessTokenFnAtom);
     const originalRequest = error.config;
-    if (error.response.status === 403 && !originalRequest._retry) {
+    if (error.response.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       if (refresher) {
-        const access_token = await refresher();
+        const accessToken = await refresher();
+        store.set(accessTokenAtom, accessToken);
         axios.defaults.headers.common["Authorization"] =
-          "Bearer " + access_token;
+          "Bearer " + accessToken;
         return httpClient(originalRequest);
       }
     }
