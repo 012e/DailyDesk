@@ -1,10 +1,7 @@
 import * as z from "zod";
+import api, { queryApi } from "@/lib/api";
+import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { uuidv7 } from "uuidv7";
-import { createCollection, eq, useLiveSuspenseQuery } from "@tanstack/react-db";
-import { queryCollectionOptions } from "@tanstack/query-db-collection";
-import { queryClient } from "@/lib/query-client";
-import api from "@/lib/api";
-import { useSuspenseQuery } from "@tanstack/react-query";
 
 export const CreateBoardSchema = z.object({
   name: z.string().nonempty(),
@@ -37,86 +34,40 @@ export const BoardSchema = z.object({
   lists: ListSchema.array(),
 });
 
-export const boardCollection = createCollection(
-  queryCollectionOptions({
-    queryKey: ["boards"],
-    schema: BoardSchema,
-    startSync: true,
-    queryFn: async () => {
-      const { data, error } = await api.GET("/boards");
-      if (error) {
-        throw new Error(error);
-      }
-      return data;
-    },
-    queryClient,
-    getKey: (item) => item.id,
-    onUpdate: async ({ transaction }) => {
-      return { refetch: false };
-    },
-    onInsert: async ({ transaction }) => {
-      const newItem = transaction.mutations
-        .map((m) => m.modified)
-        .map((e) =>
-          api.POST("/boards", {
-            body: {
-              id: e.id,
-              name: e.name,
-            },
-          }),
-        );
-      Promise.all(newItem);
-    },
-  }),
-);
+export function useCreateboard() {
+  const { mutate } = queryApi.useMutation("post", "/boards", {
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: ["boards"],
+      }),
+  });
+  const queryClient = useQueryClient();
 
-export function useBoardActions() {
   function createBoard(board: CreateBoardType) {
-    boardCollection.insert(
-      {
+    mutate({
+      body: {
         id: uuidv7(),
         name: board.name,
-        lists: [],
-      },
-      {
-        metadata: {
-          type: "create-board",
-        },
-      },
-    );
-  }
-
-  function deleteBoard(id: string) {
-    boardCollection.delete(id, {
-      metadata: {
-        type: "delete-board",
       },
     });
   }
 
   return {
     createBoard,
-    deleteBoard,
   };
 }
 
 export function useBoards() {
-  const { data } = useLiveSuspenseQuery((q) =>
-    q
-      .from({ boardCollection })
-      .select(({ boardCollection }) => ({
-        id: boardCollection.id,
-        name: boardCollection.name,
-        lists: boardCollection.lists,
-
-        // backgroundUrl: boardCollection.backgroundUrl,
-        // backgroundColor:
-        //   boardCollection.backgroundColor ??
-        //   (!boardCollection.backgroundUrl && "#e992ffff"),
-      }))
-      .orderBy((e) => e.boardCollection.id, "desc"),
-  );
-
+  const { data } = useSuspenseQuery({
+    queryKey: ["boards"],
+    queryFn: async () => {
+      const { data, error } = await api.GET("/boards");
+      if (error) {
+        throw new Error(error);
+      }
+      return data!;
+    },
+  });
   return data;
 }
 

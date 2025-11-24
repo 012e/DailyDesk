@@ -48,6 +48,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useListActions } from "@/hooks/use-list";
 import { useParams } from "react-router";
 import { useBoard } from "@/hooks/use-board";
+import BoardIdProivder from "@/components/board-id-provider";
 
 type Card = {
   id: string;
@@ -59,7 +60,7 @@ type Card = {
 export default function Kanban() {
   const { boardId } = useParams();
 
-  const { createList } = useListActions(boardId!);
+  const { createList } = useListActions();
   const board = useBoard({ boardId: boardId! });
   const lists = board.lists;
   const [isAddingList, setIsAddingList] = useState(false);
@@ -226,7 +227,7 @@ export default function Kanban() {
   };
 
   return (
-    <Suspense fallback={<Loader />}>
+    <BoardIdProivder>
       <KanbanBoardProvider>
         <div className="p-4 w-full h-full">
           <h1>
@@ -450,6 +451,6 @@ export default function Kanban() {
           </KanbanBoard>
         </div>
       </KanbanBoardProvider>
-    </Suspense>
+    </BoardIdProivder>
   );
 }

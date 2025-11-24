@@ -3,8 +3,10 @@ import type { paths } from "@/lib/generated/api-schema";
 import store from "@/stores/store";
 import { accessTokenAtom } from "@/stores/access-token";
 import { getAccessTokenFnAtom } from "@/stores/auth";
+import createQueryClient from "openapi-react-query";
 
 const api = createClient<paths>({ baseUrl: "http://localhost:3000" });
+const queryApi = createQueryClient(api);
 
 const accessTokenInjectMiddleware: Middleware = {
   async onRequest({ request }) {
@@ -75,3 +77,4 @@ const accessTokenInjectMiddleware: Middleware = {
 api.use(accessTokenInjectMiddleware);
 
 export default api;
+export { queryApi };

@@ -5,6 +5,7 @@ import Providers from "./components/providers";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
+import PageLoader from "./components/full-page-loader";
 
 export default function Layout() {
   return (
@@ -21,13 +22,7 @@ export default function Layout() {
               </div>
             }
           >
-            <Suspense
-              fallback={
-                <h1 className="flex justify-center items-center w-full h-full">
-                  Loading
-                </h1>
-              }
-            >
+            <Suspense fallback={<PageLoader />}>
               <Outlet />
             </Suspense>
           </ErrorBoundary>
