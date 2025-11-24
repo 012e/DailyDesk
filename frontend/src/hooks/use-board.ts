@@ -48,6 +48,8 @@ export function useCreateboard() {
       body: {
         id: uuidv7(),
         name: board.name,
+        backgroundColor: board.backgroundColor,
+        backgroundUrl: board.backgroundUrl,
       },
     });
   }

@@ -31,6 +31,8 @@ export interface paths {
                             id: string;
                             name: string;
                             userId: string;
+                            backgroundUrl: string | null;
+                            backgroundColor: string | null;
                             lists: {
                                 /** Format: uuid */
                                 id: string;
@@ -66,6 +68,8 @@ export interface paths {
                         /** Format: uuid */
                         id: string;
                         name: string;
+                        backgroundUrl?: string;
+                        backgroundColor?: string;
                     };
                 };
             };
@@ -81,6 +85,8 @@ export interface paths {
                             id: string;
                             name: string;
                             userId: string;
+                            backgroundUrl: string | null;
+                            backgroundColor: string | null;
                         };
                     };
                 };
@@ -121,6 +127,8 @@ export interface paths {
                             id: string;
                             name: string;
                             userId: string;
+                            backgroundUrl: string | null;
+                            backgroundColor: string | null;
                             lists: {
                                 /** Format: uuid */
                                 id: string;
@@ -168,7 +176,9 @@ export interface paths {
             requestBody?: {
                 content: {
                     "application/json": {
-                        name: string;
+                        name?: string;
+                        backgroundUrl?: string | null;
+                        backgroundColor?: string | null;
                     };
                 };
             };
@@ -184,6 +194,8 @@ export interface paths {
                             id: string;
                             name: string;
                             userId: string;
+                            backgroundUrl: string | null;
+                            backgroundColor: string | null;
                         };
                     };
                 };
