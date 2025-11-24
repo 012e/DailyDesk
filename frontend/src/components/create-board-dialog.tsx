@@ -20,8 +20,8 @@ interface CreateBoardDialogProps {
   onOpenChange: (open: boolean) => void;
   onCreate: (
     title: string,
-    isBackgroundImage: boolean,
-    background?: string
+    backgroundImage?: string,
+    backgroundUrl?: string,
   ) => void;
 }
 
@@ -84,14 +84,7 @@ export default function CreateBoardDialog({
 
     setIsSubmitting(true);
     setTimeout(() => {
-      let background: string | undefined = undefined;
-      if (backgroundType === "color") {
-        background = selectedColor;
-      } else if (backgroundType === "image" && imagePreview) {
-        background = imagePreview;
-      }
-
-      onCreate(trimmedTitle, backgroundType === "image", background);
+      onCreate(trimmedTitle, selectedColor, imagePreview);
 
       setTitle("");
       setSelectedColor("#bfdbfe");
@@ -135,7 +128,7 @@ export default function CreateBoardDialog({
   //#region Render
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md min-h-[60vh] max-h-[90vh] overflow-auto">
+      <DialogContent className="overflow-auto sm:max-w-md min-h-[60vh] max-h-[90vh]">
         <DialogHeader className="h-20">
           <DialogTitle>Create New Board</DialogTitle>
           <DialogDescription>
@@ -192,7 +185,7 @@ export default function CreateBoardDialog({
                     color={selectedColor}
                     onChange={setSelectedColor}
                   />
-                  <div className="flex items-center gap-3 mt-6 mb-10">
+                  <div className="flex gap-3 items-center mt-6 mb-10">
                     <div className="grid grid-cols-9 gap-2">
                       {colorPalette.map((c) => (
                         <button
@@ -211,7 +204,7 @@ export default function CreateBoardDialog({
                         />
                       ))}
                     </div>
-                    <div className="ml-3 flex items-center gap-2">
+                    <div className="flex gap-2 items-center ml-3">
                       <span className="text-sm text-muted-foreground">
                         Preview
                       </span>
@@ -251,7 +244,7 @@ export default function CreateBoardDialog({
                     </Button>
                   </div>
 
-                  <div className="flex items-center gap-3 pt-4">
+                  <div className="flex gap-3 items-center pt-4">
                     <span className="text-sm text-muted-foreground">
                       Preview
                     </span>
@@ -270,7 +263,7 @@ export default function CreateBoardDialog({
                         <img
                           src={imagePreview}
                           alt="preview"
-                          className="w-full h-full object-cover"
+                          className="object-cover w-full h-full"
                         />
                       ) : (
                         <span className="text-xs text-muted-foreground">
