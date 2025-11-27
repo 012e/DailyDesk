@@ -76,6 +76,8 @@ export default function createBoardRoutes() {
           id: req.id,
           name: req.name,
           userId: user.sub,
+          backgroundUrl: req.backgroundUrl ?? null,
+          backgroundColor: req.backgroundColor ?? null,
         })
         .returning();
 
@@ -182,11 +184,19 @@ export default function createBoardRoutes() {
         return c.json({ error: "Không có quyền cập nhật Board này" }, 403);
       }
 
+      const updateData: {
+        name?: string;
+        backgroundUrl?: string | null;
+        backgroundColor?: string | null;
+      } = {};
+
+      if (req.name !== undefined) updateData.name = req.name;
+      if (req.backgroundUrl !== undefined) updateData.backgroundUrl = req.backgroundUrl;
+      if (req.backgroundColor !== undefined) updateData.backgroundColor = req.backgroundColor;
+
       const updatedBoard = await db
         .update(boardsTable)
-        .set({
-          name: req.name,
-        })
+        .set(updateData)
         .where(eq(boardsTable.id, id))
         .returning();
 

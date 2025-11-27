@@ -9,6 +9,8 @@ export const boardsTable = sqliteTable("boards", {
     .$defaultFn(() => randomUUID()),
   name: text("name").notNull(),
   userId: text("user_id").notNull(), // Clerk user ID
+  backgroundUrl: text("background_url"),
+  backgroundColor: text("background_color"), // Valid hex color code
 });
 
 // Lists table with foreign key to boards
