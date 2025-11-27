@@ -34,8 +34,8 @@ export function useUpdateCard() {
         queryClient.setQueryData<Card[]>(
           ["cards"],
           previousCards.map((card) =>
-            card.id === updatedCard.id ? updatedCard : card
-          )
+            card.id === updatedCard.id ? updatedCard : card,
+          ),
         );
       }
 
@@ -81,7 +81,7 @@ export function useDeleteCard() {
       if (previousCards) {
         queryClient.setQueryData<Card[]>(
           ["cards"],
-          previousCards.filter((card) => card.id !== cardId)
+          previousCards.filter((card) => card.id !== cardId),
         );
       }
 
@@ -108,7 +108,9 @@ export function useCreateCard() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (newCard: Omit<Card, "id" | "createdAt" | "updatedAt">) => {
+    mutationFn: async (
+      newCard: Omit<Card, "id" | "createdAt" | "updatedAt">,
+    ) => {
       // TODO: Replace với API call thực tế
       // const { data } = await api.POST('/cards', { body: newCard });
       // return data;
