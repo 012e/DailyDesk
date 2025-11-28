@@ -9,6 +9,12 @@ export const CreateBoardSchema = z.object({
   backgroundUrl: z.string().optional(),
 });
 
+export const UpdateBoardSchema = z.object({
+  name: z.string().nonempty().optional(),
+  backgroundColor: z.string().optional(),
+  backgroundUrl: z.string().optional(),
+});
+
 export type CreateBoardType = z.infer<typeof CreateBoardSchema>;
 export const CardSchema = z.object({
   id: z.uuidv7(),
@@ -33,18 +39,19 @@ export const BoardSchema = z.object({
   backgroundColor: z.string().optional(),
   lists: ListSchema.array(),
 });
+export type BoardType = z.infer<typeof BoardSchema>;
 
-export function useCreateboard() {
-  const { mutate } = queryApi.useMutation("post", "/boards", {
-    onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: ["boards"],
-      }),
-  });
+export function useCreateBoard() {
   const queryClient = useQueryClient();
 
-  function createBoard(board: CreateBoardType) {
-    mutate({
+  const { mutateAsync } = queryApi.useMutation("post", "/boards", {
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
+    },
+  });
+
+  const createBoard = async (board: CreateBoardType): Promise<BoardType> => {
+    const newBoard = await mutateAsync({
       body: {
         id: uuidv7(),
         name: board.name,
@@ -52,10 +59,48 @@ export function useCreateboard() {
         backgroundUrl: board.backgroundUrl,
       },
     });
-  }
+
+    return {
+      id: newBoard.id,
+      name: newBoard.name,
+      lists: [],
+      backgroundUrl: newBoard.backgroundUrl ?? undefined,
+      backgroundColor: newBoard.backgroundColor ?? undefined,
+    };
+  };
 
   return {
     createBoard,
+  };
+}
+
+export function useUpdateBoard() {
+  const queryClient = useQueryClient();
+
+  const { mutateAsync } = queryApi.useMutation("put", "/boards/{id}", {
+    onSuccess: (_, variables) => {
+      // Khi update xong, refresh query cho board cụ thể và list boards
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
+      if (variables?.id) {
+        queryClient.invalidateQueries({ queryKey: ["board", variables.id] });
+      }
+    },
+  });
+
+  const updateBoard = async (id: string, boardData: BoardType) => {
+    // validate dữ liệu trước khi gửi
+    const parsedData = UpdateBoardSchema.parse(boardData);
+
+    const updatedBoard = await mutateAsync({
+      path: { id },
+      body: parsedData,
+    });
+
+    return updatedBoard;
+  };
+
+  return {
+    updateBoard,
   };
 }
 

@@ -6,6 +6,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import PageLoader from "./components/full-page-loader";
+import { Toaster } from "react-hot-toast";
 
 export default function Layout() {
   return (
@@ -23,6 +24,7 @@ export default function Layout() {
             }
           >
             <Suspense fallback={<PageLoader />}>
+              <Toaster position="top-right" reverseOrder={false} />
               <Outlet />
             </Suspense>
           </ErrorBoundary>

@@ -17,12 +17,12 @@ export default function AccessTokenProvider({
   const [accessToken, setAccessToken] = useAtom(accessTokenAtom);
 
   const getAccessTokenFnRef = useRef<typeof auth.getAccessTokenSilently | null>(
-    null,
+    null
   );
 
   useEffect(() => {
     if (auth.isAuthenticated) {
-      setGetAcessTokenFn(auth.getAccessTokenSilently);
+      setGetAcessTokenFn(() => auth.getAccessTokenSilently);
       getAccessTokenFnRef.current = auth.getAccessTokenSilently;
     }
   }, [auth, setGetAcessTokenFn]);

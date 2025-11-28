@@ -4,11 +4,13 @@ import { Suspense, useState } from "react";
 import CreateBoardDialog from "@/components/create-board-dialog";
 import { BoardCard } from "@/components/board-card";
 import { Clipboard } from "lucide-react";
-import { useBoards, useCreateboard } from "@/hooks/use-board";
+import { useBoards, useCreateBoard } from "@/hooks/use-board";
 import PageLoader from "./components/full-page-loader";
+import { useUploadImage } from "@/hooks/use-image";
 
 export default function Home() {
-  const { createBoard } = useCreateboard();
+  const { createBoard } = useCreateBoard();
+  const { uploadImage } = useUploadImage();
 
   const boards = useBoards();
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
@@ -16,13 +18,25 @@ export default function Home() {
   const handleCreateBoard = async (
     title: string,
     backgroundColor?: string,
-    backgroundUrl?: string,
+    backgroundImage?: File
   ) => {
-    createBoard({
+    const newBoard = await createBoard({
       name: title,
       backgroundColor,
-      backgroundUrl,
+      backgroundUrl: "",
     });
+
+    if (backgroundImage) {
+      try {
+        const savedData = await uploadImage({
+          file: backgroundImage,
+          type: "board",
+          id: newBoard.id,
+        });
+      } catch (err) {
+        console.error("Upload thất bại", err);
+      }
+    }
     setIsDialogOpen(false);
   };
 
@@ -45,8 +59,8 @@ export default function Home() {
               <BoardCard
                 id={board.id}
                 name={board.name}
-                backgroundUrl={board.backgroundUrl}
-                backgroundColor={board.backgroundColor}
+                backgroundUrl={board.backgroundUrl || undefined}
+                backgroundColor={board.backgroundColor || undefined}
               />
             ))}
 

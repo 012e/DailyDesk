@@ -14,14 +14,16 @@ import { Label } from "@/components/ui/label";
 import { useRef, useState, useEffect } from "react";
 import { AdvancedColorPicker } from "./color-picker";
 import ImageCropper from "./image-cropper";
+import { Spinner } from "./ui/spinner";
+import { cn } from "@/lib/utils";
 
 interface CreateBoardDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreate: (
     title: string,
-    backgroundImage?: string,
-    backgroundUrl?: string,
+    backgroundColor?: string,
+    backgroundImage?: File
   ) => void;
 }
 
@@ -53,6 +55,24 @@ export default function CreateBoardDialog({
   const [showCropper, setShowCropper] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  useEffect(() => {
+    const checkImage = async (url: string) => {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Image not accessible");
+      } catch (err) {
+        console.error("CORS or fetch error:", err);
+        alert(
+          "Không thể tải hình ảnh này. " +
+            "Vui lòng nhập URL khác hoặc upload file trực tiếp."
+        );
+        setImageLink("");
+        setImagePreview("");
+      }
+    };
+    checkImage(imageLink);
+  }, [imageLink]);
+
   const handleFilePick = (file?: File) => {
     if (!file) return;
     const url = URL.createObjectURL(file);
@@ -81,11 +101,21 @@ export default function CreateBoardDialog({
     e.preventDefault();
     const trimmedTitle = title.trim();
     if (!trimmedTitle) return;
+    if (
+      selectedFile &&
+      selectedFile.type === "image/gif" &&
+      selectedFile.size / 1024 / 1024 > 5
+    ) {
+      alert(
+        "File quá lớn (>5MB). Vui lòng giảm kích thước hoặc chuyển sang WebP/MP4."
+      );
+      setIsSubmitting(false);
+      return;
+    }
 
     setIsSubmitting(true);
+    onCreate(trimmedTitle, selectedColor, selectedFile || undefined);
     setTimeout(() => {
-      onCreate(trimmedTitle, selectedColor, imagePreview);
-
       setTitle("");
       setSelectedColor("#bfdbfe");
       setBackgroundType("color");
@@ -93,7 +123,7 @@ export default function CreateBoardDialog({
       setImagePreview("");
       setIsSubmitting(false);
       setShowCropper(false);
-    }, 300);
+    }, 1000);
   };
 
   const closeDialog = async () => {
@@ -107,7 +137,7 @@ export default function CreateBoardDialog({
 
   // CHỈNH SỬA PHẦN fetch link → tạo File
   useEffect(() => {
-    if (!imagePreview || selectedFile) return;
+    if (!imagePreview) return;
 
     const fetchFileFromLink = async () => {
       try {
@@ -129,173 +159,187 @@ export default function CreateBoardDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="overflow-auto sm:max-w-md min-h-[60vh] max-h-[90vh]">
-        <DialogHeader className="h-20">
-          <DialogTitle>Create New Board</DialogTitle>
-          <DialogDescription>
-            Give your board a name and choose a background color or image. You
-            can change both later.
-          </DialogDescription>
-        </DialogHeader>
+        {isSubmitting ? (
+          <div className="flex flex-col gap-3 justify-center items-center w-full h-full">
+            <Spinner className={cn("size-10")} />
+            <h2 className="text-xl font-bold tracking-tight">Creating...</h2>
+          </div>
+        ) : (
+          <>
+            <DialogHeader className="h-20">
+              <DialogTitle>Create New Board</DialogTitle>
+              <DialogDescription>
+                Give your board a name and choose a background color or image.
+                You can change both later.
+              </DialogDescription>
+            </DialogHeader>
 
-        <form onSubmit={handleSubmit}>
-          <div className="grid gap-6 pb-8">
-            <div className="grid gap-3">
-              <Label htmlFor="board-title">Board Title</Label>
-              <Input
-                id="board-title"
-                className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-0 focus:border-sky-400 [&:focus]:ring-1 [&:focus]:ring-sky-100"
-                placeholder="e.g. Marketing Campaign 2025"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                autoFocus
-                disabled={isSubmitting}
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label>Background</Label>
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setBackgroundType("color")}
-                  className={`px-3 py-1 rounded-md border dark:bg-black ${
-                    backgroundType === "color"
-                      ? "border-sky-400 bg-sky-50"
-                      : "border-transparent"
-                  }`}
-                >
-                  Color
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setBackgroundType("image")}
-                  className={`px-3 py-1 rounded-md border dark:bg-black ${
-                    backgroundType === "image"
-                      ? "border-sky-400 bg-sky-50"
-                      : "border-transparent"
-                  }`}
-                >
-                  Image
-                </button>
-              </div>
-              {backgroundType === "color" ? (
-                //#region Background:Color selection
-                <div className="grid gap-2 mt-6">
-                  <AdvancedColorPicker
-                    color={selectedColor}
-                    onChange={setSelectedColor}
+            <form onSubmit={handleSubmit}>
+              <div className="grid gap-6 pb-8">
+                <div className="grid gap-3">
+                  <Label htmlFor="board-title">Board Title</Label>
+                  <Input
+                    id="board-title"
+                    className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-0 focus:border-sky-400 [&:focus]:ring-1 [&:focus]:ring-sky-100"
+                    placeholder="e.g. Marketing Campaign 2025"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    autoFocus
+                    disabled={isSubmitting}
                   />
-                  <div className="flex gap-3 items-center mt-6 mb-10">
-                    <div className="grid grid-cols-9 gap-2">
-                      {colorPalette.map((c) => (
-                        <button
-                          key={c}
-                          defaultChecked={c === selectedColor}
-                          type="button"
-                          aria-label={`Select ${c}`}
-                          onClick={() => setSelectedColor(c)}
-                          disabled={isSubmitting}
-                          className={`w-8 h-8 rounded-md border-1 transform transition ${
-                            selectedColor === c
-                              ? "border-sky-300 ring-2 ring-sky-200 scale-110 z-10 shadow-lg"
-                              : "border-transparent"
-                          } hover:scale-110 hover:z-10 hover:shadow-md`}
-                          style={{ backgroundColor: c }}
-                        />
-                      ))}
-                    </div>
-                    <div className="flex gap-2 items-center ml-3">
-                      <span className="text-sm text-muted-foreground">
-                        Preview
-                      </span>
-                      <div
-                        className="w-12 h-8 rounded-md border"
-                        style={{ backgroundColor: selectedColor }}
-                      />
-                    </div>
-                  </div>
                 </div>
-              ) : (
-                //#region Background:Image selection
-                <div className="grid gap-2 mt-2">
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Paste image link (https://...)"
-                      value={imageLink}
-                      className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-0 focus:border-sky-400 [&:focus]:ring-1 [&:focus]:ring-sky-100"
-                      onChange={(e) => handleImageLinkChange(e.target.value)}
-                      disabled={isSubmitting}
-                    />
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={onFileChange}
-                      className="hidden"
-                      disabled={isSubmitting}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={isSubmitting}
-                    >
-                      Choose file
-                    </Button>
-                  </div>
 
-                  <div className="flex gap-3 items-center pt-4">
-                    <span className="text-sm text-muted-foreground">
-                      Preview
-                    </span>
-                    <div
-                      onClick={() => {
-                        if (imagePreview && selectedFile?.type !== "image/gif")
-                          setShowCropper(true);
-                      }}
-                      className={`w-34 h-24 rounded-md border bg-gray-50 overflow-hidden flex items-center justify-center ${
-                        imagePreview
-                          ? "cursor-pointer hover:opacity-80 transition-opacity"
-                          : ""
+                <div className="grid gap-2">
+                  <Label>Background</Label>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setBackgroundType("color")}
+                      className={`px-3 py-1 rounded-md border dark:bg-black ${
+                        backgroundType === "color"
+                          ? "border-sky-400 bg-sky-50"
+                          : "border-transparent"
                       }`}
                     >
-                      {imagePreview ? (
-                        <img
-                          src={imagePreview}
-                          alt="preview"
-                          className="object-cover w-full h-full"
+                      Color
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBackgroundType("image")}
+                      className={`px-3 py-1 rounded-md border dark:bg-black ${
+                        backgroundType === "image"
+                          ? "border-sky-400 bg-sky-50"
+                          : "border-transparent"
+                      }`}
+                    >
+                      Image
+                    </button>
+                  </div>
+                  {backgroundType === "color" ? (
+                    //#region Background:Color selection
+                    <div className="grid gap-2 mt-6">
+                      <AdvancedColorPicker
+                        color={selectedColor}
+                        onChange={setSelectedColor}
+                      />
+                      <div className="flex gap-3 items-center mt-6 mb-10">
+                        <div className="grid grid-cols-9 gap-2">
+                          {colorPalette.map((c) => (
+                            <button
+                              key={c}
+                              defaultChecked={c === selectedColor}
+                              type="button"
+                              aria-label={`Select ${c}`}
+                              onClick={() => setSelectedColor(c)}
+                              disabled={isSubmitting}
+                              className={`w-8 h-8 rounded-md border-1 transform transition ${
+                                selectedColor === c
+                                  ? "border-sky-300 ring-2 ring-sky-200 scale-110 z-10 shadow-lg"
+                                  : "border-transparent"
+                              } hover:scale-110 hover:z-10 hover:shadow-md`}
+                              style={{ backgroundColor: c }}
+                            />
+                          ))}
+                        </div>
+                        <div className="flex gap-2 items-center ml-3">
+                          <span className="text-sm text-muted-foreground">
+                            Preview
+                          </span>
+                          <div
+                            className="w-12 h-8 rounded-md border"
+                            style={{ backgroundColor: selectedColor }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    //#region Background:Image selection
+                    <div className="grid gap-2 mt-2">
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Paste image link (https://...)"
+                          value={imageLink}
+                          className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-0 focus:border-sky-400 [&:focus]:ring-1 [&:focus]:ring-sky-100"
+                          onChange={(e) =>
+                            handleImageLinkChange(e.target.value)
+                          }
+                          disabled={isSubmitting}
                         />
-                      ) : (
-                        <span className="text-xs text-muted-foreground">
-                          No image selected
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={onFileChange}
+                          className="hidden"
+                          disabled={isSubmitting}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={isSubmitting}
+                        >
+                          Choose file
+                        </Button>
+                      </div>
+
+                      <div className="flex gap-3 items-center pt-4">
+                        <span className="text-sm text-muted-foreground">
+                          Preview
                         </span>
+                        <div
+                          onClick={() => {
+                            if (
+                              imagePreview &&
+                              selectedFile?.type !== "image/gif"
+                            )
+                              setShowCropper(true);
+                          }}
+                          className={`w-34 h-24 rounded-md border bg-gray-50 overflow-hidden flex items-center justify-center ${
+                            imagePreview
+                              ? "cursor-pointer hover:opacity-80 transition-opacity"
+                              : ""
+                          }`}
+                        >
+                          {imagePreview ? (
+                            <img
+                              src={imagePreview}
+                              alt="preview"
+                              className="object-cover w-full h-full"
+                            />
+                          ) : (
+                            <span className="text-xs text-muted-foreground">
+                              No image selected
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      {imagePreview && selectedFile?.type !== "image/gif" && (
+                        <p className="text-xs text-muted-foreground">
+                          Click preview to crop image
+                        </p>
                       )}
                     </div>
-                  </div>
-                  {imagePreview && selectedFile?.type !== "image/gif" && (
-                    <p className="text-xs text-muted-foreground">
-                      Click preview to crop image
-                    </p>
                   )}
                 </div>
-              )}
-            </div>
-          </div>
+              </div>
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => closeDialog()}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={!title.trim() || isSubmitting}>
-              {isSubmitting ? "Creating..." : "Create Board"}
-            </Button>
-          </DialogFooter>
-        </form>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => closeDialog()}
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={!title.trim() || isSubmitting}>
+                  {isSubmitting ? "Creating..." : "Create Board"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </>
+        )}
       </DialogContent>
 
       <ImageCropper
