@@ -79,7 +79,6 @@ export function useUpdateBoard() {
 
   const { mutateAsync } = queryApi.useMutation("put", "/boards/{id}", {
     onSuccess: (_, variables) => {
-      // Khi update xong, refresh query cho board cụ thể và list boards
       queryClient.invalidateQueries({ queryKey: ["boards"] });
       if (variables?.id) {
         queryClient.invalidateQueries({ queryKey: ["board", variables.id] });
@@ -92,7 +91,7 @@ export function useUpdateBoard() {
     const parsedData = UpdateBoardSchema.parse(boardData);
 
     const updatedBoard = await mutateAsync({
-      path: { id },
+      params: { path: { id } },
       body: parsedData,
     });
 
