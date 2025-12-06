@@ -23,7 +23,6 @@ const accessTokenInjectMiddleware: Middleware = {
     // I've included both to be safe.
     if (response.status === 401 || response.status === 403) {
       const refresher = store.get(getAccessTokenFnAtom);
-      console.log("refresher", refresher);
 
       // Ensure we haven't already retried this specific request to prevent loops
       // (We detect this by checking if the Authorization header matches the *current* store token

@@ -88,10 +88,6 @@ export default function Kanban() {
 
   // Log boardId for debugging
   useEffect(() => {
-    console.log("Current board ID:", boardId);
-  }, [boardId]);
-
-  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
         isAddingList &&
@@ -273,15 +269,12 @@ export default function Kanban() {
     // TODO: Connect this to a backend mutation/hook.
     // The logic below only worked when 'lists' was local state.
     // Since 'lists' now comes from useBoard(), you need an API call here.
-    console.log("Update card:", updatedCard);
 
     setSelectedCard(updatedCard);
   };
 
   const handleDeleteCard = (cardId: string) => {
     // TODO: Connect this to a backend mutation/hook.
-    console.log("Delete card:", cardId);
-
     setIsCardDialogOpen(false);
     setSelectedCard(null);
   };
