@@ -108,14 +108,6 @@ export function useCreateCard() {
     }) => {
       const cardId = uuidv7();
       
-      console.log("Creating card with params:", {
-        boardId: params.boardId,
-        listId: params.listId,
-        cardId,
-        name: params.name,
-        order: params.order ?? 0,
-      });
-
       const { data, error, response } = await api.POST("/boards/{boardId}/cards", {
         params: {
           path: {
