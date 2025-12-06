@@ -1,5 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Card } from "@/types/card";
+import { uuidv7 } from "uuidv7";
+import api from "@/lib/api";
 
 /**
  * Hook để update card với optimistic updates
@@ -34,8 +36,8 @@ export function useUpdateCard() {
         queryClient.setQueryData<Card[]>(
           ["cards"],
           previousCards.map((card) =>
-            card.id === updatedCard.id ? updatedCard : card,
-          ),
+            card.id === updatedCard.id ? updatedCard : card
+          )
         );
       }
 
@@ -81,7 +83,7 @@ export function useDeleteCard() {
       if (previousCards) {
         queryClient.setQueryData<Card[]>(
           ["cards"],
-          previousCards.filter((card) => card.id !== cardId),
+          previousCards.filter((card) => card.id !== cardId)
         );
       }
 
@@ -108,38 +110,53 @@ export function useCreateCard() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (
-      newCard: Omit<Card, "id" | "createdAt" | "updatedAt">,
-    ) => {
-      // TODO: Replace với API call thực tế
-      // const { data } = await api.POST('/cards', { body: newCard });
-      // return data;
+    mutationFn: async (params: {
+      boardId: string;
+      listId: string;
+      name: string;
+      order?: number;
+    }) => {
+      const cardId = uuidv7();
+      
+      console.log("Creating card with params:", {
+        boardId: params.boardId,
+        listId: params.listId,
+        cardId,
+        name: params.name,
+        order: params.order ?? 0,
+      });
 
-      const card: Card = {
-        ...newCard,
-        id: Date.now().toString(),
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+      const { data, error, response } = await api.POST("/boards/{boardId}/cards", {
+        params: {
+          path: {
+            boardId: params.boardId,
+          },
+        },
+        body: {
+          id: cardId,
+          name: params.name,
+          order: params.order ?? 0,
+          listId: params.listId,
+        },
+      });
 
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      return card;
+      if (error) {
+        console.error("API Error:", error);
+        console.error("Response status:", response?.status);
+        console.error("Response headers:", response?.headers);
+        throw new Error(`Failed to create card: ${JSON.stringify(error)}`);
+      }
+
+      return data;
     },
 
-    onSuccess: (newCard) => {
-      // Add card to cache
-      queryClient.setQueryData<Card[]>(["cards"], (old = []) => [
-        ...old,
-        newCard,
-      ]);
+    onSuccess: (_newCard, variables) => {
+      // Invalidate board query to refetch the updated data
+      queryClient.invalidateQueries({ queryKey: ["board", variables.boardId] });
     },
 
     onError: (err) => {
       console.error("Failed to create card:", err);
-    },
-
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["cards"] });
     },
   });
 }
