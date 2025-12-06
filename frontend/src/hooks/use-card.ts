@@ -11,51 +11,41 @@ export function useUpdateCard() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (card: Card) => {
-      // TODO: Replace với API call thực tế khi backend ready
-      // const { data } = await api.PATCH(`/cards/${card.id}`, {
-      //   body: card
-      // });
-      // return data;
+    mutationFn: async (params: {
+      boardId: string;
+      cardId: string;
+      name?: string;
+      order?: number;
+      listId?: string;
+    }) => {
+      const { data, error } = await api.PUT("/boards/{boardId}/cards/{id}", {
+        params: {
+          path: {
+            boardId: params.boardId,
+            id: params.cardId,
+          },
+        },
+        body: {
+          name: params.name,
+          order: params.order,
+          listId: params.listId,
+        },
+      });
 
-      // Mock delay để simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      return card;
-    },
-
-    // Optimistic update - update UI ngay lập tức
-    onMutate: async (updatedCard) => {
-      // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ["cards"] });
-
-      // Snapshot previous value
-      const previousCards = queryClient.getQueryData<Card[]>(["cards"]);
-
-      // Optimistically update to the new value
-      if (previousCards) {
-        queryClient.setQueryData<Card[]>(
-          ["cards"],
-          previousCards.map((card) =>
-            card.id === updatedCard.id ? updatedCard : card
-          )
-        );
+      if (error) {
+        throw new Error("Failed to update card");
       }
 
-      // Return context với previous value
-      return { previousCards };
+      return data;
     },
 
-    // Rollback on error
-    onError: (err, _variables, context) => {
-      if (context?.previousCards) {
-        queryClient.setQueryData(["cards"], context.previousCards);
-      }
+    onSuccess: (_data, variables) => {
+      // Invalidate board query to refetch the updated data
+      queryClient.invalidateQueries({ queryKey: ["board", variables.boardId] });
+    },
+
+    onError: (err) => {
       console.error("Failed to update card:", err);
-    },
-
-    // Refetch sau khi mutation succeeds
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["cards"] });
     },
   });
 }

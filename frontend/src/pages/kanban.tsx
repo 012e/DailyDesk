@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/context-menu";
 import { Input } from "@/components/ui/input";
 import { useBoard } from "@/hooks/use-board";
-import { useCreateCard } from "@/hooks/use-card";
+import { useCreateCard, useUpdateCard } from "@/hooks/use-card";
 import { useListActions } from "@/hooks/use-list";
 import type { Card as CardType, Label, Member } from "@/types/card";
 import {
@@ -84,6 +84,7 @@ export default function Kanban() {
   );
   const [newCardTitle, setNewCardTitle] = useState("");
   const { mutate: createCard } = useCreateCard();
+  const { mutate: updateCard } = useUpdateCard();
 
   // Log boardId for debugging
   useEffect(() => {
@@ -109,7 +110,32 @@ export default function Kanban() {
   }, [isAddingList]);
 
   const handleDropOverColumn = (columnId: string, dataTransferData: string) => {
-    // Drop logic to be implemented with hooks/backend
+    if (!boardId) return;
+    
+    // dataTransferData is a JSON string of the card object
+    let cardId: string;
+    try {
+      const cardData = JSON.parse(dataTransferData);
+      cardId = cardData.id;
+    } catch (e) {
+      console.error("Failed to parse drag data:", e);
+      return;
+    }
+    
+    // Find the target list
+    const targetList = lists.find((l) => l.id === columnId);
+    if (!targetList) return;
+    
+    // Calculate the new order (append to end of target list)
+    const newOrder = targetList.cards.length;
+    
+    // Update the card's listId and order
+    updateCard({
+      boardId,
+      cardId,
+      listId: columnId,
+      order: newOrder,
+    });
   };
 
   const handleDropOverListItem = (
@@ -118,7 +144,42 @@ export default function Kanban() {
     dataTransferData: string,
     dropDirection: KanbanBoardDropDirection
   ) => {
-    // Drop logic to be implemented with hooks/backend
+    if (!boardId) return;
+    
+    // dataTransferData is a JSON string of the card object
+    let draggedCardId: string;
+    try {
+      const cardData = JSON.parse(dataTransferData);
+      draggedCardId = cardData.id;
+    } catch (e) {
+      console.error("Failed to parse drag data:", e);
+      return;
+    }
+    
+    // Don't do anything if dropping on itself
+    if (draggedCardId === targetCardId) return;
+    
+    // Find the target list and cards
+    const targetList = lists.find((l) => l.id === columnId);
+    if (!targetList) return;
+    
+    // Find the target card's current order
+    const targetCard = targetList.cards.find((c) => c.id === targetCardId);
+    if (!targetCard) return;
+    
+    // Calculate new order based on drop direction
+    let newOrder = targetCard.order || 0;
+    if (dropDirection === "bottom") {
+      newOrder += 1;
+    }
+    
+    // Update the dragged card
+    updateCard({
+      boardId,
+      cardId: draggedCardId,
+      listId: columnId,
+      order: newOrder,
+    });
   };
 
   // Show input for adding a card in a column
