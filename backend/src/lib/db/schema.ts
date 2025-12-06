@@ -35,6 +35,8 @@ export const cardsTable = sqliteTable("cards", {
   listId: text("list_id")
     .notNull()
     .references(() => listsTable.id, { onDelete: "cascade" }),
+  startDate: integer("start_date", { mode: "timestamp" }), // Optional start date for events
+  deadline: integer("deadline", { mode: "timestamp" }), // Optional deadline for events
 });
 
 // Labels table
