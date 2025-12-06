@@ -70,6 +70,8 @@ export default function createCardRoutes() {
           listId: cardsTable.listId,
           startDate: cardsTable.startDate,
           deadline: cardsTable.deadline,
+          latitude: cardsTable.latitude,
+          longitude: cardsTable.longitude,
         })
         .from(cardsTable)
         .innerJoin(listsTable, eq(cardsTable.listId, listsTable.id))
@@ -153,6 +155,8 @@ export default function createCardRoutes() {
           listId: req.listId,
           startDate: req.startDate,
           deadline: req.deadline,
+          latitude: req.latitude,
+          longitude: req.longitude,
         })
         .returning();
 
@@ -214,6 +218,8 @@ export default function createCardRoutes() {
           listId: cardsTable.listId,
           startDate: cardsTable.startDate,
           deadline: cardsTable.deadline,
+          latitude: cardsTable.latitude,
+          longitude: cardsTable.longitude,
         })
         .from(cardsTable)
         .innerJoin(listsTable, eq(cardsTable.listId, listsTable.id))
@@ -337,6 +343,8 @@ export default function createCardRoutes() {
           listId: req.listId,
           startDate: req.startDate,
           deadline: req.deadline,
+          latitude: req.latitude,
+          longitude: req.longitude,
         })
         .where(eq(cardsTable.id, id))
         .returning();

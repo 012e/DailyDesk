@@ -37,6 +37,8 @@ export const cardsTable = sqliteTable("cards", {
     .references(() => listsTable.id, { onDelete: "cascade" }),
   startDate: integer("start_date", { mode: "timestamp" }), // Optional start date for events
   deadline: integer("deadline", { mode: "timestamp" }), // Optional deadline for events
+  latitude: integer("latitude"), // Optional latitude for location
+  longitude: integer("longitude"), // Optional longitude for location
 });
 
 // Labels table
