@@ -1,3 +1,5 @@
+import BoardIdProivder from "@/components/board-id-provider";
+import { CardEditDialog } from "@/components/card-edit-dialog";
 import {
   KanbanBoard,
   KanbanBoardCard,
@@ -25,21 +27,19 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { Input } from "@/components/ui/input";
+import { useBoard } from "@/hooks/use-board";
+import { useCreateCard, useUpdateCard } from "@/hooks/use-card";
+import { useListActions } from "@/hooks/use-list";
+import type { Card as CardType, Label, Member } from "@/types/card";
 import {
   CheckIcon,
   Edit2Icon,
-  Loader,
   PlusIcon,
   Trash2Icon,
   XIcon,
 } from "lucide-react";
-import { Suspense, useEffect, useRef, useState } from "react";
-import { useListActions } from "@/hooks/use-list";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
-import { useBoard } from "@/hooks/use-board";
-import BoardIdProivder from "@/components/board-id-provider";
-import { CardEditDialog } from "@/components/card-edit-dialog";
-import type { Card as CardType, Label, Member } from "@/types/card";
 
 type Card = {
   id: string;
@@ -60,7 +60,12 @@ export default function Kanban() {
   // HEAD: Use hooks for data and actions
   const { createList } = useListActions();
   const board = useBoard({ boardId: boardId! });
-  const lists = board.lists;
+  const [lists, setLists] = useState(board.lists);
+
+  // Sync lists with board.lists when board changes
+  useEffect(() => {
+    setLists(board.lists);
+  }, [board.lists]);
 
   // Main: UI State for dialogs and inputs
   const [isAddingList, setIsAddingList] = useState(false);
@@ -73,11 +78,15 @@ export default function Kanban() {
 
   const addListRef = useRef<HTMLDivElement>(null);
 
-  // Log boardId for debugging
-  useEffect(() => {
-    console.log("Current board ID:", boardId);
-  }, [boardId]);
+  // Track which column is adding a card and the input value
+  const [addingCardColumnId, setAddingCardColumnId] = useState<string | null>(
+    null
+  );
+  const [newCardTitle, setNewCardTitle] = useState("");
+  const { mutate: createCard } = useCreateCard();
+  const { mutate: updateCard } = useUpdateCard();
 
+  // Log boardId for debugging
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -97,21 +106,100 @@ export default function Kanban() {
   }, [isAddingList]);
 
   const handleDropOverColumn = (columnId: string, dataTransferData: string) => {
-    // Drop logic to be implemented with hooks/backend
+    if (!boardId) return;
+    
+    // dataTransferData is a JSON string of the card object
+    let cardId: string;
+    try {
+      const cardData = JSON.parse(dataTransferData);
+      cardId = cardData.id;
+    } catch (e) {
+      console.error("Failed to parse drag data:", e);
+      return;
+    }
+    
+    // Find the target list
+    const targetList = lists.find((l) => l.id === columnId);
+    if (!targetList) return;
+    
+    // Calculate the new order (append to end of target list)
+    const newOrder = targetList.cards.length;
+    
+    // Update the card's listId and order
+    updateCard({
+      boardId,
+      cardId,
+      listId: columnId,
+      order: newOrder,
+    });
   };
 
   const handleDropOverListItem = (
     columnId: string,
     targetCardId: string,
     dataTransferData: string,
-    dropDirection: KanbanBoardDropDirection,
+    dropDirection: KanbanBoardDropDirection
   ) => {
-    // Drop logic to be implemented with hooks/backend
+    if (!boardId) return;
+    
+    // dataTransferData is a JSON string of the card object
+    let draggedCardId: string;
+    try {
+      const cardData = JSON.parse(dataTransferData);
+      draggedCardId = cardData.id;
+    } catch (e) {
+      console.error("Failed to parse drag data:", e);
+      return;
+    }
+    
+    // Don't do anything if dropping on itself
+    if (draggedCardId === targetCardId) return;
+    
+    // Find the target list and cards
+    const targetList = lists.find((l) => l.id === columnId);
+    if (!targetList) return;
+    
+    // Find the target card's current order
+    const targetCard = targetList.cards.find((c) => c.id === targetCardId);
+    if (!targetCard) return;
+    
+    // Calculate new order based on drop direction
+    let newOrder = targetCard.order || 0;
+    if (dropDirection === "bottom") {
+      newOrder += 1;
+    }
+    
+    // Update the dragged card
+    updateCard({
+      boardId,
+      cardId: draggedCardId,
+      listId: columnId,
+      order: newOrder,
+    });
   };
 
-  const addCard = (columnId: string) => {
-    // This needs to be connected to a useCardActions hook or similar
-    console.log("Add card to column:", columnId);
+  // Show input for adding a card in a column
+  const startAddCard = (columnId: string) => {
+    setAddingCardColumnId(columnId);
+    setNewCardTitle("");
+  };
+
+  const handleAddCard = (columnId: string) => {
+    if (!newCardTitle.trim() || !boardId) return;
+
+    // Get the current list to calculate the next order
+    const list = lists.find((l) => l.id === columnId);
+    const nextOrder = list ? list.cards.length : 0;
+
+    createCard({
+      boardId: boardId,
+      listId: columnId,
+      name: newCardTitle,
+      order: nextOrder,
+    });
+    
+    setNewCardTitle("");
+    setAddingCardColumnId(null);
   };
 
   const addColumn = () => {
@@ -181,15 +269,12 @@ export default function Kanban() {
     // TODO: Connect this to a backend mutation/hook.
     // The logic below only worked when 'lists' was local state.
     // Since 'lists' now comes from useBoard(), you need an API call here.
-    console.log("Update card:", updatedCard);
 
     setSelectedCard(updatedCard);
   };
 
   const handleDeleteCard = (cardId: string) => {
     // TODO: Connect this to a backend mutation/hook.
-    console.log("Delete card:", cardId);
-
     setIsCardDialogOpen(false);
     setSelectedCard(null);
   };
@@ -234,9 +319,6 @@ export default function Kanban() {
                   ) : (
                     <>
                       <KanbanBoardColumnTitle columnId={column.id}>
-                        {/* {column.color && ( */}
-                        {/* <KanbanColorCircle color={column.color} /> */}
-                        {/* )} */}
                         {column.name}
                         <span className="ml-2 text-muted-foreground">
                           {/* {column.cards.length} */}
@@ -254,7 +336,7 @@ export default function Kanban() {
                           onClick={() => {
                             if (
                               confirm(
-                                `Delete "${column.name}" list and all its cards?`,
+                                `Delete "${column.name}" list and all its cards?`
                               )
                             ) {
                               deleteColumn(column.id);
@@ -269,62 +351,124 @@ export default function Kanban() {
                 </KanbanBoardColumnHeader>
 
                 <KanbanBoardColumnList>
-                  {column.cards.map((card) => (
-                    <KanbanBoardColumnListItem
-                      key={card.id}
-                      cardId={card.id}
-                      onDropOverListItem={(data, direction) =>
-                        handleDropOverListItem(
-                          column.id,
-                          card.id,
-                          data,
-                          direction,
-                        )
-                      }
-                    >
-                      <ContextMenu>
-                        <ContextMenuTrigger>
-                          <KanbanBoardCard
-                            data={card}
-                            onClick={() => openCardDialog(card)}
-                          >
-                            <KanbanBoardCardTitle>
-                              {card.color && (
-                                <KanbanColorCircle color={card.color} />
+                  {column.cards.map((card) => {
+                    const c = card as any;
+                    // Normalize card to Card type for UI
+                    const normalizedCard = {
+                      id: c.id,
+                      title: c.title || c.name || "Untitled",
+                      description: c.description || "",
+                      listId: c.listId || column.id,
+                      position: c.position || c.order || 0,
+                      labels: c.labels || [],
+                      members: c.members || [],
+                      dueDate: c.dueDate,
+                      cover: c.cover,
+                      attachments: c.attachments || [],
+                      comments: c.comments || [],
+                      activities: c.activities || [],
+                      createdAt: c.createdAt || new Date(),
+                      updatedAt: c.updatedAt || new Date(),
+                      color: c.color,
+                    };
+                    return (
+                      <KanbanBoardColumnListItem
+                        key={normalizedCard.id}
+                        cardId={normalizedCard.id}
+                        onDropOverListItem={(data, direction) =>
+                          handleDropOverListItem(
+                            column.id,
+                            normalizedCard.id,
+                            data,
+                            direction
+                          )
+                        }
+                      >
+                        <ContextMenu>
+                          <ContextMenuTrigger>
+                            <KanbanBoardCard
+                              data={normalizedCard}
+                              onClick={() => openCardDialog(normalizedCard)}
+                            >
+                              <KanbanBoardCardTitle>
+                                {/* If you want to show color, add KanbanColorCircle here if available */}
+                                {normalizedCard.title}
+                              </KanbanBoardCardTitle>
+                              {normalizedCard.description && (
+                                <KanbanBoardCardDescription>
+                                  {normalizedCard.description}
+                                </KanbanBoardCardDescription>
                               )}
-                              {card.title}
-                            </KanbanBoardCardTitle>
-                            {card.description && (
-                              <KanbanBoardCardDescription>
-                                {card.description}
-                              </KanbanBoardCardDescription>
-                            )}
-                          </KanbanBoardCard>
-                        </ContextMenuTrigger>
-                        <ContextMenuContent>
-                          <ContextMenuItem onClick={() => openCardDialog(card)}>
-                            Edit
-                          </ContextMenuItem>
-                          <ContextMenuItem
-                            onClick={() => {
-                              if (confirm("Delete this card?")) {
-                                handleDeleteCard(card.id);
-                              }
-                            }}
-                          >
-                            Remove
-                          </ContextMenuItem>
-                        </ContextMenuContent>
-                      </ContextMenu>
-                    </KanbanBoardColumnListItem>
-                  ))}
+                            </KanbanBoardCard>
+                          </ContextMenuTrigger>
+                          <ContextMenuContent>
+                            <ContextMenuItem
+                              onClick={() => openCardDialog(normalizedCard)}
+                            >
+                              Edit
+                            </ContextMenuItem>
+                            <ContextMenuItem
+                              onClick={() => {
+                                if (confirm("Delete this card?")) {
+                                  handleDeleteCard(normalizedCard.id);
+                                }
+                              }}
+                            >
+                              Remove
+                            </ContextMenuItem>
+                          </ContextMenuContent>
+                        </ContextMenu>
+                      </KanbanBoardColumnListItem>
+                    );
+                  })}
                 </KanbanBoardColumnList>
 
                 <KanbanBoardColumnFooter>
-                  <KanbanBoardColumnButton onClick={() => addCard(column.id)}>
-                    <PlusIcon className="mr-2 size-4" />
-                    Add Card
-                  </KanbanBoardColumnButton>
+                  {addingCardColumnId === column.id ? (
+                    <div className="flex flex-col gap-2 w-full">
+                      <Input
+                        autoFocus
+                        placeholder="Enter card title..."
+                        value={newCardTitle}
+                        onChange={(e) => setNewCardTitle(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleAddCard(column.id);
+                          if (e.key === "Escape") {
+                            setAddingCardColumnId(null);
+                            setNewCardTitle("");
+                          }
+                        }}
+                        className="bg-background"
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => handleAddCard(column.id)}
+                          disabled={!newCardTitle.trim()}
+                        >
+                          Add
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            setAddingCardColumnId(null);
+                            setNewCardTitle("");
+                          }}
+                          className="ml-auto"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <KanbanBoardColumnButton
+                      onClick={() => startAddCard(column.id)}
+                    >
+                      <PlusIcon className="mr-2 size-4" />
+                      Add Card
+                    </KanbanBoardColumnButton>
+                  )}
                 </KanbanBoardColumnFooter>
               </KanbanBoardColumn>
             ))}

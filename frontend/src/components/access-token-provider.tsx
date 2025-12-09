@@ -16,16 +16,15 @@ export default function AccessTokenProvider({
   const [, setGetAcessTokenFn] = useAtom(getAccessTokenFnAtom);
   const [accessToken, setAccessToken] = useAtom(accessTokenAtom);
 
-  const getAccessTokenFnRef = useRef<typeof auth.getAccessTokenSilently | null>(
-    null,
-  );
+  const getAccessTokenFnRef = useRef<(() => Promise<string>) | null>(null);
 
   useEffect(() => {
     if (auth.isAuthenticated) {
-      setGetAcessTokenFn(auth.getAccessTokenSilently);
-      getAccessTokenFnRef.current = auth.getAccessTokenSilently;
+      const boundGetAccessToken = () => auth.getAccessTokenSilently();
+      setGetAcessTokenFn(() => boundGetAccessToken);
+      getAccessTokenFnRef.current = boundGetAccessToken;
     }
-  }, [auth, setGetAcessTokenFn]);
+  }, [auth.isAuthenticated, setGetAcessTokenFn]);
 
   useEffect(() => {
     if (isUpdating.current || !auth.isAuthenticated) {
