@@ -11,11 +11,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useRef, useState, useEffect } from "react";
-import { AdvancedColorPicker } from "./color-picker";
+import { useState, useEffect } from "react";
 import ImageCropper from "./image-cropper";
 import { Spinner } from "./ui/spinner";
 import { cn } from "@/lib/utils";
+import { BoardBackgroundPicker } from "./background-picker";
 
 interface CreateBoardDialogProps {
   open: boolean;
@@ -34,18 +34,7 @@ export default function CreateBoardDialog({
 }: CreateBoardDialogProps) {
   const [title, setTitle] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const colorPalette = [
-    "#ffffff",
-    "#fde68a",
-    "#fca5a5",
-    "#c7f9cc",
-    "#bfdbfe",
-    "#e9d5ff",
-    "#fef3c7",
-    "#d1fae5",
-  ];
   const [selectedColor, setSelectedColor] = useState<string>("#ffffff");
-
   type BackgroundType = "color" | "image";
   const [backgroundType, setBackgroundType] = useState<BackgroundType>("color");
 
@@ -53,7 +42,6 @@ export default function CreateBoardDialog({
   const [imagePreview, setImagePreview] = useState<string>("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showCropper, setShowCropper] = useState<boolean>(false);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     const checkImage = async (url: string) => {
@@ -73,7 +61,7 @@ export default function CreateBoardDialog({
     checkImage(imageLink);
   }, [imageLink]);
 
-  const handleFilePick = (file?: File) => {
+  const handleFilePick = (file: File | null | undefined) => {
     if (!file) return;
     const url = URL.createObjectURL(file);
     setImagePreview(url);
@@ -81,23 +69,14 @@ export default function CreateBoardDialog({
     setImageLink("");
   };
 
-  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) handleFilePick(file);
-  };
-
-  const handleImageLinkChange = (value: string) => {
-    setImageLink(value);
-    setImagePreview(value);
-    setSelectedFile(null); // link chưa có File, sẽ fetch sau
-  };
-
   const handleCropComplete = (croppedImage: string) => {
     setImagePreview(croppedImage);
     setShowCropper(false);
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>
+  ): Promise<void> => {
     e.preventDefault();
     const trimmedTitle = title.trim();
     if (!trimmedTitle) return;
@@ -114,7 +93,7 @@ export default function CreateBoardDialog({
     }
 
     setIsSubmitting(true);
-    onCreate(trimmedTitle, selectedColor, selectedFile || undefined);
+    await onCreate(trimmedTitle, selectedColor, selectedFile || undefined);
     setTimeout(() => {
       setTitle("");
       setSelectedColor("#bfdbfe");
@@ -123,7 +102,7 @@ export default function CreateBoardDialog({
       setImagePreview("");
       setIsSubmitting(false);
       setShowCropper(false);
-    }, 1000);
+    }, 300);
   };
 
   const closeDialog = async () => {
@@ -158,7 +137,10 @@ export default function CreateBoardDialog({
   //#region Render
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="overflow-auto sm:max-w-md min-h-[60vh] max-h-[90vh]">
+      <DialogContent
+        className="overflow-auto sm:max-w-md min-h-[60vh] max-h-[90vh]"
+        showCloseButton={false}
+      >
         {isSubmitting ? (
           <div className="flex flex-col gap-3 justify-center items-center w-full h-full">
             <Spinner className={cn("size-10")} />
@@ -175,8 +157,8 @@ export default function CreateBoardDialog({
             </DialogHeader>
 
             <form onSubmit={handleSubmit}>
-              <div className="grid gap-6 pb-8">
-                <div className="grid gap-3">
+              <div className="grid gap-8 pb-8">
+                <div className="grid gap-4">
                   <Label htmlFor="board-title">Board Title</Label>
                   <Input
                     id="board-title"
@@ -189,138 +171,28 @@ export default function CreateBoardDialog({
                   />
                 </div>
 
-                <div className="grid gap-2">
+                {/* Background Picker */}
+                <div className="grid gap-4">
                   <Label>Background</Label>
-                  <div className="flex gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setBackgroundType("color")}
-                      className={`px-3 py-1 rounded-md border dark:bg-black ${
-                        backgroundType === "color"
-                          ? "border-sky-400 bg-sky-50"
-                          : "border-transparent"
-                      }`}
-                    >
-                      Color
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setBackgroundType("image")}
-                      className={`px-3 py-1 rounded-md border dark:bg-black ${
-                        backgroundType === "image"
-                          ? "border-sky-400 bg-sky-50"
-                          : "border-transparent"
-                      }`}
-                    >
-                      Image
-                    </button>
-                  </div>
-                  {backgroundType === "color" ? (
-                    //#region Background:Color selection
-                    <div className="grid gap-2 mt-6">
-                      <AdvancedColorPicker
-                        color={selectedColor}
-                        onChange={setSelectedColor}
-                      />
-                      <div className="flex gap-3 items-center mt-6 mb-10">
-                        <div className="grid grid-cols-9 gap-2">
-                          {colorPalette.map((c) => (
-                            <button
-                              key={c}
-                              defaultChecked={c === selectedColor}
-                              type="button"
-                              aria-label={`Select ${c}`}
-                              onClick={() => setSelectedColor(c)}
-                              disabled={isSubmitting}
-                              className={`w-8 h-8 rounded-md border-1 transform transition ${
-                                selectedColor === c
-                                  ? "border-sky-300 ring-2 ring-sky-200 scale-110 z-10 shadow-lg"
-                                  : "border-transparent"
-                              } hover:scale-110 hover:z-10 hover:shadow-md`}
-                              style={{ backgroundColor: c }}
-                            />
-                          ))}
-                        </div>
-                        <div className="flex gap-2 items-center ml-3">
-                          <span className="text-sm text-muted-foreground">
-                            Preview
-                          </span>
-                          <div
-                            className="w-12 h-8 rounded-md border"
-                            style={{ backgroundColor: selectedColor }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    //#region Background:Image selection
-                    <div className="grid gap-2 mt-2">
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="Paste image link (https://...)"
-                          value={imageLink}
-                          className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-0 focus:border-sky-400 [&:focus]:ring-1 [&:focus]:ring-sky-100"
-                          onChange={(e) =>
-                            handleImageLinkChange(e.target.value)
-                          }
-                          disabled={isSubmitting}
-                        />
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept="image/*"
-                          onChange={onFileChange}
-                          className="hidden"
-                          disabled={isSubmitting}
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => fileInputRef.current?.click()}
-                          disabled={isSubmitting}
-                        >
-                          Choose file
-                        </Button>
-                      </div>
 
-                      <div className="flex gap-3 items-center pt-4">
-                        <span className="text-sm text-muted-foreground">
-                          Preview
-                        </span>
-                        <div
-                          onClick={() => {
-                            if (
-                              imagePreview &&
-                              selectedFile?.type !== "image/gif"
-                            )
-                              setShowCropper(true);
-                          }}
-                          className={`w-34 h-24 rounded-md border bg-gray-50 overflow-hidden flex items-center justify-center ${
-                            imagePreview
-                              ? "cursor-pointer hover:opacity-80 transition-opacity"
-                              : ""
-                          }`}
-                        >
-                          {imagePreview ? (
-                            <img
-                              src={imagePreview}
-                              alt="preview"
-                              className="object-cover w-full h-full"
-                            />
-                          ) : (
-                            <span className="text-xs text-muted-foreground">
-                              No image selected
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      {imagePreview && selectedFile?.type !== "image/gif" && (
-                        <p className="text-xs text-muted-foreground">
-                          Click preview to crop image
-                        </p>
-                      )}
-                    </div>
-                  )}
+                  <BoardBackgroundPicker
+                    type={backgroundType}
+                    onTypeChange={setBackgroundType}
+                    // Color
+                    color={selectedColor}
+                    onColorChange={setSelectedColor}
+                    // Image
+                    imageLink={imageLink}
+                    onImageLinkChange={(v) => {
+                      setImageLink(v);
+                      setImagePreview(v);
+                      setSelectedFile(null);
+                    }}
+                    imagePreview={imagePreview}
+                    onFileChange={(file) => handleFilePick(file)}
+                    onOpenCropper={() => setShowCropper(true)}
+                    disabled={isSubmitting}
+                  />
                 </div>
               </div>
 
