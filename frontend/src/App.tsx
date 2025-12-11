@@ -8,6 +8,7 @@ interface AppProps {
 
 function App({ children }: AppProps) {
   const { isAuthenticated } = useAuth0();
+  console.log("User is authenticated:", isAuthenticated);
   return (
     <div>
       {!isAuthenticated ? (
