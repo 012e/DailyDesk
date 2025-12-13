@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Card } from "@/types/card";
 import { uuidv7 } from "uuidv7";
 import api from "@/lib/api";
+import { useDeleteImage } from "@/hooks/use-image";
 
 /**
  * Hook để update card với optimistic updates
@@ -9,6 +10,7 @@ import api from "@/lib/api";
  */
 export function useUpdateCard() {
   const queryClient = useQueryClient();
+  const { deleteImage } = useDeleteImage();
 
   return useMutation({
     mutationFn: async (params: {
@@ -17,7 +19,10 @@ export function useUpdateCard() {
       name?: string;
       order?: number;
       listId?: string;
+      coverColor?: string | null;
+      isCover?: boolean;
     }) => {
+      console.log("param:", params);
       const { data, error } = await api.PUT("/boards/{boardId}/cards/{id}", {
         params: {
           path: {
@@ -29,11 +34,20 @@ export function useUpdateCard() {
           name: params.name,
           order: params.order,
           listId: params.listId,
+          coverColor: params.coverColor,
+          isCover: params.isCover,
         },
       });
 
       if (error) {
         throw new Error("Failed to update card");
+      }
+      if (params.coverColor) {
+        try {
+          await deleteImage("board", params.cardId);
+        } catch (error) {
+          throw new Error(`Failed to delete card cover: ${error}`);
+        }
       }
 
       return data;
@@ -107,20 +121,23 @@ export function useCreateCard() {
       order?: number;
     }) => {
       const cardId = uuidv7();
-      
-      const { data, error, response } = await api.POST("/boards/{boardId}/cards", {
-        params: {
-          path: {
-            boardId: params.boardId,
+
+      const { data, error, response } = await api.POST(
+        "/boards/{boardId}/cards",
+        {
+          params: {
+            path: {
+              boardId: params.boardId,
+            },
           },
-        },
-        body: {
-          id: cardId,
-          name: params.name,
-          order: params.order ?? 0,
-          listId: params.listId,
-        },
-      });
+          body: {
+            id: cardId,
+            name: params.name,
+            order: params.order ?? 0,
+            listId: params.listId,
+          },
+        }
+      );
 
       if (error) {
         console.error("API Error:", error);

@@ -7,7 +7,6 @@ import { Clipboard } from "lucide-react";
 import { useBoards, useCreateBoard } from "@/hooks/use-board";
 import PageLoader from "./components/full-page-loader";
 import { useUploadImage } from "@/hooks/use-image";
-import { queryClient } from "./lib/query-client";
 
 export default function Home() {
   const { createBoard } = useCreateBoard();
@@ -34,8 +33,6 @@ export default function Home() {
           type: "board",
           id: newBoard.id,
         });
-
-        queryClient.invalidateQueries({ queryKey: ["boards"] });
       } catch (err) {
         console.error("Upload thất bại", err);
       }

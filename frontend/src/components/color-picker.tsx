@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Copy, Check } from "lucide-react";
-
+import type { ComponentProps } from "react";
 import * as ColorUtils from "@/lib/color-utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,19 +14,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 
 interface ColorPickerProps {
   color?: string;
   onChange?: (value: string) => void;
 }
-
 type ColorMode = "hex" | "rgba" | "hsla";
 type CopyState = { [key in ColorMode]: boolean };
 
 export function AdvancedColorPicker({
   color = "#000000",
   onChange,
-}: ColorPickerProps) {
+  className,
+  ...props
+}: ComponentProps<typeof Button> & ColorPickerProps) {
   const [currentColor, setCurrentColor] = React.useState(color);
   const [colorMode, setColorMode] = React.useState<ColorMode>("hex");
   const [copied, setCopied] = React.useState<CopyState>({
@@ -143,10 +145,21 @@ export function AdvancedColorPicker({
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className="w-[250px] justify-start text-left font-normal"
+          className={cn(
+            "w-[250px] justify-start text-left font-normal",
+            className
+          )}
+          {...props}
         >
-          <div className="w-full flex items-center gap-2">
-            <div className="truncate flex-1">{currentColor}</div>
+          <div
+            className={cn(
+              "w-full flex items-center gap-2",
+              currentColor ? "opacity-100" : "opacity-50 text-gray-400"
+            )}
+          >
+            <div className="truncate flex-1">
+              {currentColor ? currentColor : "Click here to pick color"}
+            </div>
           </div>
         </Button>
       </PopoverTrigger>
@@ -154,7 +167,7 @@ export function AdvancedColorPicker({
         <div className="grid gap-4">
           <div
             ref={colorPlaneRef}
-            className="relative w-full h-48 rounded-lg cursor-crosshair touch-none"
+            className="relative w-full h-48 rounded-lg cursor-crosshair touch-none select-none"
             style={{
               // backgroundColor: `hsl(${hsl.h}, 100%, 50%)`,
               background: `

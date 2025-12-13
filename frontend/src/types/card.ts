@@ -35,14 +35,30 @@ export interface Comment {
 
 export interface ActivityLog {
   id: string;
-  type: 'comment' | 'label' | 'member' | 'dueDate' | 'attachment' | 'description' | 'title' | 'move';
+  type:
+    | "comment"
+    | "label"
+    | "member"
+    | "dueDate"
+    | "attachment"
+    | "description"
+    | "title"
+    | "move";
   userId: string;
   user: Member;
   action: string;
   createdAt: Date;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
+export const CardCoverModeValue = {
+  TOP: "top",
+  COVER: "cover",
+  NONE: null,
+} as const;
+
+export type CardCoverMode =
+  (typeof CardCoverModeValue)[keyof typeof CardCoverModeValue];
 export interface Card {
   id: string;
   title: string;
@@ -52,12 +68,15 @@ export interface Card {
   labels?: Label[];
   members?: Member[];
   dueDate?: Date;
-  cover?: string; // URL hoặc color
+  coverUrl: string;
+  coverColor: string;
+  coverMode?: CardCoverMode;
   attachments?: Attachment[];
   comments?: Comment[];
   activities?: ActivityLog[];
   createdAt: Date;
   updatedAt: Date;
+  order: number;
 }
 
 export interface List {
@@ -68,4 +87,6 @@ export interface List {
 }
 
 // Card update payload
-export type CardUpdatePayload = Partial<Omit<Card, 'id' | 'createdAt' | 'updatedAt'>>;
+export type CardUpdatePayload = Partial<
+  Omit<Card, "id" | "createdAt" | "updatedAt">
+>;

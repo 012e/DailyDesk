@@ -1,43 +1,16 @@
 "use client";
 
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { AdvancedColorPicker } from "./color-picker";
-import { cn } from "@/lib/utils";
-import React from "react";
-import { Divide } from "lucide-react";
+import { cn, imageUrlToFile } from "@/lib/utils";
+import React, { useState } from "react";
+import { BackgroundTypeValue } from "@/hooks/use-background-picker";
+import ImageCropper from "./image-cropper";
+import { useBackgroundPickerContext } from "./background-picker-provider";
+import { Card, CardContent } from "./ui/card";
 
-interface BoardBackgroundPickerProps {
-  type: "color" | "image";
-  onTypeChange: (type: "color" | "image") => void;
-
-  // Color
-  color: string;
-  onColorChange: (color: string) => void;
-
-  // Image
-  imageLink: string;
-  onImageLinkChange: (value: string) => void;
-  imagePreview: string;
-  onFileChange: (file: File | null) => void;
-  onOpenCropper: () => void;
-  disabled?: boolean;
-}
-
-export function BoardBackgroundPicker({
-  type,
-  onTypeChange,
-  color,
-  onColorChange,
-  imageLink,
-  onImageLinkChange,
-  imagePreview,
-  onFileChange,
-  onOpenCropper,
-  disabled,
-}: BoardBackgroundPickerProps) {
+export function BackgroundPicker() {
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+  const [selectedBGIndex, setSelectedBGIndex] = useState<number | null>(null); // State to track selected  pre-Existing background index
 
   const colorPalette = [
     "#ffffff",
@@ -49,17 +22,48 @@ export function BoardBackgroundPicker({
     "#fef3c7",
     "#d1fae5",
   ];
+  const preExistingImages = [
+    "https://res.cloudinary.com/dpqv7ag5w/image/upload/v1765610459/japan-background-digital-art_ftw16m.jpg",
+    "https://res.cloudinary.com/dpqv7ag5w/image/upload/v1765610458/anime-style-cozy-home-interior-with-furnishings_w64pvh.jpg",
+    "https://res.cloudinary.com/dpqv7ag5w/image/upload/v1765610458/anime-moon-landscape_xpl8tc.jpg",
+    "https://res.cloudinary.com/dpqv7ag5w/image/upload/v1765610458/japan-background-digital-art_1_v64imy.jpg",
+    "https://res.cloudinary.com/dpqv7ag5w/image/upload/v1765610457/japan-background-digital-art_2_t9ezt8.jpg",
+    "https://res.cloudinary.com/dpqv7ag5w/image/upload/v1765610797/japan-background-digital-art_nzenvh.jpg",
+    "https://res.cloudinary.com/dpqv7ag5w/image/upload/v1765610459/japan-background-digital-art_ftw16m.jpg",
+  ];
+
+  const {
+    backgroundType,
+    setBackgroundType,
+    selectedColor,
+    imagePreview,
+    selectedFile,
+    showCropper,
+    setShowCropper,
+    handleFilePick,
+    handleCropComplete,
+    handleColorPick,
+  } = useBackgroundPickerContext();
 
   return (
     <div className="grid gap-2">
+      <ImageCropper
+        open={showCropper}
+        onOpenChange={setShowCropper}
+        file={selectedFile}
+        onCropComplete={handleCropComplete}
+        onCancel={() => setShowCropper(false)}
+      />
       {/* Switcher */}
       <div className="flex gap-3">
         <button
           type="button"
-          onClick={() => onTypeChange("color")}
+          onClick={() => setBackgroundType(BackgroundTypeValue.COLOR)}
           className={cn(
             "px-3 py-1 rounded-md border dark:bg-black",
-            type === "color" ? "border-sky-400 bg-sky-50" : "border-transparent"
+            backgroundType === BackgroundTypeValue.COLOR
+              ? "border-sky-400 bg-sky-50"
+              : "border-transparent"
           )}
         >
           Color
@@ -67,10 +71,12 @@ export function BoardBackgroundPicker({
 
         <button
           type="button"
-          onClick={() => onTypeChange("image")}
+          onClick={() => setBackgroundType(BackgroundTypeValue.IMAGE)}
           className={cn(
             "px-3 py-1 rounded-md border dark:bg-black",
-            type === "image" ? "border-sky-400 bg-sky-50" : "border-transparent"
+            backgroundType === BackgroundTypeValue.IMAGE
+              ? "border-sky-400 bg-sky-50"
+              : "border-transparent"
           )}
         >
           Image
@@ -78,75 +84,101 @@ export function BoardBackgroundPicker({
       </div>
 
       {/* COLOR MODE */}
-      {type === "color" ? (
-        <div className="grid gap-2 mt-6">
-          <AdvancedColorPicker color={color} onChange={onColorChange} />
-
-          <div className="flex gap-3 items-center mt-6 mb-10">
-            <div className="grid grid-cols-9 gap-2">
+      {backgroundType === BackgroundTypeValue.COLOR ? (
+        <div className="flex w-full gap-4 my-4 items-start">
+          <div className="grid gap-6 w-full flex-[2]">
+            <AdvancedColorPicker
+              className="w-full"
+              color={selectedColor}
+              onChange={(color) => {
+                handleColorPick(color);
+              }}
+            />
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(0.5rem,1fr))] w-[250] ">
               {colorPalette.map((c) => (
                 <button
                   key={c}
                   type="button"
                   aria-label={`Select ${c}`}
-                  onClick={() => onColorChange(c)}
-                  disabled={disabled}
+                  onClick={() => handleColorPick(c)}
                   className={cn(
-                    "w-8 h-8 rounded-md border-1 transition",
-                    color === c
-                      ? "border-sky-300 ring-2 ring-sky-200 scale-110 z-10 shadow-lg"
+                    "aspect-square w-full rounded-md border transition cursor-pointer select-none",
+                    selectedColor === c
+                      ? "border-sky-300 ring-1 ring-sky-200 scale-105 z-10 shadow-lg"
                       : "border-transparent"
                   )}
                   style={{ backgroundColor: c }}
                 />
               ))}
             </div>
-
-            <div className="flex gap-2 items-center ml-3">
-              <span className="text-sm text-muted-foreground">Preview</span>
-              <div
-                className="w-12 h-8 rounded-md border"
-                style={{ backgroundColor: color }}
-              />
-            </div>
+          </div>
+          <div className="flex gap-2 items-center ml-3 flex-[1]">
+            <span className="text-sm text-muted-foreground">Preview</span>
+            <div
+              className="w-full h-9 rounded-md border"
+              style={{ backgroundColor: selectedColor }}
+            />
           </div>
         </div>
       ) : (
         /* IMAGE MODE */
         <div className="grid gap-2 mt-2">
           <div className="flex gap-2">
-            <Input
-              placeholder="Paste image link (https://...)"
-              value={imageLink}
-              onChange={(e) => onImageLinkChange(e.target.value)}
-              disabled={disabled}
-              className="border border-gray-300 rounded-md px-3 py-2"
-            />
-
             <input
               ref={fileInputRef}
               type="file"
               accept="image/*"
-              onChange={(e) => onFileChange(e.target.files?.[0] ?? null)}
+              onChange={(e) => {
+                handleFilePick(e.target.files?.[0] ?? null);
+                setSelectedBGIndex(null);
+              }}
               className="hidden"
-              disabled={disabled}
             />
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={disabled}
+          </div>
+          <div className="grid grid-cols-4 gap-2 w-full">
+            {preExistingImages.map((c, index) => {
+              return (
+                <>
+                  <button
+                    key={c}
+                    type="button"
+                    aria-label={`Select ${c}`}
+                    onClick={async () => {
+                      setSelectedBGIndex(index);
+                      handleFilePick(await imageUrlToFile(c));
+                    }}
+                    className={cn(
+                      "h-12 rounded-md transition overflow-hidden bg-center bg-cover bg-no-repeat  cursor-pointer select-none ",
+                      selectedBGIndex === index
+                        ? " ring-1 ring-sky-200 scale-105 z-10 shadow-lg"
+                        : "border-transparent"
+                    )}
+                    style={{
+                      backgroundImage: `url(${c})`,
+                    }}
+                  />
+                </>
+              );
+            })}
+            <Card
+              className="flex flex-col justify-center py-0 items-center border-2 border-gray-500 border-dashed rounded-sm transition-all cursor-pointer hover:border-gray-400 hover:bg-gray-300/20"
+              onClick={() => {
+                fileInputRef.current?.click();
+              }}
             >
-              Choose file
-            </Button>
+              <CardContent className="w-full p-0 pb-1 flex items-center justify-center ">
+                <p className="text-sm font-medium text-gray-700 dark:text-white  ">
+                  Custom
+                </p>
+              </CardContent>
+            </Card>
           </div>
 
           <div className="flex gap-3 items-center pt-4">
             <div
-              onClick={() => imagePreview && onOpenCropper()}
+              onClick={() => imagePreview && setShowCropper(true)}
               className={cn(
-                "w-34 h-24 rounded-md border bg-gray-50 overflow-hidden flex items-center justify-center",
+                "w-[57%] h-32 rounded-md  bg-gray-50 bg-cover bg-center  overflow-hidden flex items-center justify-center",
                 imagePreview && "cursor-pointer hover:opacity-80 transition"
               )}
             >
@@ -154,10 +186,10 @@ export function BoardBackgroundPicker({
                 <img
                   src={imagePreview}
                   alt="preview"
-                  className="object-cover w-full h-full"
+                  className="object-cover w-full h-full cursor-pointer "
                 />
               ) : (
-                <span className="text-xs text-muted-foreground">
+                <span className="text-xs text-muted-foreground select-none">
                   No image selected
                 </span>
               )}

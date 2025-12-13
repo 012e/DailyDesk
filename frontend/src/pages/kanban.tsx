@@ -16,7 +16,7 @@ import {
   KanbanBoardColumnTitle,
   KanbanBoardExtraMargin,
   KanbanBoardProvider,
-  type KanbanBoardCircleColor,
+  KanbanCardCover,
   type KanbanBoardDropDirection,
 } from "@/components/kanban";
 import { Button } from "@/components/ui/button";
@@ -30,7 +30,7 @@ import { Input } from "@/components/ui/input";
 import { useBoard } from "@/hooks/use-board";
 import { useCreateCard, useUpdateCard } from "@/hooks/use-card";
 import { useListActions } from "@/hooks/use-list";
-import type { Card as CardType, Label, Member } from "@/types/card";
+import { CardCoverModeValue, type Card as CardType } from "@/types/card";
 import {
   CheckIcon,
   Edit2Icon,
@@ -40,19 +40,6 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
-
-type Card = {
-  id: string;
-  title: string;
-  description?: string;
-  color?: KanbanBoardCircleColor;
-  labels?: Label[];
-  members?: Member[];
-  dueDate?: Date;
-  cover?: string;
-  attachments?: any[];
-  comments?: any[];
-};
 
 export default function Kanban() {
   const { boardId } = useParams();
@@ -107,7 +94,7 @@ export default function Kanban() {
 
   const handleDropOverColumn = (columnId: string, dataTransferData: string) => {
     if (!boardId) return;
-    
+
     // dataTransferData is a JSON string of the card object
     let cardId: string;
     try {
@@ -117,14 +104,14 @@ export default function Kanban() {
       console.error("Failed to parse drag data:", e);
       return;
     }
-    
+
     // Find the target list
     const targetList = lists.find((l) => l.id === columnId);
     if (!targetList) return;
-    
+
     // Calculate the new order (append to end of target list)
     const newOrder = targetList.cards.length;
-    
+
     // Update the card's listId and order
     updateCard({
       boardId,
@@ -141,7 +128,7 @@ export default function Kanban() {
     dropDirection: KanbanBoardDropDirection
   ) => {
     if (!boardId) return;
-    
+
     // dataTransferData is a JSON string of the card object
     let draggedCardId: string;
     try {
@@ -151,24 +138,24 @@ export default function Kanban() {
       console.error("Failed to parse drag data:", e);
       return;
     }
-    
+
     // Don't do anything if dropping on itself
     if (draggedCardId === targetCardId) return;
-    
+
     // Find the target list and cards
     const targetList = lists.find((l) => l.id === columnId);
     if (!targetList) return;
-    
+
     // Find the target card's current order
     const targetCard = targetList.cards.find((c) => c.id === targetCardId);
     if (!targetCard) return;
-    
+
     // Calculate new order based on drop direction
     let newOrder = targetCard.order || 0;
     if (dropDirection === "bottom") {
       newOrder += 1;
     }
-    
+
     // Update the dragged card
     updateCard({
       boardId,
@@ -197,7 +184,7 @@ export default function Kanban() {
       name: newCardTitle,
       order: nextOrder,
     });
-    
+
     setNewCardTitle("");
     setAddingCardColumnId(null);
   };
@@ -243,7 +230,7 @@ export default function Kanban() {
   };
 
   // Card editing functions
-  const openCardDialog = (card: Card) => {
+  const openCardDialog = (card: any) => {
     // Convert local Card type to CardType for the Dialog
     const fullCard: CardType = {
       id: card.id,
@@ -255,7 +242,10 @@ export default function Kanban() {
       labels: card.labels || [],
       members: card.members || [],
       dueDate: card.dueDate,
-      cover: card.cover,
+      coverUrl: card.coverUrl,
+      coverColor: card.coverColor,
+      order: card.order,
+      coverMode: card.coverMode,
       attachments: card.attachments || [],
       comments: card.comments || [],
       createdAt: new Date(),
@@ -265,11 +255,23 @@ export default function Kanban() {
     setIsCardDialogOpen(true);
   };
 
-  const handleUpdateCard = (updatedCard: CardType) => {
+  const handleUpdateCard = async (updatedCard: CardType) => {
     // TODO: Connect this to a backend mutation/hook.
     // The logic below only worked when 'lists' was local state.
     // Since 'lists' now comes from useBoard(), you need an API call here.
+    // Get the current list to calculate the next order
+    if (!boardId) return;
 
+    updateCard({
+      boardId: boardId,
+      cardId: updatedCard.id,
+      name: updatedCard.title,
+      listId: updatedCard.listId,
+      coverColor: updatedCard.coverColor,
+      isCover:
+        updatedCard.coverMode === CardCoverModeValue.COVER ? true : false,
+      order: updatedCard.order,
+    });
     setSelectedCard(updatedCard);
   };
 
@@ -363,7 +365,14 @@ export default function Kanban() {
                       labels: c.labels || [],
                       members: c.members || [],
                       dueDate: c.dueDate,
-                      cover: c.cover,
+                      coverUrl: c.coverUrl,
+                      coverColor: c.CoverColor,
+                      coverMode:
+                        !c.coverUrl && !c.coverColor
+                          ? CardCoverModeValue.NONE
+                          : c.isCover
+                          ? CardCoverModeValue.COVER
+                          : CardCoverModeValue.TOP,
                       attachments: c.attachments || [],
                       comments: c.comments || [],
                       activities: c.activities || [],
@@ -390,6 +399,11 @@ export default function Kanban() {
                               data={normalizedCard}
                               onClick={() => openCardDialog(normalizedCard)}
                             >
+                              <KanbanCardCover
+                                mode={normalizedCard.coverMode}
+                                color={normalizedCard.coverColor}
+                                imageUrl={normalizedCard.coverUrl}
+                              />
                               <KanbanBoardCardTitle>
                                 {/* If you want to show color, add KanbanColorCircle here if available */}
                                 {normalizedCard.title}
@@ -524,6 +538,7 @@ export default function Kanban() {
           {/* Card Edit Dialog from origin/main */}
           <CardEditDialog
             card={selectedCard}
+            boardId={boardId || ""}
             isOpen={isCardDialogOpen}
             onClose={() => {
               setIsCardDialogOpen(false);

@@ -1,4 +1,5 @@
 import { queryApi } from "@/lib/api";
+import { queryClient } from "@/lib/query-client";
 import imageCompression from "browser-image-compression";
 
 export type SaveImageResponseType = {
@@ -70,9 +71,34 @@ export function useUploadImage() {
         public_id: uploadData.public_id,
       },
     });
+    if (type === "board") {
+      queryClient.invalidateQueries({ queryKey: ["board", id] });
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
+    }
 
+    if (type === "card") {
+      queryClient.invalidateQueries({ queryKey: ["card", id] });
+    }
     return savedData;
   };
 
   return { uploadImage };
+}
+
+export function useDeleteImage() {
+  const mutation = queryApi.useMutation("delete", "/media/image/{type}/{id}");
+  const deleteImage = async (type: "board" | "card", id: string) => {
+    await mutation.mutateAsync({
+      params: { path: { type, id } },
+    });
+    if (type === "board") {
+      queryClient.invalidateQueries({ queryKey: ["board", id] });
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
+    }
+    if (type === "card") {
+      queryClient.invalidateQueries({ queryKey: ["card", id] });
+    }
+  };
+
+  return { deleteImage };
 }

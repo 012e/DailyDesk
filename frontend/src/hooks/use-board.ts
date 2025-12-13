@@ -2,6 +2,7 @@ import * as z from "zod";
 import api, { queryApi } from "@/lib/api";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { uuidv7 } from "uuidv7";
+import { useDeleteImage } from "@/hooks/use-image";
 
 export const CreateBoardSchema = z.object({
   name: z.string().nonempty(),
@@ -48,6 +49,9 @@ export function useCreateBoard() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["boards"] });
     },
+    onError: (err) => {
+      console.error("Failed to create board:", err);
+    },
   });
 
   const createBoard = async (board: CreateBoardType): Promise<BoardType> => {
@@ -76,6 +80,7 @@ export function useCreateBoard() {
 
 export function useUpdateBoard() {
   const queryClient = useQueryClient();
+  const { deleteImage } = useDeleteImage();
 
   const { mutateAsync } = queryApi.useMutation("put", "/boards/{id}", {
     onSuccess: (_, variables) => {
@@ -84,6 +89,9 @@ export function useUpdateBoard() {
       if (variables?.id) {
         queryClient.invalidateQueries({ queryKey: ["board", variables.id] });
       }
+    },
+    onError: (err) => {
+      console.error("Failed to update board:", err);
     },
   });
 
@@ -95,6 +103,14 @@ export function useUpdateBoard() {
       path: { id },
       body: parsedData,
     });
+
+    if (boardData.backgroundColor) {
+      try {
+        await deleteImage("board", id);
+      } catch (error) {
+        throw new Error(`Failed to delete  board image: ${error}`);
+      }
+    }
 
     return updatedBoard;
   };
@@ -109,6 +125,7 @@ export function useBoards() {
     queryKey: ["boards"],
     queryFn: async () => {
       const { data, error } = await api.GET("/boards");
+
       if (error) {
         throw new Error(error);
       }
@@ -137,3 +154,40 @@ export function useBoard({ boardId }: { boardId: string }) {
   });
   return board.data;
 }
+
+// export function useDeleteBoard() {
+//   const queryClient = useQueryClient();
+//   const { deleteImage } = useDeleteImage();
+
+//   const { mutateAsync } = queryApi.useMutation("delete", "/boards/{id}", {
+//     onSuccess: (_, variables) => {
+//       // Khi update xong, refresh query cho board cụ thể và list boards
+//       queryClient.invalidateQueries({ queryKey: ["boards"] });
+//     },
+//     onError: (err) => {
+//       console.error("Failed to update board:", err);
+//     },
+//   });
+
+//   const updateBoard = async (id: string) => {
+//     // validate dữ liệu trước khi gửi
+
+//     await mutateAsync({
+//       path: { id },
+//     });
+
+//     if (boardData.backgroundColor) {
+//       try {
+//         await deleteImage("board", id);
+//       } catch (error) {
+//         throw new Error(`Failed to delete  board image: ${error}`);
+//       }
+//     }
+
+//     return true;
+//   };
+
+//   return {
+//     updateBoard,
+//   };
+// }

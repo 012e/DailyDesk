@@ -4,6 +4,10 @@ export const CardSchema = z.object({
   id: z.uuidv7(),
   name: z.string().nonempty(),
   order: z.number().int(),
+  coverUrl: z.string().url().nullable(),
+  coverPublicId: z.string().nullable(),
+  coverColor: z.string().nullable(),
+  isCover: z.boolean().default(false),
   listId: z.uuidv7(),
 });
 

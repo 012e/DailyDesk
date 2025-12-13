@@ -5,11 +5,7 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { eq } from "drizzle-orm";
 import { authMiddleware } from "@/lib/auth";
 import { defaultSecurityScheme, jsonBody, successJson } from "@/types/openapi";
-import {
-  CardSchema,
-  CreateCardSchema,
-  UpdateCardSchema,
-} from "@/types/cards";
+import { CardSchema, CreateCardSchema, UpdateCardSchema } from "@/types/cards";
 
 const TAGS = ["Cards"];
 
@@ -74,7 +70,7 @@ export default function createCardRoutes() {
         .where(eq(listsTable.boardId, boardId));
 
       return c.json(cards);
-    },
+    }
   );
 
   // POST /boards/{boardId}/cards - Create a new card
@@ -91,7 +87,7 @@ export default function createCardRoutes() {
         body: jsonBody(
           CreateCardSchema.extend({
             listId: z.uuid(),
-          }),
+          })
         ),
       },
       responses: {
@@ -124,7 +120,10 @@ export default function createCardRoutes() {
       }
 
       if (board[0].userId !== user.sub) {
-        return c.json({ error: "Không có quyền tạo Card trong Board này" }, 403);
+        return c.json(
+          { error: "Không có quyền tạo Card trong Board này" },
+          403
+        );
       }
 
       // Check if list exists and belongs to the board
@@ -153,7 +152,7 @@ export default function createCardRoutes() {
         .returning();
 
       return c.json(card[0]);
-    },
+    }
   );
 
   // GET /boards/{boardId}/cards/{id} - Get a specific card
@@ -230,7 +229,7 @@ export default function createCardRoutes() {
       }
 
       return c.json(card[0]);
-    },
+    }
   );
 
   // PUT /boards/{boardId}/cards/{id} - Update a card
@@ -248,7 +247,7 @@ export default function createCardRoutes() {
         body: jsonBody(
           UpdateCardSchema.extend({
             listId: z.uuid().optional(),
-          }),
+          })
         ),
       },
       responses: {
@@ -329,12 +328,14 @@ export default function createCardRoutes() {
           name: req.name,
           order: req.order,
           listId: req.listId,
+          isCover: req.isCover,
+          coverColor: req.coverColor,
         })
         .where(eq(cardsTable.id, id))
         .returning();
 
       return c.json(updatedCard[0]);
-    },
+    }
   );
 
   // DELETE /boards/{boardId}/cards/{id} - Delete a card
@@ -414,7 +415,7 @@ export default function createCardRoutes() {
       await db.delete(cardsTable).where(eq(cardsTable.id, id));
 
       return c.json({ message: "Xóa Card thành công" });
-    },
+    }
   );
 
   return app;

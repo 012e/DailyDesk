@@ -36,22 +36,6 @@ const ImageCropper = ({
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [croppedImage, setCroppedImage] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (file) {
-      setSelectedFile(file);
-      setCroppedImage(null);
-
-      const url = URL.createObjectURL(file);
-      setImageUrl(url);
-
-      // Dọn dẹp URL cũ để tránh memory leak
-      return () => URL.revokeObjectURL(url);
-    } else {
-      setSelectedFile(null);
-      setImageUrl(null);
-    }
-  }, [file]);
-
   const handleImageLoaded = () => {
     setIsImageLoading(false);
   };
@@ -66,6 +50,22 @@ const ImageCropper = ({
     onCancel?.();
     handleReset();
   };
+
+  useEffect(() => {
+    if (file) {
+      setSelectedFile(file);
+      setCroppedImage(null);
+      console.log("Selected file set in cropper:", file);
+      const url = URL.createObjectURL(file);
+      setImageUrl(url);
+
+      // Dọn dẹp URL cũ để tránh memory leak
+      return () => URL.revokeObjectURL(url);
+    } else {
+      setSelectedFile(null);
+      setImageUrl(null);
+    }
+  }, [file, isImageLoading]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange || handleClose}>
@@ -107,11 +107,6 @@ const ImageCropper = ({
                     <ImageCropContent className="max-h-[45vh] w-auto" />
 
                     <div className="flex justify-center gap-3 w-full">
-                      {croppedImage && (
-                        <Button variant="outline" onClick={handleReset}>
-                          Start Over
-                        </Button>
-                      )}
                       <Button variant="outline" onClick={handleClose}>
                         Cancel
                       </Button>
