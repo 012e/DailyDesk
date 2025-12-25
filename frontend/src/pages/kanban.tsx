@@ -1,4 +1,5 @@
 import BoardIdProivder from "@/components/board-id-provider";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CardEditDialog } from "@/components/card-edit-dialog";
 import {
   KanbanBoard,
@@ -40,6 +41,9 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
+import { Calendar } from "@/components/ui/calendar";
+import EventCalendar from "@/components/comp-542";
+import EventCalendarPage from "@/components/comp-542";
 
 type Card = {
   id: string;
@@ -54,9 +58,43 @@ type Card = {
   comments?: any[];
 };
 
-export default function Kanban() {
+export default function KanbanPage() {
   const { boardId } = useParams();
+  const [page, setPage] = useState<"kanban" | "calendar">("kanban");
 
+  return (
+    <div>
+      {page === "kanban" && <Kanban boardId={boardId} />}{" "}
+      {page === "calendar" && <EventCalendarPage />}
+      <PageTabs page={page} setPage={setPage} />
+    </div>
+  );
+}
+
+export function PageTabs({
+  page,
+  setPage,
+}: {
+  page: string;
+  setPage: (p: "kanban" | "calendar") => void;
+}) {
+  return (
+    <div className="flex fixed right-0 left-0 bottom-5 z-50 justify-center items-center w-full">
+      <Tabs defaultValue="kanban">
+        <TabsList>
+          <TabsTrigger value="kanban" onClick={() => setPage("kanban")}>
+            Kanban
+          </TabsTrigger>
+          <TabsTrigger value="calendar" onClick={() => setPage("calendar")}>
+            Calendar
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+    </div>
+  );
+}
+
+export function Kanban({ boardId }: { boardId?: string }) {
   // HEAD: Use hooks for data and actions
   const { createList } = useListActions();
   const board = useBoard({ boardId: boardId! });
@@ -80,7 +118,7 @@ export default function Kanban() {
 
   // Track which column is adding a card and the input value
   const [addingCardColumnId, setAddingCardColumnId] = useState<string | null>(
-    null
+    null,
   );
   const [newCardTitle, setNewCardTitle] = useState("");
   const { mutate: createCard } = useCreateCard();
@@ -107,7 +145,7 @@ export default function Kanban() {
 
   const handleDropOverColumn = (columnId: string, dataTransferData: string) => {
     if (!boardId) return;
-    
+
     // dataTransferData is a JSON string of the card object
     let cardId: string;
     try {
@@ -117,14 +155,14 @@ export default function Kanban() {
       console.error("Failed to parse drag data:", e);
       return;
     }
-    
+
     // Find the target list
     const targetList = lists.find((l) => l.id === columnId);
     if (!targetList) return;
-    
+
     // Calculate the new order (append to end of target list)
     const newOrder = targetList.cards.length;
-    
+
     // Update the card's listId and order
     updateCard({
       boardId,
@@ -138,10 +176,10 @@ export default function Kanban() {
     columnId: string,
     targetCardId: string,
     dataTransferData: string,
-    dropDirection: KanbanBoardDropDirection
+    dropDirection: KanbanBoardDropDirection,
   ) => {
     if (!boardId) return;
-    
+
     // dataTransferData is a JSON string of the card object
     let draggedCardId: string;
     try {
@@ -151,24 +189,24 @@ export default function Kanban() {
       console.error("Failed to parse drag data:", e);
       return;
     }
-    
+
     // Don't do anything if dropping on itself
     if (draggedCardId === targetCardId) return;
-    
+
     // Find the target list and cards
     const targetList = lists.find((l) => l.id === columnId);
     if (!targetList) return;
-    
+
     // Find the target card's current order
     const targetCard = targetList.cards.find((c) => c.id === targetCardId);
     if (!targetCard) return;
-    
+
     // Calculate new order based on drop direction
     let newOrder = targetCard.order || 0;
     if (dropDirection === "bottom") {
       newOrder += 1;
     }
-    
+
     // Update the dragged card
     updateCard({
       boardId,
@@ -197,7 +235,7 @@ export default function Kanban() {
       name: newCardTitle,
       order: nextOrder,
     });
-    
+
     setNewCardTitle("");
     setAddingCardColumnId(null);
   };
@@ -336,7 +374,7 @@ export default function Kanban() {
                           onClick={() => {
                             if (
                               confirm(
-                                `Delete "${column.name}" list and all its cards?`
+                                `Delete "${column.name}" list and all its cards?`,
                               )
                             ) {
                               deleteColumn(column.id);
@@ -380,7 +418,7 @@ export default function Kanban() {
                             column.id,
                             normalizedCard.id,
                             data,
-                            direction
+                            direction,
                           )
                         }
                       >
