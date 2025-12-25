@@ -1,22 +1,48 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { openai } from "@ai-sdk/openai";
+import { streamText } from "ai";
 import { authMiddleware } from "@/lib/auth";
-import { defaultSecurityScheme, jsonBody, successJson } from "@/types/openapi";
-import { getChatCompletion } from "@/services/llm";
+import { defaultSecurityScheme } from "@/types/openapi";
 
 const chatSchema = z.object({
-  message: z.string().min(1).max(1000).openapi({
-    example: "Xin chào, bạn là ai?",
+  messages: z.array(
+    z.object({
+      role: z.enum(["user", "assistant", "system"]).openapi({
+        example: "user",
+      }),
+      content: z.string().openapi({
+        example: "Xin chào, bạn là ai?",
+      }),
+    })
+  ).openapi({
+    example: [
+      {
+        role: "user",
+        content: "Xin chào, bạn là ai?",
+      },
+    ],
   }),
 });
 
-const chatResponseSchema = z.object({
-  response: z.string().openapi({
-    example: "Xin chào! Tôi là trợ lý AI của DailyDesk. Tôi có thể giúp gì cho bạn?",
-  }),
-  timestamp: z.string().openapi({
-    example: new Date().toISOString(),
-  }),
-});
+const SYSTEM_PROMPT = `Bạn là trợ lý AI thông minh của DailyDesk - một ứng dụng quản lý công việc (task management) giống Trello.
+
+Thông tin về DailyDesk:
+- DailyDesk giúp người dùng tổ chức công việc bằng Board, List và Card
+- Board: Không gian làm việc cho từng dự án/nhóm
+- List: Các cột trong board (ví dụ: "To Do", "In Progress", "Done")
+- Card: Đơn vị công việc nhỏ nhất, có thể có tiêu đề, mô tả, nhãn, người thực hiện, hạn hoàn thành
+
+Nhiệm vụ của bạn:
+- Trả lời câu hỏi về cách sử dụng DailyDesk
+- Hướng dẫn người dùng tạo board, list, card
+- Giải thích các tính năng
+- Gợi ý cách tổ chức công việc hiệu quả
+- Trả lời bằng tiếng Việt thân thiện, ngắn gọn, dễ hiểu
+
+Lưu ý:
+- Không trả lời các câu hỏi không liên quan đến quản lý công việc
+- Giữ câu trả lời ngắn gọn (2-4 câu), trừ khi cần giải thích chi tiết
+- Sử dụng bullet points khi liệt kê nhiều thông tin`;
 
 const TAGS = ["Chat"];
 
@@ -31,35 +57,49 @@ export default function createChatRoutes() {
       path: "/",
       security: defaultSecurityScheme(),
       request: {
-        body: jsonBody(chatSchema, {
-          description: "Chat message",
-        }),
+        body: {
+          content: {
+            "application/json": {
+              schema: chatSchema,
+            },
+          },
+          description: "Chat messages array",
+        },
       },
       responses: {
-        200: successJson(chatResponseSchema, {
-          description: "Chatbot response",
-        }),
+        200: {
+          description: "Streaming chatbot response",
+          content: {
+            "text/event-stream": {
+              schema: {
+                type: "string",
+              },
+            },
+          },
+        },
       },
     }),
     async (c) => {
-      const { message } = c.req.valid("json");
+      const { messages } = c.req.valid("json");
 
       try {
-        // Sử dụng GPT-4o-mini để trả lời
-        const response = await getChatCompletion(message);
-
-        return c.json({
-          response,
-          timestamp: new Date().toISOString(),
+        const result = streamText({
+          model: openai("gpt-4o-mini"),
+          system: SYSTEM_PROMPT,
+          messages,
+          temperature: 0.7,
+          maxOutputTokens: 500,
         });
+
+        return result.toUIMessageStreamResponse();
       } catch (error) {
         console.error("Chat error:", error);
-
-        // Fallback response nếu API fails
-        return c.json({
-          response: "Xin lỗi, hiện tại tôi đang gặp vấn đề kỹ thuật. Vui lòng thử lại sau.",
-          timestamp: new Date().toISOString(),
-        }, 500);
+        return c.json(
+          {
+            error: "Xin lỗi, hiện tại tôi đang gặp vấn đề kỹ thuật. Vui lòng thử lại sau.",
+          },
+          500
+        );
       }
     }
   );
