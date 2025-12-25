@@ -1,24 +1,24 @@
 import { useState } from 'react';
-import { MessageCircle, X } from 'lucide-react';
+import { MessageCircle, MessageSquareIcon, X } from 'lucide-react';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { useAtomValue } from 'jotai';
 import { accessTokenAtom } from '@/stores/access-token';
-import { 
-  Conversation, 
-  ConversationContent, 
+import {
+  Conversation,
+  ConversationContent,
   ConversationEmptyState,
-  ConversationScrollButton 
-} from './ai-elements/conversation';
-import { Message, MessageContent } from './ai-elements/message';
-import { 
-  PromptInput, 
-  PromptInputBody, 
-  PromptInputTextarea, 
-  PromptInputFooter, 
-  PromptInputSubmit 
-} from './ai-elements/prompt-input';
-import { Loader } from './ai-elements/loader';
+  ConversationScrollButton,
+} from '@/components/ai-elements/conversation';
+import { Message, MessageContent } from '@/components/ai-elements/message';
+import {
+  PromptInput,
+  PromptInputBody,
+  PromptInputTextarea,
+  PromptInputFooter,
+  PromptInputSubmit,
+} from '@/components/ai-elements/prompt-input';
+import { Loader } from '@/components/ai-elements/loader';
 
 export function Chatbox() {
   const [isOpen, setIsOpen] = useState(false);
@@ -78,17 +78,18 @@ export function Chatbox() {
             <ConversationContent>
               {messages.length === 0 ? (
                 <ConversationEmptyState
-                  title="Xin chào! 👋"
                   description="Tôi có thể giúp gì cho bạn?"
+                  icon={<MessageSquareIcon className="size-6" />}
+                  title="Xin chào! 👋"
                 />
               ) : (
                 messages.map((message) => (
-                  <Message key={message.id} from={message.role}>
+                  <Message from={message.role} key={message.id}>
                     <MessageContent>
                       {message.parts.map((part, i) => {
                         if (part.type === 'text') {
                           return (
-                            <p key={`${message.id}-${i}`} className="whitespace-pre-wrap">
+                            <p key={i} className="whitespace-pre-wrap">
                               {part.text}
                             </p>
                           );
@@ -114,9 +115,9 @@ export function Chatbox() {
           <div className="border-t border-border p-4">
             <PromptInput onSubmit={handleSubmit}>
               <PromptInputBody>
-                <PromptInputTextarea 
-                  placeholder="Nhập tin nhắn..."
+                <PromptInputTextarea
                   className="min-h-[60px]"
+                  placeholder="Nhập tin nhắn..."
                 />
               </PromptInputBody>
               <PromptInputFooter>
