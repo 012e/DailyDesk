@@ -35,19 +35,11 @@ export function useListActions() {
     });
   }
 
+  async function deleteList(listId) {
+    const boardId = useAtomValue(boardIdAtom);
+  }
+
   return {
     createList,
   };
-}
-
-export function useLists({ boardId }: { boardId: string }) {
-  const listCollection = useLiveSuspenseQuery(
-    (q) =>
-      q
-        .from({ board: boardCollection })
-        .where(({ board }) => eq(board.id, boardId))
-        .findOne(),
-    [boardId],
-  );
-  return listCollection.data!.lists;
 }
