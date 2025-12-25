@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from "vitest";
+import { describe, test, expect, beforeEach } from "@jest/globals";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { createAuthHeaders, mockUser } from "./helpers/auth";
 import { createTestApp } from "./helpers/app";
@@ -11,9 +11,9 @@ describe("Boards API Integration Tests", () => {
     app = createTestApp();
   });
 
-  describe("GET /api/boards", () => {
+  describe("GET /boards", () => {
     test("should return empty array for authenticated user with no boards", async () => {
-      const res = await app.request("/api/boards", {
+      const res = await app.request("/boards", {
         method: "GET",
         headers: createAuthHeaders(),
       });
@@ -24,7 +24,7 @@ describe("Boards API Integration Tests", () => {
     });
   });
 
-  describe("POST /api/boards", () => {
+  describe("POST /boards", () => {
     test("should create a new board", async () => {
       const newBoard = {
         id: crypto.randomUUID(),
@@ -32,7 +32,7 @@ describe("Boards API Integration Tests", () => {
         backgroundColor: "#3498db",
       };
 
-      const res = await app.request("/api/boards", {
+      const res = await app.request("/boards", {
         method: "POST",
         headers: createAuthHeaders(),
         body: JSON.stringify(newBoard),
@@ -52,7 +52,7 @@ describe("Boards API Integration Tests", () => {
         name: "Test Board",
       };
 
-      const res = await app.request("/api/boards", {
+      const res = await app.request("/boards", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -68,7 +68,7 @@ describe("Boards API Integration Tests", () => {
         id: "invalid-id", // Not a valid UUID
       };
 
-      const res = await app.request("/api/boards", {
+      const res = await app.request("/boards", {
         method: "POST",
         headers: createAuthHeaders(),
         body: JSON.stringify(invalidBoard),
@@ -78,11 +78,11 @@ describe("Boards API Integration Tests", () => {
     });
   });
 
-  describe("GET /api/boards/:id", () => {
+  describe("GET /boards/:id", () => {
     test("should return a specific board with lists and cards", async () => {
       // First create a board
       const boardId = crypto.randomUUID();
-      await app.request("/api/boards", {
+      await app.request("/boards", {
         method: "POST",
         headers: createAuthHeaders(),
         body: JSON.stringify({
@@ -116,11 +116,11 @@ describe("Boards API Integration Tests", () => {
     });
   });
 
-  describe("PATCH /api/boards/:id", () => {
+  describe("PATCH /boards/:id", () => {
     test("should update board properties", async () => {
       // First create a board
       const boardId = crypto.randomUUID();
-      await app.request("/api/boards", {
+      await app.request("/boards", {
         method: "POST",
         headers: createAuthHeaders(),
         body: JSON.stringify({
@@ -146,11 +146,11 @@ describe("Boards API Integration Tests", () => {
     });
   });
 
-  describe("DELETE /api/boards/:id", () => {
+  describe("DELETE /boards/:id", () => {
     test("should delete a board", async () => {
       // First create a board
       const boardId = crypto.randomUUID();
-      await app.request("/api/boards", {
+      await app.request("/boards", {
         method: "POST",
         headers: createAuthHeaders(),
         body: JSON.stringify({

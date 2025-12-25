@@ -8,6 +8,11 @@ import setupRoutes from "@/routes";
 export function createTestApp(): OpenAPIHono {
   const app = new OpenAPIHono();
   app.use("*", cors());
-  setupRoutes(app);
+  
+  // Create a sub-app with routes and mount it at /api
+  const apiApp = new OpenAPIHono();
+  setupRoutes(apiApp);
+  app.route("/api", apiApp);
+  
   return app;
 }

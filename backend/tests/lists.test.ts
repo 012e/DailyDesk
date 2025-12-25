@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from "vitest";
+import { describe, test, expect, beforeEach } from "@jest/globals";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { createAuthHeaders } from "./helpers/auth";
 import { createTestApp } from "./helpers/app";
@@ -13,7 +13,7 @@ describe("Lists API Integration Tests", () => {
 
     // Create a test board to use for list tests
     testBoardId = crypto.randomUUID();
-    await app.request("/api/boards", {
+    await app.request("/boards", {
       method: "POST",
       headers: createAuthHeaders(),
       body: JSON.stringify({
@@ -23,7 +23,7 @@ describe("Lists API Integration Tests", () => {
     });
   });
 
-  describe("POST /api/lists", () => {
+  describe("POST /lists", () => {
     test("should create a new list", async () => {
       const newList = {
         id: crypto.randomUUID(),
@@ -32,7 +32,7 @@ describe("Lists API Integration Tests", () => {
         order: 0,
       };
 
-      const res = await app.request("/api/lists", {
+      const res = await app.request("/lists", {
         method: "POST",
         headers: createAuthHeaders(),
         body: JSON.stringify(newList),
@@ -54,7 +54,7 @@ describe("Lists API Integration Tests", () => {
         order: 0,
       };
 
-      const res = await app.request("/api/lists", {
+      const res = await app.request("/lists", {
         method: "POST",
         headers: createAuthHeaders(),
         body: JSON.stringify(newList),
@@ -72,7 +72,7 @@ describe("Lists API Integration Tests", () => {
         order: 0,
       };
 
-      const res = await app.request("/api/lists", {
+      const res = await app.request("/lists", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -84,11 +84,11 @@ describe("Lists API Integration Tests", () => {
     });
   });
 
-  describe("PATCH /api/lists/:id", () => {
+  describe("PATCH /lists/:id", () => {
     test("should update list name", async () => {
       // Create a list first
       const listId = crypto.randomUUID();
-      await app.request("/api/lists", {
+      await app.request("/lists", {
         method: "POST",
         headers: createAuthHeaders(),
         body: JSON.stringify({
@@ -118,7 +118,7 @@ describe("Lists API Integration Tests", () => {
       const list1Id = crypto.randomUUID();
       const list2Id = crypto.randomUUID();
 
-      await app.request("/api/lists", {
+      await app.request("/lists", {
         method: "POST",
         headers: createAuthHeaders(),
         body: JSON.stringify({
@@ -129,7 +129,7 @@ describe("Lists API Integration Tests", () => {
         }),
       });
 
-      await app.request("/api/lists", {
+      await app.request("/lists", {
         method: "POST",
         headers: createAuthHeaders(),
         body: JSON.stringify({
@@ -155,11 +155,11 @@ describe("Lists API Integration Tests", () => {
     });
   });
 
-  describe("DELETE /api/lists/:id", () => {
+  describe("DELETE /lists/:id", () => {
     test("should delete a list", async () => {
       // Create a list
       const listId = crypto.randomUUID();
-      await app.request("/api/lists", {
+      await app.request("/lists", {
         method: "POST",
         headers: createAuthHeaders(),
         body: JSON.stringify({
@@ -194,7 +194,7 @@ describe("Lists API Integration Tests", () => {
       const listId = crypto.randomUUID();
       const cardId = crypto.randomUUID();
 
-      await app.request("/api/lists", {
+      await app.request("/lists", {
         method: "POST",
         headers: createAuthHeaders(),
         body: JSON.stringify({
@@ -205,7 +205,7 @@ describe("Lists API Integration Tests", () => {
         }),
       });
 
-      await app.request("/api/cards", {
+      await app.request("/cards", {
         method: "POST",
         headers: createAuthHeaders(),
         body: JSON.stringify({
@@ -242,7 +242,7 @@ describe("Lists API Integration Tests", () => {
 
       // Create three lists
       for (let i = 0; i < 3; i++) {
-        await app.request("/api/lists", {
+        await app.request("/lists", {
           method: "POST",
           headers: createAuthHeaders(),
           body: JSON.stringify({
