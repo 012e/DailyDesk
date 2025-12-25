@@ -2,6 +2,7 @@ import { describe, test, expect, beforeEach } from "vitest";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { createAuthHeaders } from "./helpers/auth";
 import { createTestApp } from "./helpers/app";
+import { uuidv7 } from "uuidv7";
 
 describe("Lists API Integration Tests", () => {
   let app: OpenAPIHono;
@@ -12,8 +13,8 @@ describe("Lists API Integration Tests", () => {
     app = createTestApp();
 
     // Create a test board to use for list tests
-    testBoardId = crypto.randomUUID();
-    await app.request("/api/boards", {
+    testBoardId = uuidv7();
+    await app.request("/boards", {
       method: "POST",
       headers: createAuthHeaders(),
       body: JSON.stringify({
@@ -23,16 +24,15 @@ describe("Lists API Integration Tests", () => {
     });
   });
 
-  describe("POST /api/lists", () => {
+  describe("POST /boards/:boardId/lists", () => {
     test("should create a new list", async () => {
       const newList = {
-        id: crypto.randomUUID(),
+        id: uuidv7(),
         name: "To Do",
-        boardId: testBoardId,
         order: 0,
       };
 
-      const res = await app.request("/api/lists", {
+      const res = await app.request(`/boards/${testBoardId}/lists`, {
         method: "POST",
         headers: createAuthHeaders(),
         body: JSON.stringify(newList),
@@ -48,31 +48,30 @@ describe("Lists API Integration Tests", () => {
 
     test("should validate board exists", async () => {
       const newList = {
-        id: crypto.randomUUID(),
+        id: uuidv7(),
         name: "Invalid List",
-        boardId: crypto.randomUUID(), // Non-existent board
         order: 0,
       };
 
-      const res = await app.request("/api/lists", {
+      const badBoardId = uuidv7();
+      const res = await app.request(`/boards/${badBoardId}/lists`, {
         method: "POST",
         headers: createAuthHeaders(),
         body: JSON.stringify(newList),
       });
 
-      // Should fail due to foreign key constraint
+      // Should fail because board doesn't exist
       expect(res.status).not.toBe(200);
     });
 
     test("should require authentication", async () => {
       const newList = {
-        id: crypto.randomUUID(),
+        id: uuidv7(),
         name: "Unauthorized List",
-        boardId: testBoardId,
         order: 0,
       };
 
-      const res = await app.request("/api/lists", {
+      const res = await app.request(`/boards/${testBoardId}/lists`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -84,24 +83,23 @@ describe("Lists API Integration Tests", () => {
     });
   });
 
-  describe("PATCH /api/lists/:id", () => {
+  describe("PUT /boards/:boardId/lists/:id", () => {
     test("should update list name", async () => {
       // Create a list first
-      const listId = crypto.randomUUID();
-      await app.request("/api/lists", {
+      const listId = uuidv7();
+      await app.request(`/boards/${testBoardId}/lists`, {
         method: "POST",
         headers: createAuthHeaders(),
         body: JSON.stringify({
           id: listId,
           name: "Original Name",
-          boardId: testBoardId,
           order: 0,
         }),
       });
 
       // Update it
-      const res = await app.request(`/api/lists/${listId}`, {
-        method: "PATCH",
+      const res = await app.request(`/boards/${testBoardId}/lists/${listId}`, {
+        method: "PUT",
         headers: createAuthHeaders(),
         body: JSON.stringify({
           name: "Updated Name",
@@ -115,34 +113,32 @@ describe("Lists API Integration Tests", () => {
 
     test("should update list order", async () => {
       // Create two lists
-      const list1Id = crypto.randomUUID();
-      const list2Id = crypto.randomUUID();
+      const list1Id = uuidv7();
+      const list2Id = uuidv7();
 
-      await app.request("/api/lists", {
+      await app.request(`/boards/${testBoardId}/lists`, {
         method: "POST",
         headers: createAuthHeaders(),
         body: JSON.stringify({
           id: list1Id,
           name: "List 1",
-          boardId: testBoardId,
           order: 0,
         }),
       });
 
-      await app.request("/api/lists", {
+      await app.request(`/boards/${testBoardId}/lists`, {
         method: "POST",
         headers: createAuthHeaders(),
         body: JSON.stringify({
           id: list2Id,
           name: "List 2",
-          boardId: testBoardId,
           order: 1,
         }),
       });
 
       // Reorder
-      const res = await app.request(`/api/lists/${list1Id}`, {
-        method: "PATCH",
+      const res = await app.request(`/boards/${testBoardId}/lists/${list1Id}`, {
+        method: "PUT",
         headers: createAuthHeaders(),
         body: JSON.stringify({
           order: 2,
@@ -155,23 +151,22 @@ describe("Lists API Integration Tests", () => {
     });
   });
 
-  describe("DELETE /api/lists/:id", () => {
+  describe("DELETE /boards/:boardId/lists/:id", () => {
     test("should delete a list", async () => {
       // Create a list
-      const listId = crypto.randomUUID();
-      await app.request("/api/lists", {
+      const listId = uuidv7();
+      await app.request(`/boards/${testBoardId}/lists`, {
         method: "POST",
         headers: createAuthHeaders(),
         body: JSON.stringify({
           id: listId,
           name: "List to Delete",
-          boardId: testBoardId,
           order: 0,
         }),
       });
 
       // Delete it
-      const deleteRes = await app.request(`/api/lists/${listId}`, {
+      const deleteRes = await app.request(`/boards/${testBoardId}/lists/${listId}`, {
         method: "DELETE",
         headers: createAuthHeaders(),
       });
@@ -179,7 +174,7 @@ describe("Lists API Integration Tests", () => {
       expect(deleteRes.status).toBe(200);
 
       // Verify the board no longer has the list
-      const boardRes = await app.request(`/api/boards/${testBoardId}`, {
+      const boardRes = await app.request(`/boards/${testBoardId}`, {
         method: "GET",
         headers: createAuthHeaders(),
       });
@@ -191,21 +186,20 @@ describe("Lists API Integration Tests", () => {
 
     test("should cascade delete cards when list is deleted", async () => {
       // Create a list with a card
-      const listId = crypto.randomUUID();
-      const cardId = crypto.randomUUID();
+      const listId = uuidv7();
+      const cardId = uuidv7();
 
-      await app.request("/api/lists", {
+      await app.request(`/boards/${testBoardId}/lists`, {
         method: "POST",
         headers: createAuthHeaders(),
         body: JSON.stringify({
           id: listId,
           name: "List with Card",
-          boardId: testBoardId,
           order: 0,
         }),
       });
 
-      await app.request("/api/cards", {
+      await app.request(`/boards/${testBoardId}/cards`, {
         method: "POST",
         headers: createAuthHeaders(),
         body: JSON.stringify({
@@ -217,14 +211,14 @@ describe("Lists API Integration Tests", () => {
       });
 
       // Delete the list
-      await app.request(`/api/lists/${listId}`, {
+      await app.request(`/boards/${testBoardId}/lists/${listId}`, {
         method: "DELETE",
         headers: createAuthHeaders(),
       });
 
       // The card should be automatically deleted due to cascade
       // We can verify this by checking the board doesn't have the card
-      const boardRes = await app.request(`/api/boards/${testBoardId}`, {
+      const boardRes = await app.request(`/boards/${testBoardId}`, {
         method: "GET",
         headers: createAuthHeaders(),
       });
@@ -238,24 +232,23 @@ describe("Lists API Integration Tests", () => {
 
   describe("List ordering", () => {
     test("should maintain correct order when multiple lists are created", async () => {
-      const listIds = [crypto.randomUUID(), crypto.randomUUID(), crypto.randomUUID()];
+      const listIds = [uuidv7(), uuidv7(), uuidv7()];
 
       // Create three lists
       for (let i = 0; i < 3; i++) {
-        await app.request("/api/lists", {
+        await app.request(`/boards/${testBoardId}/lists`, {
           method: "POST",
           headers: createAuthHeaders(),
           body: JSON.stringify({
             id: listIds[i],
             name: `List ${i + 1}`,
-            boardId: testBoardId,
             order: i,
           }),
         });
       }
 
       // Get the board and verify order
-      const res = await app.request(`/api/boards/${testBoardId}`, {
+      const res = await app.request(`/boards/${testBoardId}`, {
         method: "GET",
         headers: createAuthHeaders(),
       });

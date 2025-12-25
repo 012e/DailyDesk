@@ -101,10 +101,14 @@ export function Kanban({ boardId }: KanbanProps) {
     });
   };
 
-  const handleAddList = (title: string) => {
-    createList({
-      name: title,
-    });
+  const handleAddList = async (title: string) => {
+    try {
+      await createList({
+        name: title,
+      });
+    } catch (error) {
+      console.error("Failed to create list:", error);
+    }
   };
 
   const handleSaveColumnEdit = () => {

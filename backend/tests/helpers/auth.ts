@@ -1,4 +1,3 @@
-import { vi } from "vitest";
 import type { Context } from "hono";
 import type { MiddlewareHandler } from "hono";
 
