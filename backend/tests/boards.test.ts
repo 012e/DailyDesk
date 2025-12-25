@@ -2,6 +2,7 @@ import { describe, test, expect, beforeEach } from "vitest";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { createAuthHeaders, mockUser } from "./helpers/auth";
 import { createTestApp } from "./helpers/app";
+import { uuidv7 } from "uuidv7";
 
 describe("Boards API Integration Tests", () => {
   let app: OpenAPIHono;
@@ -27,7 +28,7 @@ describe("Boards API Integration Tests", () => {
   describe("POST /boards", () => {
     test("should create a new board", async () => {
       const newBoard = {
-        id: crypto.randomUUID(),
+        id: uuidv7(),
         name: "Test Board",
         backgroundColor: "#3498db",
       };
@@ -48,7 +49,7 @@ describe("Boards API Integration Tests", () => {
 
     test("should reject board creation without authentication", async () => {
       const newBoard = {
-        id: crypto.randomUUID(),
+        id: uuidv7(),
         name: "Test Board",
       };
 
@@ -81,7 +82,7 @@ describe("Boards API Integration Tests", () => {
   describe("GET /boards/:id", () => {
     test("should return a specific board with lists and cards", async () => {
       // First create a board
-      const boardId = crypto.randomUUID();
+      const boardId = uuidv7();
       await app.request("/boards", {
         method: "POST",
         headers: createAuthHeaders(),
@@ -105,7 +106,7 @@ describe("Boards API Integration Tests", () => {
     });
 
     test("should return 404 for non-existent board", async () => {
-      const nonExistentId = crypto.randomUUID();
+      const nonExistentId = uuidv7();
 
       const res = await app.request(`/boards/${nonExistentId}`, {
         method: "GET",
@@ -119,7 +120,7 @@ describe("Boards API Integration Tests", () => {
   describe("PATCH /boards/:id", () => {
     test("should update board properties", async () => {
       // First create a board
-      const boardId = crypto.randomUUID();
+      const boardId = uuidv7();
       await app.request("/boards", {
         method: "POST",
         headers: createAuthHeaders(),
@@ -150,7 +151,7 @@ describe("Boards API Integration Tests", () => {
   describe("DELETE /boards/:id", () => {
     test("should delete a board", async () => {
       // First create a board
-      const boardId = crypto.randomUUID();
+      const boardId = uuidv7();
       await app.request("/boards", {
         method: "POST",
         headers: createAuthHeaders(),

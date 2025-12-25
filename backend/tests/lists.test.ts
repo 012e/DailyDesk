@@ -2,6 +2,7 @@ import { describe, test, expect, beforeEach } from "vitest";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { createAuthHeaders } from "./helpers/auth";
 import { createTestApp } from "./helpers/app";
+import { uuidv7 } from "uuidv7";
 
 describe("Lists API Integration Tests", () => {
   let app: OpenAPIHono;
@@ -12,7 +13,7 @@ describe("Lists API Integration Tests", () => {
     app = createTestApp();
 
     // Create a test board to use for list tests
-    testBoardId = crypto.randomUUID();
+    testBoardId = uuidv7();
     await app.request("/boards", {
       method: "POST",
       headers: createAuthHeaders(),
@@ -26,7 +27,7 @@ describe("Lists API Integration Tests", () => {
   describe("POST /boards/:boardId/lists", () => {
     test("should create a new list", async () => {
       const newList = {
-        id: crypto.randomUUID(),
+        id: uuidv7(),
         name: "To Do",
         order: 0,
       };
@@ -47,12 +48,12 @@ describe("Lists API Integration Tests", () => {
 
     test("should validate board exists", async () => {
       const newList = {
-        id: crypto.randomUUID(),
+        id: uuidv7(),
         name: "Invalid List",
         order: 0,
       };
 
-      const badBoardId = crypto.randomUUID();
+      const badBoardId = uuidv7();
       const res = await app.request(`/boards/${badBoardId}/lists`, {
         method: "POST",
         headers: createAuthHeaders(),
@@ -65,7 +66,7 @@ describe("Lists API Integration Tests", () => {
 
     test("should require authentication", async () => {
       const newList = {
-        id: crypto.randomUUID(),
+        id: uuidv7(),
         name: "Unauthorized List",
         order: 0,
       };
@@ -85,7 +86,7 @@ describe("Lists API Integration Tests", () => {
   describe("PUT /boards/:boardId/lists/:id", () => {
     test("should update list name", async () => {
       // Create a list first
-      const listId = crypto.randomUUID();
+      const listId = uuidv7();
       await app.request(`/boards/${testBoardId}/lists`, {
         method: "POST",
         headers: createAuthHeaders(),
@@ -112,8 +113,8 @@ describe("Lists API Integration Tests", () => {
 
     test("should update list order", async () => {
       // Create two lists
-      const list1Id = crypto.randomUUID();
-      const list2Id = crypto.randomUUID();
+      const list1Id = uuidv7();
+      const list2Id = uuidv7();
 
       await app.request(`/boards/${testBoardId}/lists`, {
         method: "POST",
@@ -153,7 +154,7 @@ describe("Lists API Integration Tests", () => {
   describe("DELETE /boards/:boardId/lists/:id", () => {
     test("should delete a list", async () => {
       // Create a list
-      const listId = crypto.randomUUID();
+      const listId = uuidv7();
       await app.request(`/boards/${testBoardId}/lists`, {
         method: "POST",
         headers: createAuthHeaders(),
@@ -185,8 +186,8 @@ describe("Lists API Integration Tests", () => {
 
     test("should cascade delete cards when list is deleted", async () => {
       // Create a list with a card
-      const listId = crypto.randomUUID();
-      const cardId = crypto.randomUUID();
+      const listId = uuidv7();
+      const cardId = uuidv7();
 
       await app.request(`/boards/${testBoardId}/lists`, {
         method: "POST",
@@ -231,7 +232,7 @@ describe("Lists API Integration Tests", () => {
 
   describe("List ordering", () => {
     test("should maintain correct order when multiple lists are created", async () => {
-      const listIds = [crypto.randomUUID(), crypto.randomUUID(), crypto.randomUUID()];
+      const listIds = [uuidv7(), uuidv7(), uuidv7()];
 
       // Create three lists
       for (let i = 0; i < 3; i++) {
