@@ -22,14 +22,12 @@ jobs:
           cache: 'pnpm'
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v2
         with:
           version: 8
+          cache: true
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-        with:
-          cache: true
 
       - name: Run tests
         run: pnpm test
