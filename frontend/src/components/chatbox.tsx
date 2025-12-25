@@ -4,6 +4,8 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { useAtomValue } from "jotai";
 import { accessTokenAtom } from "@/stores/access-token";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   Conversation,
   ConversationContent,
@@ -129,7 +131,35 @@ export function Chatbox() {
                     <MessageContent>
                       {message.parts.map((part, i) => {
                         if (part.type === "text") {
-                          return (
+                          return message.role === "assistant" ? (
+                            <div key={i} className="prose prose-sm dark:prose-invert max-w-none">
+                              <ReactMarkdown
+                                remarkPlugins={[remarkGfm]}
+                                components={{
+                                  code: ({ className, children, ...props }: any) => {
+                                    const isInline = !className;
+                                    return isInline ? (
+                                      <code
+                                        className="rounded bg-muted px-1.5 py-0.5 font-mono text-sm"
+                                        {...props}
+                                      >
+                                        {children}
+                                      </code>
+                                    ) : (
+                                      <code
+                                        className={`block rounded-lg bg-muted p-4 font-mono text-sm overflow-x-auto ${className || ''}`}
+                                        {...props}
+                                      >
+                                        {children}
+                                      </code>
+                                    );
+                                  },
+                                }}
+                              >
+                                {part.text}
+                              </ReactMarkdown>
+                            </div>
+                          ) : (
                             <p key={i} className="whitespace-pre-wrap">
                               {part.text}
                             </p>
@@ -158,7 +188,7 @@ export function Chatbox() {
               <PromptInputBody>
                 <PromptInputTextarea
                   className="min-h-[60px]"
-                  placeholder="Nhập tin nhắn..."
+                  placeholder="Enter your message..."
                 />
               </PromptInputBody>
               <PromptInputFooter>
@@ -182,7 +212,7 @@ export function Chatbox() {
                       </PromptInputButton>
                     </ModelSelectorTrigger>
                     <ModelSelectorContent>
-                      <ModelSelectorInput placeholder="Tìm model..." />
+                      <ModelSelectorInput placeholder="Select model..." />
                       <ModelSelectorList>
                         <ModelSelectorEmpty>
                           Không tìm thấy model.
