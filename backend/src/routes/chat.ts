@@ -28,7 +28,7 @@ export default function createChatRoutes() {
     createRoute({
       method: "post",
       tags: TAGS,
-      path: "/chat",
+      path: "/",
       security: defaultSecurityScheme(),
       request: {
         body: jsonBody(chatSchema, {

@@ -8,7 +8,7 @@ export default function setupRoutes(app: OpenAPIHono) {
   app.route("/boards", createBoardRoutes());
   app.route("/boards", createListRoutes());
   app.route("/boards", createCardRoutes());
-  app.route("/", createChatRoutes());
+  app.route("/chat", createChatRoutes());
 
   return app;
 }
