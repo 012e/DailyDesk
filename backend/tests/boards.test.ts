@@ -92,7 +92,7 @@ describe("Boards API Integration Tests", () => {
       });
 
       // Then retrieve it
-      const res = await app.request(`/api/boards/${boardId}`, {
+      const res = await app.request(`/boards/${boardId}`, {
         method: "GET",
         headers: createAuthHeaders(),
       });
@@ -107,7 +107,7 @@ describe("Boards API Integration Tests", () => {
     test("should return 404 for non-existent board", async () => {
       const nonExistentId = crypto.randomUUID();
 
-      const res = await app.request(`/api/boards/${nonExistentId}`, {
+      const res = await app.request(`/boards/${nonExistentId}`, {
         method: "GET",
         headers: createAuthHeaders(),
       });
@@ -130,8 +130,9 @@ describe("Boards API Integration Tests", () => {
       });
 
       // Then update it
-      const res = await app.request(`/api/boards/${boardId}`, {
-        method: "PATCH",
+      // The server expects PUT for full updates
+      const res = await app.request(`/boards/${boardId}`, {
+        method: "PUT",
         headers: createAuthHeaders(),
         body: JSON.stringify({
           name: "Updated Name",
@@ -160,7 +161,7 @@ describe("Boards API Integration Tests", () => {
       });
 
       // Then delete it
-      const deleteRes = await app.request(`/api/boards/${boardId}`, {
+      const deleteRes = await app.request(`/boards/${boardId}`, {
         method: "DELETE",
         headers: createAuthHeaders(),
       });
@@ -168,7 +169,7 @@ describe("Boards API Integration Tests", () => {
       expect(deleteRes.status).toBe(200);
 
       // Verify it's gone
-      const getRes = await app.request(`/api/boards/${boardId}`, {
+      const getRes = await app.request(`/boards/${boardId}`, {
         method: "GET",
         headers: createAuthHeaders(),
       });
