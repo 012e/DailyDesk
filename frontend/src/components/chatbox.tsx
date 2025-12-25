@@ -1,83 +1,88 @@
-import { useState, useRef, useEffect } from 'react';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { MessageCircle, X, Send } from 'lucide-react';
-import { useChat } from '@/hooks/use-chat';
+import { useState, useRef } from "react";
+import { MessageCircle, MessageSquareIcon, X, CheckIcon } from "lucide-react";
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
+import { useAtomValue } from "jotai";
+import { accessTokenAtom } from "@/stores/access-token";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import {
+  Conversation,
+  ConversationContent,
+  ConversationEmptyState,
+  ConversationScrollButton,
+} from "@/components/ai-elements/conversation";
+import { Message, MessageContent } from "@/components/ai-elements/message";
+import {
+  PromptInput,
+  PromptInputBody,
+  PromptInputTextarea,
+  PromptInputFooter,
+  PromptInputSubmit,
+  PromptInputTools,
+  PromptInputButton,
+} from "@/components/ai-elements/prompt-input";
+import {
+  ModelSelector,
+  ModelSelectorContent,
+  ModelSelectorEmpty,
+  ModelSelectorGroup,
+  ModelSelectorInput,
+  ModelSelectorItem,
+  ModelSelectorList,
+  ModelSelectorLogo,
+  ModelSelectorName,
+  ModelSelectorTrigger,
+} from "@/components/ai-elements/model-selector";
+import { Loader } from "@/components/ai-elements/loader";
 
-interface Message {
-  id: string;
-  text: string;
-  sender: 'user' | 'bot';
-  timestamp: Date;
-}
+const chatGPTModels = [
+  {
+    id: "gpt-4o",
+    name: "GPT-4o",
+    chef: "OpenAI",
+    chefSlug: "openai",
+  },
+  {
+    id: "gpt-4o-mini",
+    name: "GPT-4o Mini",
+    chef: "OpenAI",
+    chefSlug: "openai",
+  },
+];
 
 export function Chatbox() {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      text: 'Xin chào! Tôi có thể giúp gì cho bạn?',
-      sender: 'bot',
-      timestamp: new Date(),
-    },
-  ]);
-  const [inputValue, setInputValue] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const chatMutation = useChat();
+  const [model, setModel] = useState<string>(chatGPTModels[0].id);
+  const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
+  const accessToken = useAtomValue(accessTokenAtom);
+  const modelRef = useRef<string>(model);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  // A dirty fix, dirty as hell
+  // Keep ref in sync with state
+  modelRef.current = model;
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+  const selectedModelData = chatGPTModels.find((m) => m.id === model);
 
-  const handleSendMessage = async () => {
-    if (!inputValue.trim()) return;
+  const { messages, sendMessage, status } = useChat({
+    transport: new DefaultChatTransport({
+      api: "http://localhost:3000/chat",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: () => {
+        return { model: modelRef.current };
+      },
+    }),
+  });
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      text: inputValue,
-      sender: 'user',
-      timestamp: new Date(),
-    };
+  const handleSubmit = (message: { text: string }) => {
+    if (!message.text.trim()) return;
 
-    setMessages((prev) => [...prev, userMessage]);
-    const messageToSend = inputValue;
-    setInputValue('');
-    setIsTyping(true);
-
-    try {
-      const response = await chatMutation.mutateAsync({ message: messageToSend });
-
-      const botMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: response.response,
-        sender: 'bot',
-        timestamp: new Date(response.timestamp),
-      };
-
-      setMessages((prev) => [...prev, botMessage]);
-    } catch (error) {
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: 'Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại sau.',
-        sender: 'bot',
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, errorMessage]);
-    } finally {
-      setIsTyping(false);
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
+    sendMessage({
+      role: "user",
+      parts: [{ type: "text", text: message.text }],
+    });
   };
 
   return (
@@ -112,65 +117,136 @@ export function Chatbox() {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                    message.sender === 'user'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-muted text-foreground'
-                  }`}
-                >
-                  <p className="text-sm">{message.text}</p>
-                  <p
-                    className={`mt-1 text-xs ${
-                      message.sender === 'user' ? 'text-blue-100' : 'text-muted-foreground'
-                    }`}
-                  >
-                    {message.timestamp.toLocaleTimeString('vi-VN', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </p>
-                </div>
-              </div>
-            ))}
-            {isTyping && (
-              <div className="flex justify-start">
-                <div className="max-w-[80%] rounded-lg bg-muted px-4 py-2">
-                  <div className="flex gap-1">
-                    <span className="animate-bounce">•</span>
-                    <span className="animate-bounce delay-100">•</span>
-                    <span className="animate-bounce delay-200">•</span>
-                  </div>
-                </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
+          <Conversation className="flex-1">
+            <ConversationContent>
+              {messages.length === 0 ? (
+                <ConversationEmptyState
+                  description="Tôi có thể giúp gì cho bạn?"
+                  icon={<MessageSquareIcon className="size-6" />}
+                  title="Xin chào! 👋"
+                />
+              ) : (
+                messages.map((message) => (
+                  <Message from={message.role} key={message.id}>
+                    <MessageContent>
+                      {message.parts.map((part, i) => {
+                        if (part.type === "text") {
+                          return message.role === "assistant" ? (
+                            <div key={i} className="prose prose-sm dark:prose-invert max-w-none">
+                              <ReactMarkdown
+                                remarkPlugins={[remarkGfm]}
+                                components={{
+                                  code: ({ className, children, ...props }: any) => {
+                                    const isInline = !className;
+                                    return isInline ? (
+                                      <code
+                                        className="rounded bg-muted px-1.5 py-0.5 font-mono text-sm"
+                                        {...props}
+                                      >
+                                        {children}
+                                      </code>
+                                    ) : (
+                                      <code
+                                        className={`block rounded-lg bg-muted p-4 font-mono text-sm overflow-x-auto ${className || ''}`}
+                                        {...props}
+                                      >
+                                        {children}
+                                      </code>
+                                    );
+                                  },
+                                }}
+                              >
+                                {part.text}
+                              </ReactMarkdown>
+                            </div>
+                          ) : (
+                            <p key={i} className="whitespace-pre-wrap">
+                              {part.text}
+                            </p>
+                          );
+                        }
+                        return null;
+                      })}
+                    </MessageContent>
+                  </Message>
+                ))
+              )}
+              {status === "streaming" && (
+                <Message from="assistant">
+                  <MessageContent>
+                    <Loader size={16} />
+                  </MessageContent>
+                </Message>
+              )}
+            </ConversationContent>
+            <ConversationScrollButton />
+          </Conversation>
 
           {/* Input */}
           <div className="border-t border-border p-4">
-            <div className="flex gap-2">
-              <Input
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Nhập tin nhắn..."
-                className="flex-1"
-              />
-              <Button
-                onClick={handleSendMessage}
-                size="icon"
-                disabled={!inputValue.trim() || isTyping}
-              >
-                <Send className="h-4 w-4" />
-              </Button>
-            </div>
+            <PromptInput onSubmit={handleSubmit}>
+              <PromptInputBody>
+                <PromptInputTextarea
+                  className="min-h-[60px]"
+                  placeholder="Enter your message..."
+                />
+              </PromptInputBody>
+              <PromptInputFooter>
+                <PromptInputTools>
+                  <ModelSelector
+                    onOpenChange={setModelSelectorOpen}
+                    open={modelSelectorOpen}
+                  >
+                    <ModelSelectorTrigger asChild>
+                      <PromptInputButton>
+                        {selectedModelData?.chefSlug && (
+                          <ModelSelectorLogo
+                            provider={selectedModelData.chefSlug}
+                          />
+                        )}
+                        {selectedModelData?.name && (
+                          <ModelSelectorName>
+                            {selectedModelData.name}
+                          </ModelSelectorName>
+                        )}
+                      </PromptInputButton>
+                    </ModelSelectorTrigger>
+                    <ModelSelectorContent>
+                      <ModelSelectorInput placeholder="Select model..." />
+                      <ModelSelectorList>
+                        <ModelSelectorEmpty>
+                          Không tìm thấy model.
+                        </ModelSelectorEmpty>
+                        <ModelSelectorGroup heading="OpenAI">
+                          {chatGPTModels.map((m) => (
+                            <ModelSelectorItem
+                              key={m.id}
+                              onSelect={() => {
+                                setModel(m.id);
+                                console.log(model);
+                                console.log(model);
+                                console.log(model);
+                                setModelSelectorOpen(false);
+                              }}
+                              value={m.id}
+                            >
+                              <ModelSelectorLogo provider={m.chefSlug} />
+                              <ModelSelectorName>{m.name}</ModelSelectorName>
+                              {model === m.id ? (
+                                <CheckIcon className="ml-auto size-4" />
+                              ) : (
+                                <div className="ml-auto size-4" />
+                              )}
+                            </ModelSelectorItem>
+                          ))}
+                        </ModelSelectorGroup>
+                      </ModelSelectorList>
+                    </ModelSelectorContent>
+                  </ModelSelector>
+                </PromptInputTools>
+                <PromptInputSubmit status={status} />
+              </PromptInputFooter>
+            </PromptInput>
           </div>
         </div>
       )}

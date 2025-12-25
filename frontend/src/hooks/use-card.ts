@@ -73,7 +73,7 @@ export function useDeleteCard() {
       if (previousCards) {
         queryClient.setQueryData<Card[]>(
           ["cards"],
-          previousCards.filter((card) => card.id !== cardId)
+          previousCards.filter((card) => card.id !== cardId),
         );
       }
 
@@ -107,20 +107,23 @@ export function useCreateCard() {
       order?: number;
     }) => {
       const cardId = uuidv7();
-      
-      const { data, error, response } = await api.POST("/boards/{boardId}/cards", {
-        params: {
-          path: {
-            boardId: params.boardId,
+
+      const { data, error, response } = await api.POST(
+        "/boards/{boardId}/cards",
+        {
+          params: {
+            path: {
+              boardId: params.boardId,
+            },
+          },
+          body: {
+            id: cardId,
+            name: params.name,
+            order: params.order ?? 0,
+            listId: params.listId,
           },
         },
-        body: {
-          id: cardId,
-          name: params.name,
-          order: params.order ?? 0,
-          listId: params.listId,
-        },
-      });
+      );
 
       if (error) {
         console.error("API Error:", error);
