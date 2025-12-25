@@ -41,8 +41,6 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
-import { Calendar } from "@/components/ui/calendar";
-import EventCalendar from "@/components/comp-542";
 import EventCalendarPage from "@/components/comp-542";
 
 type Card = {
@@ -65,7 +63,7 @@ export default function KanbanPage() {
   return (
     <div>
       {page === "kanban" && <Kanban boardId={boardId} />}{" "}
-      {page === "calendar" && <EventCalendarPage />}
+      {page === "calendar" && <EventCalendarPage boardId={boardId} />}
       <PageTabs page={page} setPage={setPage} />
     </div>
   );
@@ -98,12 +96,7 @@ export function Kanban({ boardId }: { boardId?: string }) {
   // HEAD: Use hooks for data and actions
   const { createList } = useListActions();
   const board = useBoard({ boardId: boardId! });
-  const [lists, setLists] = useState(board.lists);
-
-  // Sync lists with board.lists when board changes
-  useEffect(() => {
-    setLists(board.lists);
-  }, [board.lists]);
+  const lists = board?.lists;
 
   // Main: UI State for dialogs and inputs
   const [isAddingList, setIsAddingList] = useState(false);
