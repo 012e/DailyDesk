@@ -2,13 +2,16 @@ import { z } from "zod";
 import path from "path";
 import * as fs from "fs";
 import dotenv from "dotenv";
-dotenv.config({ path: [".env", ".env.local"] });
+import { openai } from "@ai-sdk/openai";
+dotenv.config({ path: ".env" });
+dotenv.config({ path: ".env.local" });
 
 export const configSchema = z.object({
   databaseUrl: z.url().default("file:./tmp/database"),
   isProduction: z.boolean().default(false),
   authIssuerUrl: z.url().nonempty(), // Required, non-empty URL
   authAudience: z.string().nonempty(),
+  openai: z.string().nonempty(),
 });
 
 /**
@@ -42,6 +45,7 @@ export default function getConfig(): Config {
     isProduction: process.env.NODE_ENV === "production",
     authIssuerUrl: "https://" + process.env.AUTH0_DOMAIN! + "/",
     authAudience: process.env.AUTH0_API_AUDIENCE!,
+    openai: process.env.OPENAI_API_KEY!,
   };
 
   return configSchema.parse(rawConfig);

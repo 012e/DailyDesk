@@ -1,28 +1,13 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { openai } from "@ai-sdk/openai";
-import { streamText } from "ai";
+import { createOpenAI } from "@ai-sdk/openai";
+import { convertToModelMessages, streamText, UIMessage } from "ai";
 import { authMiddleware } from "@/lib/auth";
 import { defaultSecurityScheme } from "@/types/openapi";
-
-const chatSchema = z.object({
-  messages: z.array(
-    z.object({
-      role: z.enum(["user", "assistant", "system"]).openapi({
-        example: "user",
-      }),
-      content: z.string().openapi({
-        example: "Xin chào, bạn là ai?",
-      }),
-    })
-  ).openapi({
-    example: [
-      {
-        role: "user",
-        content: "Xin chào, bạn là ai?",
-      },
-    ],
-  }),
-});
+import getConfig from "@/lib/config";
+const config = getConfig();
+const openai = createOpenAI({
+  apiKey: config.openai,
+})
 
 const SYSTEM_PROMPT = `Bạn là trợ lý AI thông minh của DailyDesk - một ứng dụng quản lý công việc (task management) giống Trello.
 
@@ -56,16 +41,6 @@ export default function createChatRoutes() {
       tags: TAGS,
       path: "/",
       security: defaultSecurityScheme(),
-      request: {
-        body: {
-          content: {
-            "application/json": {
-              schema: chatSchema,
-            },
-          },
-          description: "Chat messages array",
-        },
-      },
       responses: {
         200: {
           description: "Streaming chatbot response",
@@ -80,7 +55,8 @@ export default function createChatRoutes() {
       },
     }),
     async (c) => {
-      const { messages } = c.req.valid("json");
+      const request = (await c.req.json());
+      const messages = await convertToModelMessages(request.messages as UIMessage[]);
 
       try {
         const result = streamText({
