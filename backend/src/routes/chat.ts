@@ -41,6 +41,18 @@ export default function createChatRoutes() {
       tags: TAGS,
       path: "/",
       security: defaultSecurityScheme(),
+      request: {
+        body: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                messages: z.array(z.any()),
+                model: z.string().optional().default("gpt-4o-mini"),
+              }),
+            },
+          },
+        },
+      },
       responses: {
         200: {
           description: "Streaming chatbot response",
@@ -57,10 +69,28 @@ export default function createChatRoutes() {
     async (c) => {
       const request = (await c.req.json());
       const messages = await convertToModelMessages(request.messages as UIMessage[]);
+      const modelId = request.model || "gpt-4o-mini";
+
+      // Validate that only ChatGPT models are allowed
+      const allowedModels = ["gpt-4o", "gpt-4o-mini"];
+      if (!allowedModels.includes(modelId)) {
+        return c.json(
+          {
+            error: "Model không được hỗ trợ. Vui lòng chọn model ChatGPT.",
+          },
+          400
+        );
+      }
+      console.log(modelId);
+      console.log(modelId);
+      console.log(modelId);
+      console.log(modelId);
+      console.log(modelId);
+      console.log(modelId);
 
       try {
         const result = streamText({
-          model: openai("gpt-4o-mini"),
+          model: openai(modelId),
           system: SYSTEM_PROMPT,
           messages,
           temperature: 0.7,

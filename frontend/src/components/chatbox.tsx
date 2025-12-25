@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MessageCircle, MessageSquareIcon, X } from 'lucide-react';
+import { MessageCircle, MessageSquareIcon, X, CheckIcon } from 'lucide-react';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { useAtomValue } from 'jotai';
@@ -17,18 +17,54 @@ import {
   PromptInputTextarea,
   PromptInputFooter,
   PromptInputSubmit,
+  PromptInputTools,
+  PromptInputButton,
 } from '@/components/ai-elements/prompt-input';
+import {
+  ModelSelector,
+  ModelSelectorContent,
+  ModelSelectorEmpty,
+  ModelSelectorGroup,
+  ModelSelectorInput,
+  ModelSelectorItem,
+  ModelSelectorList,
+  ModelSelectorLogo,
+  ModelSelectorName,
+  ModelSelectorTrigger,
+} from '@/components/ai-elements/model-selector';
 import { Loader } from '@/components/ai-elements/loader';
+
+const chatGPTModels = [
+  {
+    id: "gpt-4o",
+    name: "GPT-4o",
+    chef: "OpenAI",
+    chefSlug: "openai",
+  },
+  {
+    id: "gpt-4o-mini",
+    name: "GPT-4o Mini",
+    chef: "OpenAI",
+    chefSlug: "openai",
+  },
+];
 
 export function Chatbox() {
   const [isOpen, setIsOpen] = useState(false);
+  const [model, setModel] = useState<string>(chatGPTModels[0].id);
+  const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
   const accessToken = useAtomValue(accessTokenAtom);
+  
+  const selectedModelData = chatGPTModels.find((m) => m.id === model);
   
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({
       api: 'http://localhost:3000/chat',
       headers: {
         Authorization: `Bearer ${accessToken}`,
+      },
+      body: {
+        model,
       },
     }),
   });
@@ -121,7 +157,53 @@ export function Chatbox() {
                 />
               </PromptInputBody>
               <PromptInputFooter>
-                <div className="flex-1" />
+                <PromptInputTools>
+                  <ModelSelector
+                    onOpenChange={setModelSelectorOpen}
+                    open={modelSelectorOpen}
+                  >
+                    <ModelSelectorTrigger asChild>
+                      <PromptInputButton>
+                        {selectedModelData?.chefSlug && (
+                          <ModelSelectorLogo
+                            provider={selectedModelData.chefSlug}
+                          />
+                        )}
+                        {selectedModelData?.name && (
+                          <ModelSelectorName>
+                            {selectedModelData.name}
+                          </ModelSelectorName>
+                        )}
+                      </PromptInputButton>
+                    </ModelSelectorTrigger>
+                    <ModelSelectorContent>
+                      <ModelSelectorInput placeholder="Tìm model..." />
+                      <ModelSelectorList>
+                        <ModelSelectorEmpty>Không tìm thấy model.</ModelSelectorEmpty>
+                        <ModelSelectorGroup heading="OpenAI">
+                          {chatGPTModels.map((m) => (
+                            <ModelSelectorItem
+                              key={m.id}
+                              onSelect={() => {
+                                setModel(m.id);
+                                setModelSelectorOpen(false);
+                              }}
+                              value={m.id}
+                            >
+                              <ModelSelectorLogo provider={m.chefSlug} />
+                              <ModelSelectorName>{m.name}</ModelSelectorName>
+                              {model === m.id ? (
+                                <CheckIcon className="ml-auto size-4" />
+                              ) : (
+                                <div className="ml-auto size-4" />
+                              )}
+                            </ModelSelectorItem>
+                          ))}
+                        </ModelSelectorGroup>
+                      </ModelSelectorList>
+                    </ModelSelectorContent>
+                  </ModelSelector>
+                </PromptInputTools>
                 <PromptInputSubmit status={status} />
               </PromptInputFooter>
             </PromptInput>

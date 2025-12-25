@@ -3,8 +3,7 @@ import path from "path";
 import * as fs from "fs";
 import dotenv from "dotenv";
 import { openai } from "@ai-sdk/openai";
-dotenv.config({ path: ".env" });
-dotenv.config({ path: ".env.local" });
+dotenv.config({ path: [".env", ".env.local"], override: true });
 
 export const configSchema = z.object({
   databaseUrl: z.url().default("file:./tmp/database"),
