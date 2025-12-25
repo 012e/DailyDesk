@@ -28,6 +28,8 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        with:
+          cache: true
 
       - name: Run tests
         run: pnpm test
