@@ -2,7 +2,7 @@ import { uuidv7 } from "uuidv7";
 import * as z from "zod";
 import api from "@/lib/api";
 import { useAtomValue } from "jotai";
-import { boardIdAtom } from "@/stores/board";
+import { boardIdAtom } from "@/pages/kanban/atoms";
 import { useQueryClient } from "@tanstack/react-query";
 
 export const CreateListSchema = z.object({
@@ -35,9 +35,11 @@ export function useListActions() {
     });
   }
 
-  async function deleteList(listId) {
-    const boardId = useAtomValue(boardIdAtom);
-  }
+  // TODO: Implement deleteList function
+  // async function deleteList(listId: string) {
+  //   if (!boardId) throw new Error("board id is undefined");
+  //   // Implementation needed
+  // }
 
   return {
     createList,
