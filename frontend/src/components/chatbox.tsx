@@ -1,16 +1,27 @@
-import { useState, useRef, useEffect } from 'react';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { MessageCircle, X, Send } from 'lucide-react';
+import { useState } from 'react';
+import { MessageCircle, X } from 'lucide-react';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { useAtomValue } from 'jotai';
 import { accessTokenAtom } from '@/stores/access-token';
+import { 
+  Conversation, 
+  ConversationContent, 
+  ConversationEmptyState,
+  ConversationScrollButton 
+} from './ai-elements/conversation';
+import { Message, MessageContent } from './ai-elements/message';
+import { 
+  PromptInput, 
+  PromptInputBody, 
+  PromptInputTextarea, 
+  PromptInputFooter, 
+  PromptInputSubmit 
+} from './ai-elements/prompt-input';
+import { Loader } from './ai-elements/loader';
 
 export function Chatbox() {
   const [isOpen, setIsOpen] = useState(false);
-  const [input, setInput] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const accessToken = useAtomValue(accessTokenAtom);
   
   const { messages, sendMessage, status } = useChat({
@@ -22,38 +33,13 @@ export function Chatbox() {
     }),
   });
 
-  // Show welcome message when chat is empty
-  const displayMessages = messages.length === 0 
-    ? [{
-        id: 'welcome',
-        role: 'assistant' as const,
-        parts: [{ type: 'text' as const, text: 'Xin chào! Tôi có thể giúp gì cho bạn?' }],
-      }]
-    : messages;
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const handleSendMessage = async () => {
-    if (!input.trim()) return;
+  const handleSubmit = (message: { text: string }) => {
+    if (!message.text.trim()) return;
 
     sendMessage({
       role: 'user',
-      parts: [{ type: 'text', text: input }],
+      parts: [{ type: 'text', text: message.text }],
     });
-    setInput('');
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
   };
 
   return (
@@ -88,64 +74,56 @@ export function Chatbox() {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {displayMessages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                    message.role === 'user'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-muted text-foreground'
-                  }`}
-                >
-                  {message.parts.map((part, i) => {
-                    if (part.type === 'text') {
-                      return (
-                        <p key={`${message.id}-${i}`} className="text-sm whitespace-pre-wrap">
-                          {part.text}
-                        </p>
-                      );
-                    }
-                    return null;
-                  })}
-                </div>
-              </div>
-            ))}
-            {status === 'streaming' && (
-              <div className="flex justify-start">
-                <div className="max-w-[80%] rounded-lg bg-muted px-4 py-2">
-                  <div className="flex gap-1">
-                    <span className="animate-bounce">•</span>
-                    <span className="animate-bounce delay-100">•</span>
-                    <span className="animate-bounce delay-200">•</span>
-                  </div>
-                </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
+          <Conversation className="flex-1">
+            <ConversationContent>
+              {messages.length === 0 ? (
+                <ConversationEmptyState
+                  title="Xin chào! 👋"
+                  description="Tôi có thể giúp gì cho bạn?"
+                />
+              ) : (
+                messages.map((message) => (
+                  <Message key={message.id} from={message.role}>
+                    <MessageContent>
+                      {message.parts.map((part, i) => {
+                        if (part.type === 'text') {
+                          return (
+                            <p key={`${message.id}-${i}`} className="whitespace-pre-wrap">
+                              {part.text}
+                            </p>
+                          );
+                        }
+                        return null;
+                      })}
+                    </MessageContent>
+                  </Message>
+                ))
+              )}
+              {status === 'streaming' && (
+                <Message from="assistant">
+                  <MessageContent>
+                    <Loader size={16} />
+                  </MessageContent>
+                </Message>
+              )}
+            </ConversationContent>
+            <ConversationScrollButton />
+          </Conversation>
 
           {/* Input */}
           <div className="border-t border-border p-4">
-            <div className="flex gap-2">
-              <Input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Nhập tin nhắn..."
-                className="flex-1"
-              />
-              <Button
-                onClick={handleSendMessage}
-                size="icon"
-                disabled={!input.trim() || status === 'streaming'}
-              >
-                <Send className="h-4 w-4" />
-              </Button>
-            </div>
+            <PromptInput onSubmit={handleSubmit}>
+              <PromptInputBody>
+                <PromptInputTextarea 
+                  placeholder="Nhập tin nhắn..."
+                  className="min-h-[60px]"
+                />
+              </PromptInputBody>
+              <PromptInputFooter>
+                <div className="flex-1" />
+                <PromptInputSubmit status={status} />
+              </PromptInputFooter>
+            </PromptInput>
           </div>
         </div>
       )}
