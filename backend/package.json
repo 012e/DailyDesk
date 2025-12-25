@@ -5,7 +5,10 @@
     "dev": "nodemon",
     "deploy": "wrangler deploy --minify",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.6",
@@ -20,10 +23,12 @@
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
+    "@vitest/ui": "^4.0.16",
     "drizzle-kit": "^0.31.7",
     "fast-glob": "^3.3.3",
     "nodemon": "^3.1.11",
     "tsx": "^4.20.6",
+    "vitest": "^4.0.16",
     "wrangler": "^4.48.0"
   }
 }
