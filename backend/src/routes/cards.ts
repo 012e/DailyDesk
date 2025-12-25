@@ -2,7 +2,7 @@ import db from "@/lib/db";
 import { boardsTable, listsTable, cardsTable } from "@/lib/db/schema";
 import { ensureUserAuthenticated } from "@/lib/utils";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { eq } from "drizzle-orm";
+import { eq, and, gte, gt, lt, lte, sql } from "drizzle-orm";
 import { authMiddleware } from "@/lib/auth";
 import { defaultSecurityScheme, jsonBody, successJson } from "@/types/openapi";
 import {
@@ -332,6 +332,78 @@ export default function createCardRoutes() {
 
         if (newList[0].boardId !== boardId) {
           return c.json({ error: "List đích không thuộc Board này" }, 403);
+        }
+      }
+
+      // Handle order adjustments when moving cards
+      const isMovingToNewList = req.listId && req.listId !== existingCard[0].listId;
+      const isChangingOrder = req.order !== undefined && req.order !== existingCard[0].order;
+
+      if (isMovingToNewList || isChangingOrder) {
+        const oldListId = existingCard[0].listId;
+        const newListId = req.listId || oldListId;
+        const oldOrder = existingCard[0].order;
+        const newOrder = req.order !== undefined ? req.order : existingCard[0].order;
+
+        if (isMovingToNewList) {
+          // Moving to a different list
+          
+          // 1. Remove gap in source list - decrease order of cards after the removed card
+          await db
+            .update(cardsTable)
+            .set({
+              order: sql`${cardsTable.order} - 1`,
+            })
+            .where(
+              and(
+                eq(cardsTable.listId, oldListId),
+                gt(cardsTable.order, oldOrder)
+              )
+            );
+
+          // 2. Make space in destination list - increase order of cards at or after new position
+          await db
+            .update(cardsTable)
+            .set({
+              order: sql`${cardsTable.order} + 1`,
+            })
+            .where(
+              and(
+                eq(cardsTable.listId, newListId),
+                gte(cardsTable.order, newOrder)
+              )
+            );
+        } else {
+          // Moving within same list - adjust orders between old and new position
+          if (newOrder > oldOrder) {
+            // Moving down - decrease order of cards between old+1 and new (inclusive)
+            await db
+              .update(cardsTable)
+              .set({
+                order: sql`${cardsTable.order} - 1`,
+              })
+              .where(
+                and(
+                  eq(cardsTable.listId, oldListId),
+                  gt(cardsTable.order, oldOrder),
+                  lte(cardsTable.order, newOrder)
+                )
+              );
+          } else {
+            // Moving up - increase order of cards between new (inclusive) and old-1
+            await db
+              .update(cardsTable)
+              .set({
+                order: sql`${cardsTable.order} + 1`,
+              })
+              .where(
+                and(
+                  eq(cardsTable.listId, oldListId),
+                  gte(cardsTable.order, newOrder),
+                  lt(cardsTable.order, oldOrder)
+                )
+              );
+          }
         }
       }
 
