@@ -1,16 +1,16 @@
-import { useState } from 'react';
-import { MessageCircle, MessageSquareIcon, X, CheckIcon } from 'lucide-react';
-import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport } from 'ai';
-import { useAtomValue } from 'jotai';
-import { accessTokenAtom } from '@/stores/access-token';
+import { useState, useRef } from "react";
+import { MessageCircle, MessageSquareIcon, X, CheckIcon } from "lucide-react";
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
+import { useAtomValue } from "jotai";
+import { accessTokenAtom } from "@/stores/access-token";
 import {
   Conversation,
   ConversationContent,
   ConversationEmptyState,
   ConversationScrollButton,
-} from '@/components/ai-elements/conversation';
-import { Message, MessageContent } from '@/components/ai-elements/message';
+} from "@/components/ai-elements/conversation";
+import { Message, MessageContent } from "@/components/ai-elements/message";
 import {
   PromptInput,
   PromptInputBody,
@@ -19,7 +19,7 @@ import {
   PromptInputSubmit,
   PromptInputTools,
   PromptInputButton,
-} from '@/components/ai-elements/prompt-input';
+} from "@/components/ai-elements/prompt-input";
 import {
   ModelSelector,
   ModelSelectorContent,
@@ -31,8 +31,8 @@ import {
   ModelSelectorLogo,
   ModelSelectorName,
   ModelSelectorTrigger,
-} from '@/components/ai-elements/model-selector';
-import { Loader } from '@/components/ai-elements/loader';
+} from "@/components/ai-elements/model-selector";
+import { Loader } from "@/components/ai-elements/loader";
 
 const chatGPTModels = [
   {
@@ -54,17 +54,22 @@ export function Chatbox() {
   const [model, setModel] = useState<string>(chatGPTModels[0].id);
   const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
   const accessToken = useAtomValue(accessTokenAtom);
-  
+  const modelRef = useRef<string>(model);
+
+  // A dirty fix, dirty as hell
+  // Keep ref in sync with state
+  modelRef.current = model;
+
   const selectedModelData = chatGPTModels.find((m) => m.id === model);
-  
+
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({
-      api: 'http://localhost:3000/chat',
+      api: "http://localhost:3000/chat",
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
-      body: {
-        model,
+      body: () => {
+        return { model: modelRef.current };
       },
     }),
   });
@@ -73,8 +78,8 @@ export function Chatbox() {
     if (!message.text.trim()) return;
 
     sendMessage({
-      role: 'user',
-      parts: [{ type: 'text', text: message.text }],
+      role: "user",
+      parts: [{ type: "text", text: message.text }],
     });
   };
 
@@ -123,7 +128,7 @@ export function Chatbox() {
                   <Message from={message.role} key={message.id}>
                     <MessageContent>
                       {message.parts.map((part, i) => {
-                        if (part.type === 'text') {
+                        if (part.type === "text") {
                           return (
                             <p key={i} className="whitespace-pre-wrap">
                               {part.text}
@@ -136,7 +141,7 @@ export function Chatbox() {
                   </Message>
                 ))
               )}
-              {status === 'streaming' && (
+              {status === "streaming" && (
                 <Message from="assistant">
                   <MessageContent>
                     <Loader size={16} />
@@ -179,13 +184,18 @@ export function Chatbox() {
                     <ModelSelectorContent>
                       <ModelSelectorInput placeholder="Tìm model..." />
                       <ModelSelectorList>
-                        <ModelSelectorEmpty>Không tìm thấy model.</ModelSelectorEmpty>
+                        <ModelSelectorEmpty>
+                          Không tìm thấy model.
+                        </ModelSelectorEmpty>
                         <ModelSelectorGroup heading="OpenAI">
                           {chatGPTModels.map((m) => (
                             <ModelSelectorItem
                               key={m.id}
                               onSelect={() => {
                                 setModel(m.id);
+                                console.log(model);
+                                console.log(model);
+                                console.log(model);
                                 setModelSelectorOpen(false);
                               }}
                               value={m.id}
