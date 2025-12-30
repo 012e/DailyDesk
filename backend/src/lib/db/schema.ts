@@ -10,6 +10,7 @@ export const boardsTable = sqliteTable("boards", {
   name: text("name").notNull(),
   userId: text("user_id").notNull(), // Clerk user ID
   backgroundUrl: text("background_url"),
+  backgroundPublicId: text("background_public_id"),
   backgroundColor: text("background_color"), // Valid hex color code
 });
 
@@ -32,6 +33,9 @@ export const cardsTable = sqliteTable("cards", {
     .$defaultFn(() => randomUUID()),
   name: text("name").notNull(),
   order: integer("order").notNull(),
+  coverUrl: text("cover_url"),
+  coverPublicId: text("cover_public_id"),
+  coverColor: text("cover_color"),
   listId: text("list_id")
     .notNull()
     .references(() => listsTable.id, { onDelete: "cascade" }),

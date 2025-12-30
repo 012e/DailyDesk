@@ -146,6 +146,21 @@ export default function createCardRoutes() {
         return c.json({ error: "List không thuộc Board này" }, 403);
       }
 
+      // Validate order bounds
+      const cardsInList = await db
+        .select()
+        .from(cardsTable)
+        .where(eq(cardsTable.listId, req.listId));
+      
+      const listSize = cardsInList.length;
+      
+      // Order must be between 0 and list size (inclusive of list size to allow appending)
+      if (req.order < 0 || req.order > listSize) {
+        return c.json({ 
+          error: `Order must be between 0 and ${listSize} for this list` 
+        }, 400);
+      }
+
       const card = await db
         .insert(cardsTable)
         .values({
@@ -332,6 +347,35 @@ export default function createCardRoutes() {
 
         if (newList[0].boardId !== boardId) {
           return c.json({ error: "List đích không thuộc Board này" }, 403);
+        }
+      }
+
+      // Validate order bounds if order is being changed
+      if (req.order !== undefined) {
+        const targetListId = req.listId || existingCard[0].listId;
+        const isMovingToNewList = req.listId && req.listId !== existingCard[0].listId;
+        
+        // Get cards in target list (excluding current card if staying in same list)
+        const cardsInTargetList = await db
+          .select()
+          .from(cardsTable)
+          .where(
+            isMovingToNewList
+              ? eq(cardsTable.listId, targetListId)
+              : and(
+                  eq(cardsTable.listId, targetListId),
+                  sql`${cardsTable.id} != ${id}`
+                )
+          );
+        
+        const targetListSize = cardsInTargetList.length;
+        
+        // When moving to new list: order must be 0 to targetListSize (size of destination)
+        // When staying in same list: order must be 0 to targetListSize (size - 1, since we exclude current card)
+        if (req.order < 0 || req.order > targetListSize) {
+          return c.json({ 
+            error: `Order must be between 0 and ${targetListSize} for this list` 
+          }, 400);
         }
       }
 

@@ -156,6 +156,7 @@ export function Kanban({ boardId }: KanbanProps) {
 
         <CardEditDialog
           card={selectedCard}
+          boardId={boardId || ""}
           isOpen={isCardDialogOpen}
           onClose={() => {
             setIsCardDialogOpen(false);

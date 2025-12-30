@@ -48,7 +48,7 @@ export default function createBoardRoutes() {
       });
 
       return c.json(boards);
-    },
+    }
   );
 
   app.openapi(
@@ -82,7 +82,7 @@ export default function createBoardRoutes() {
         .returning();
 
       return c.json(board[0]);
-    },
+    }
   );
 
   app.openapi(
@@ -136,7 +136,7 @@ export default function createBoardRoutes() {
       }
 
       return c.json(board);
-    },
+    }
   );
 
   app.openapi(
@@ -191,8 +191,10 @@ export default function createBoardRoutes() {
       } = {};
 
       if (req.name !== undefined) updateData.name = req.name;
-      if (req.backgroundUrl !== undefined) updateData.backgroundUrl = req.backgroundUrl;
-      if (req.backgroundColor !== undefined) updateData.backgroundColor = req.backgroundColor;
+      if (req.backgroundUrl !== undefined)
+        updateData.backgroundUrl = req.backgroundUrl;
+      if (req.backgroundColor !== undefined)
+        updateData.backgroundColor = req.backgroundColor;
 
       const updatedBoard = await db
         .update(boardsTable)
@@ -201,7 +203,7 @@ export default function createBoardRoutes() {
         .returning();
 
       return c.json(updatedBoard[0]);
-    },
+    }
   );
 
   app.openapi(
@@ -257,7 +259,7 @@ export default function createBoardRoutes() {
       await db.delete(boardsTable).where(eq(boardsTable.id, id));
 
       return c.json({ message: "Xóa Board thành công" });
-    },
+    }
   );
 
   app.openapi(
@@ -310,7 +312,7 @@ export default function createBoardRoutes() {
         .where(eq(listsTable.boardId, id));
 
       return c.json(lists);
-    },
+    }
   );
 
   app.openapi(
@@ -369,7 +371,7 @@ export default function createBoardRoutes() {
         .where(eq(listsTable.boardId, id));
 
       return c.json(cards);
-    },
+    }
   );
 
   return app;

@@ -11,19 +11,19 @@ import { boardIdAtom } from "./atoms";
 import { ColumnHeader } from "./ColumnHeader";
 import { KanbanCard } from "./KanbanCard";
 
-interface Card {
+// Backend card structure
+interface BackendCard {
   id: string;
-  title?: string;
-  name?: string;
-  description?: string;
-  order?: number;
+  name: string;
+  order: number;
+  listId: string;
 }
 
 interface KanbanColumnProps {
   column: {
     id: string;
     name: string;
-    cards: Card[];
+    cards: BackendCard[];
   };
   onDropOverColumn: (data: string) => void;
   onDropOverListItem: (
