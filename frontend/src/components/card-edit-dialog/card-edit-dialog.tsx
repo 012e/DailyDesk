@@ -20,6 +20,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { queryClient } from "@/lib/query-client";
+import CheckList from "../check-list";
 
 interface CardEditDialogProps {
   card: Card | null;
@@ -268,6 +269,9 @@ function InnerDialog({
 
             {/* Description */}
             <CardDescription card={card} onUpdate={handleUpdate} />
+
+            {/* CheckList */}
+            <CheckList card={card} boardId={boardId} onUpdate={handleUpdate} />
           </div>
 
           {/* Right column - Comments and activity */}
