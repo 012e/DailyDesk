@@ -1,0 +1,255 @@
+import { useState, useRef } from "react";
+import { MessageCircle, MessageSquareIcon, X, CheckIcon } from "lucide-react";
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
+import { useAtomValue } from "jotai";
+import { accessTokenAtom } from "@/stores/access-token";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import {
+  Conversation,
+  ConversationContent,
+  ConversationEmptyState,
+  ConversationScrollButton,
+} from "@/components/ai-elements/conversation";
+import { Message, MessageContent } from "@/components/ai-elements/message";
+import {
+  PromptInput,
+  PromptInputBody,
+  PromptInputTextarea,
+  PromptInputFooter,
+  PromptInputSubmit,
+  PromptInputTools,
+  PromptInputButton,
+} from "@/components/ai-elements/prompt-input";
+import {
+  ModelSelector,
+  ModelSelectorContent,
+  ModelSelectorEmpty,
+  ModelSelectorGroup,
+  ModelSelectorInput,
+  ModelSelectorItem,
+  ModelSelectorList,
+  ModelSelectorLogo,
+  ModelSelectorName,
+  ModelSelectorTrigger,
+} from "@/components/ai-elements/model-selector";
+import { Loader } from "@/components/ai-elements/loader";
+
+const chatGPTModels = [
+  {
+    id: "gpt-4o",
+    name: "GPT-4o",
+    chef: "OpenAI",
+    chefSlug: "openai",
+  },
+  {
+    id: "gpt-4o-mini",
+    name: "GPT-4o Mini",
+    chef: "OpenAI",
+    chefSlug: "openai",
+  },
+];
+
+export function Chatbox() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [model, setModel] = useState<string>(chatGPTModels[0].id);
+  const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
+  const accessToken = useAtomValue(accessTokenAtom);
+  const modelRef = useRef<string>(model);
+
+  // A dirty fix, dirty as hell
+  // Keep ref in sync with state
+  modelRef.current = model;
+
+  const selectedModelData = chatGPTModels.find((m) => m.id === model);
+
+  const { messages, sendMessage, status } = useChat({
+    transport: new DefaultChatTransport({
+      api: "http://localhost:3000/chat",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: () => {
+        return { model: modelRef.current };
+      },
+    }),
+  });
+
+  const handleSubmit = (message: { text: string }) => {
+    if (!message.text.trim()) return;
+
+    sendMessage({
+      role: "user",
+      parts: [{ type: "text", text: message.text }],
+    });
+  };
+
+  return (
+    <>
+      {/* Floating Button */}
+      {!isOpen && (
+        <button
+          onClick={() => setIsOpen(true)}
+          className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg transition-all hover:bg-blue-700 hover:shadow-xl"
+          aria-label="Open chat"
+        >
+          <MessageCircle className="h-6 w-6" />
+        </button>
+      )}
+
+      {/* Chat Window */}
+      {isOpen && (
+        <div className="fixed bottom-6 right-6 z-50 flex h-[600px] w-[400px] flex-col rounded-lg border border-border bg-background shadow-2xl">
+          {/* Header */}
+          <div className="flex items-center justify-between rounded-t-lg bg-blue-600 p-4 text-white">
+            <div className="flex items-center gap-2">
+              <MessageCircle className="h-5 w-5" />
+              <h3 className="font-semibold">Chat Assistant</h3>
+            </div>
+            <button
+              onClick={() => setIsOpen(false)}
+              className="rounded-full p-1 transition-colors hover:bg-blue-700"
+              aria-label="Close chat"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Messages */}
+          <Conversation className="flex-1">
+            <ConversationContent>
+              {messages.length === 0 ? (
+                <ConversationEmptyState
+                  description="Tôi có thể giúp gì cho bạn?"
+                  icon={<MessageSquareIcon className="size-6" />}
+                  title="Xin chào! 👋"
+                />
+              ) : (
+                messages.map((message) => (
+                  <Message from={message.role} key={message.id}>
+                    <MessageContent>
+                      {message.parts.map((part, i) => {
+                        if (part.type === "text") {
+                          return message.role === "assistant" ? (
+                            <div key={i} className="prose prose-sm dark:prose-invert max-w-none">
+                              <ReactMarkdown
+                                remarkPlugins={[remarkGfm]}
+                                components={{
+                                  code: ({ className, children, ...props }: any) => {
+                                    const isInline = !className;
+                                    return isInline ? (
+                                      <code
+                                        className="rounded bg-muted px-1.5 py-0.5 font-mono text-sm"
+                                        {...props}
+                                      >
+                                        {children}
+                                      </code>
+                                    ) : (
+                                      <code
+                                        className={`block rounded-lg bg-muted p-4 font-mono text-sm overflow-x-auto ${className || ''}`}
+                                        {...props}
+                                      >
+                                        {children}
+                                      </code>
+                                    );
+                                  },
+                                }}
+                              >
+                                {part.text}
+                              </ReactMarkdown>
+                            </div>
+                          ) : (
+                            <p key={i} className="whitespace-pre-wrap">
+                              {part.text}
+                            </p>
+                          );
+                        }
+                        return null;
+                      })}
+                    </MessageContent>
+                  </Message>
+                ))
+              )}
+              {status === "streaming" && (
+                <Message from="assistant">
+                  <MessageContent>
+                    <Loader size={16} />
+                  </MessageContent>
+                </Message>
+              )}
+            </ConversationContent>
+            <ConversationScrollButton />
+          </Conversation>
+
+          {/* Input */}
+          <div className="border-t border-border p-4">
+            <PromptInput onSubmit={handleSubmit}>
+              <PromptInputBody>
+                <PromptInputTextarea
+                  className="min-h-[60px]"
+                  placeholder="Enter your message..."
+                />
+              </PromptInputBody>
+              <PromptInputFooter>
+                <PromptInputTools>
+                  <ModelSelector
+                    onOpenChange={setModelSelectorOpen}
+                    open={modelSelectorOpen}
+                  >
+                    <ModelSelectorTrigger asChild>
+                      <PromptInputButton>
+                        {selectedModelData?.chefSlug && (
+                          <ModelSelectorLogo
+                            provider={selectedModelData.chefSlug}
+                          />
+                        )}
+                        {selectedModelData?.name && (
+                          <ModelSelectorName>
+                            {selectedModelData.name}
+                          </ModelSelectorName>
+                        )}
+                      </PromptInputButton>
+                    </ModelSelectorTrigger>
+                    <ModelSelectorContent>
+                      <ModelSelectorInput placeholder="Select model..." />
+                      <ModelSelectorList>
+                        <ModelSelectorEmpty>
+                          Không tìm thấy model.
+                        </ModelSelectorEmpty>
+                        <ModelSelectorGroup heading="OpenAI">
+                          {chatGPTModels.map((m) => (
+                            <ModelSelectorItem
+                              key={m.id}
+                              onSelect={() => {
+                                setModel(m.id);
+                                console.log(model);
+                                console.log(model);
+                                console.log(model);
+                                setModelSelectorOpen(false);
+                              }}
+                              value={m.id}
+                            >
+                              <ModelSelectorLogo provider={m.chefSlug} />
+                              <ModelSelectorName>{m.name}</ModelSelectorName>
+                              {model === m.id ? (
+                                <CheckIcon className="ml-auto size-4" />
+                              ) : (
+                                <div className="ml-auto size-4" />
+                              )}
+                            </ModelSelectorItem>
+                          ))}
+                        </ModelSelectorGroup>
+                      </ModelSelectorList>
+                    </ModelSelectorContent>
+                  </ModelSelector>
+                </PromptInputTools>
+                <PromptInputSubmit status={status} />
+              </PromptInputFooter>
+            </PromptInput>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}

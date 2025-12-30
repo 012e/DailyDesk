@@ -1,4 +1,3 @@
-import { bearerAuth } from "..";
 export function successJson(
   schema: any,
   options: { description?: string } = {},
@@ -14,7 +13,7 @@ export function successJson(
 }
 
 export function defaultSecurityScheme() {
-  return [{ [bearerAuth.name]: [] }];
+  return [{ "bearerAuth": [] }];
 }
 
 export function jsonBody(schema: any) {

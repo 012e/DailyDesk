@@ -88,7 +88,7 @@ export function useDeleteCard() {
       if (previousCards) {
         queryClient.setQueryData<Card[]>(
           ["cards"],
-          previousCards.filter((card) => card.id !== cardId)
+          previousCards.filter((card) => card.id !== cardId),
         );
       }
 
@@ -137,7 +137,7 @@ export function useCreateCard() {
             order: params.order ?? 0,
             listId: params.listId,
           },
-        }
+        },
       );
 
       if (error) {

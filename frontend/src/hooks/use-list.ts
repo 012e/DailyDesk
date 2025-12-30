@@ -2,7 +2,7 @@ import { uuidv7 } from "uuidv7";
 import * as z from "zod";
 import api from "@/lib/api";
 import { useAtomValue } from "jotai";
-import { boardIdAtom } from "@/stores/board";
+import { boardIdAtom } from "@/pages/kanban/atoms";
 import { useQueryClient } from "@tanstack/react-query";
 
 export const CreateListSchema = z.object({
@@ -35,19 +35,13 @@ export function useListActions() {
     });
   }
 
+  // TODO: Implement deleteList function
+  // async function deleteList(listId: string) {
+  //   if (!boardId) throw new Error("board id is undefined");
+  //   // Implementation needed
+  // }
+
   return {
     createList,
   };
-}
-
-export function useLists({ boardId }: { boardId: string }) {
-  const listCollection = useLiveSuspenseQuery(
-    (q) =>
-      q
-        .from({ board: boardCollection })
-        .where(({ board }) => eq(board.id, boardId))
-        .findOne(),
-    [boardId],
-  );
-  return listCollection.data!.lists;
 }

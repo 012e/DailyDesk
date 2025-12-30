@@ -2,10 +2,14 @@ import db from "@/lib/db";
 import { boardsTable, listsTable, cardsTable } from "@/lib/db/schema";
 import { ensureUserAuthenticated } from "@/lib/utils";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { eq } from "drizzle-orm";
+import { eq, and, gte, gt, lt, lte, sql } from "drizzle-orm";
 import { authMiddleware } from "@/lib/auth";
 import { defaultSecurityScheme, jsonBody, successJson } from "@/types/openapi";
-import { CardSchema, CreateCardSchema, UpdateCardSchema } from "@/types/cards";
+import {
+  CardSchema,
+  CreateCardSchema,
+  UpdateCardSchema,
+} from "@/types/cards";
 
 const TAGS = ["Cards"];
 
@@ -64,13 +68,17 @@ export default function createCardRoutes() {
           name: cardsTable.name,
           order: cardsTable.order,
           listId: cardsTable.listId,
+          startDate: cardsTable.startDate,
+          deadline: cardsTable.deadline,
+          latitude: cardsTable.latitude,
+          longitude: cardsTable.longitude,
         })
         .from(cardsTable)
         .innerJoin(listsTable, eq(cardsTable.listId, listsTable.id))
         .where(eq(listsTable.boardId, boardId));
 
       return c.json(cards);
-    }
+    },
   );
 
   // POST /boards/{boardId}/cards - Create a new card
@@ -87,7 +95,7 @@ export default function createCardRoutes() {
         body: jsonBody(
           CreateCardSchema.extend({
             listId: z.uuid(),
-          })
+          }),
         ),
       },
       responses: {
@@ -120,10 +128,7 @@ export default function createCardRoutes() {
       }
 
       if (board[0].userId !== user.sub) {
-        return c.json(
-          { error: "Không có quyền tạo Card trong Board này" },
-          403
-        );
+        return c.json({ error: "Không có quyền tạo Card trong Board này" }, 403);
       }
 
       // Check if list exists and belongs to the board
@@ -141,6 +146,21 @@ export default function createCardRoutes() {
         return c.json({ error: "List không thuộc Board này" }, 403);
       }
 
+      // Validate order bounds
+      const cardsInList = await db
+        .select()
+        .from(cardsTable)
+        .where(eq(cardsTable.listId, req.listId));
+      
+      const listSize = cardsInList.length;
+      
+      // Order must be between 0 and list size (inclusive of list size to allow appending)
+      if (req.order < 0 || req.order > listSize) {
+        return c.json({ 
+          error: `Order must be between 0 and ${listSize} for this list` 
+        }, 400);
+      }
+
       const card = await db
         .insert(cardsTable)
         .values({
@@ -148,11 +168,15 @@ export default function createCardRoutes() {
           name: req.name,
           order: req.order,
           listId: req.listId,
+          startDate: req.startDate,
+          deadline: req.deadline,
+          latitude: req.latitude,
+          longitude: req.longitude,
         })
         .returning();
 
       return c.json(card[0]);
-    }
+    },
   );
 
   // GET /boards/{boardId}/cards/{id} - Get a specific card
@@ -207,6 +231,10 @@ export default function createCardRoutes() {
           name: cardsTable.name,
           order: cardsTable.order,
           listId: cardsTable.listId,
+          startDate: cardsTable.startDate,
+          deadline: cardsTable.deadline,
+          latitude: cardsTable.latitude,
+          longitude: cardsTable.longitude,
         })
         .from(cardsTable)
         .innerJoin(listsTable, eq(cardsTable.listId, listsTable.id))
@@ -229,7 +257,7 @@ export default function createCardRoutes() {
       }
 
       return c.json(card[0]);
-    }
+    },
   );
 
   // PUT /boards/{boardId}/cards/{id} - Update a card
@@ -247,7 +275,7 @@ export default function createCardRoutes() {
         body: jsonBody(
           UpdateCardSchema.extend({
             listId: z.uuid().optional(),
-          })
+          }),
         ),
       },
       responses: {
@@ -322,19 +350,123 @@ export default function createCardRoutes() {
         }
       }
 
+      // Validate order bounds if order is being changed
+      if (req.order !== undefined) {
+        const targetListId = req.listId || existingCard[0].listId;
+        const isMovingToNewList = req.listId && req.listId !== existingCard[0].listId;
+        
+        // Get cards in target list (excluding current card if staying in same list)
+        const cardsInTargetList = await db
+          .select()
+          .from(cardsTable)
+          .where(
+            isMovingToNewList
+              ? eq(cardsTable.listId, targetListId)
+              : and(
+                  eq(cardsTable.listId, targetListId),
+                  sql`${cardsTable.id} != ${id}`
+                )
+          );
+        
+        const targetListSize = cardsInTargetList.length;
+        
+        // When moving to new list: order must be 0 to targetListSize (size of destination)
+        // When staying in same list: order must be 0 to targetListSize (size - 1, since we exclude current card)
+        if (req.order < 0 || req.order > targetListSize) {
+          return c.json({ 
+            error: `Order must be between 0 and ${targetListSize} for this list` 
+          }, 400);
+        }
+      }
+
+      // Handle order adjustments when moving cards
+      const isMovingToNewList = req.listId && req.listId !== existingCard[0].listId;
+      const isChangingOrder = req.order !== undefined && req.order !== existingCard[0].order;
+
+      if (isMovingToNewList || isChangingOrder) {
+        const oldListId = existingCard[0].listId;
+        const newListId = req.listId || oldListId;
+        const oldOrder = existingCard[0].order;
+        const newOrder = req.order !== undefined ? req.order : existingCard[0].order;
+
+        if (isMovingToNewList) {
+          // Moving to a different list
+          
+          // 1. Remove gap in source list - decrease order of cards after the removed card
+          await db
+            .update(cardsTable)
+            .set({
+              order: sql`${cardsTable.order} - 1`,
+            })
+            .where(
+              and(
+                eq(cardsTable.listId, oldListId),
+                gt(cardsTable.order, oldOrder)
+              )
+            );
+
+          // 2. Make space in destination list - increase order of cards at or after new position
+          await db
+            .update(cardsTable)
+            .set({
+              order: sql`${cardsTable.order} + 1`,
+            })
+            .where(
+              and(
+                eq(cardsTable.listId, newListId),
+                gte(cardsTable.order, newOrder)
+              )
+            );
+        } else {
+          // Moving within same list - adjust orders between old and new position
+          if (newOrder > oldOrder) {
+            // Moving down - decrease order of cards between old+1 and new (inclusive)
+            await db
+              .update(cardsTable)
+              .set({
+                order: sql`${cardsTable.order} - 1`,
+              })
+              .where(
+                and(
+                  eq(cardsTable.listId, oldListId),
+                  gt(cardsTable.order, oldOrder),
+                  lte(cardsTable.order, newOrder)
+                )
+              );
+          } else {
+            // Moving up - increase order of cards between new (inclusive) and old-1
+            await db
+              .update(cardsTable)
+              .set({
+                order: sql`${cardsTable.order} + 1`,
+              })
+              .where(
+                and(
+                  eq(cardsTable.listId, oldListId),
+                  gte(cardsTable.order, newOrder),
+                  lt(cardsTable.order, oldOrder)
+                )
+              );
+          }
+        }
+      }
+
       const updatedCard = await db
         .update(cardsTable)
         .set({
           name: req.name,
           order: req.order,
           listId: req.listId,
-          coverColor: req.coverColor,
+          startDate: req.startDate,
+          deadline: req.deadline,
+          latitude: req.latitude,
+          longitude: req.longitude,
         })
         .where(eq(cardsTable.id, id))
         .returning();
 
       return c.json(updatedCard[0]);
-    }
+    },
   );
 
   // DELETE /boards/{boardId}/cards/{id} - Delete a card
@@ -414,7 +546,7 @@ export default function createCardRoutes() {
       await db.delete(cardsTable).where(eq(cardsTable.id, id));
 
       return c.json({ message: "Xóa Card thành công" });
-    }
+    },
   );
 
   return app;

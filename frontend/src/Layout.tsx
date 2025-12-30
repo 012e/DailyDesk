@@ -7,6 +7,7 @@ import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import PageLoader from "./components/full-page-loader";
 import { Toaster } from "react-hot-toast";
+import { Chatbox } from "@/components/chatbox";
 
 export default function Layout() {
   return (
@@ -29,6 +30,7 @@ export default function Layout() {
             </Suspense>
           </ErrorBoundary>
         </main>
+        <Chatbox />
       </SidebarProvider>
     </Providers>
   );

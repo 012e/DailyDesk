@@ -34,6 +34,7 @@ const accessTokenInjectMiddleware: Middleware = {
           const newAccessToken = await refresher();
 
           if (newAccessToken) {
+            // Update old access token
             store.set(accessTokenAtom, newAccessToken);
             // 3. Create a new request based on the original
             // We clone the headers to ensure we don't mutate the old request incorrectly

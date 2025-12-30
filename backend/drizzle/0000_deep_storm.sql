@@ -14,9 +14,21 @@ CREATE TABLE `cards` (
 	`cover_url` text,
 	`cover_public_id` text,
 	`cover_color` text,
-	`is_cover` integer DEFAULT false NOT NULL,
 	`list_id` text NOT NULL,
+	`start_date` integer,
+	`deadline` integer,
+	`latitude` integer,
+	`longitude` integer,
 	FOREIGN KEY (`list_id`) REFERENCES `lists`(`id`) ON UPDATE no action ON DELETE cascade
+);
+--> statement-breakpoint
+CREATE TABLE `checklist_items` (
+	`id` text PRIMARY KEY NOT NULL,
+	`name` text NOT NULL,
+	`completed` integer DEFAULT false NOT NULL,
+	`order` integer NOT NULL,
+	`card_id` text NOT NULL,
+	FOREIGN KEY (`card_id`) REFERENCES `cards`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
 CREATE TABLE `labels` (
