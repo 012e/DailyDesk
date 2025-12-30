@@ -1,4 +1,3 @@
-
 import type { Card } from "@/types/card";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
