@@ -21,7 +21,6 @@ export function useUpdateCard() {
       listId?: string;
       coverColor?: string | null;
       coverUrl?: string | null;
-      isCover?: boolean;
     }) => {
       console.log("param:", params);
       const { data, error } = await api.PUT("/boards/{boardId}/cards/{id}", {
@@ -36,18 +35,19 @@ export function useUpdateCard() {
           order: params.order,
           listId: params.listId,
           coverColor: params.coverColor,
-          isCover: params.isCover,
         },
       });
 
       if (error) {
         throw new Error("Failed to update card");
       }
+      // When setting a color cover and the card previously had an image, delete the old image
       if (params.coverColor && params.coverUrl) {
         try {
-          await deleteImage("board", params.cardId);
+          await deleteImage("card", params.cardId);
         } catch (error) {
-          throw new Error(`Failed to delete card cover: ${error}`);
+          console.error(`Failed to delete card cover: ${error}`);
+          // Don't throw - the update succeeded, image deletion is secondary
         }
       }
 

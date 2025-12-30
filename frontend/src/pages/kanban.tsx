@@ -65,12 +65,7 @@ export default function Kanban() {
 
   const addListRef = useRef<HTMLDivElement>(null);
 
-  // Track which column is adding a card and the input value
-  const [addingCardColumnId, setAddingCardColumnId] = useState<string | null>(
-    null
-  );
-  const [newCardTitle, setNewCardTitle] = useState("");
-  const { mutate: createCard } = useCreateCard();
+  const { mutateAsync: createCardAsync } = useCreateCard();
   const { mutate: updateCard } = useUpdateCard();
 
   // Log boardId for debugging
@@ -165,28 +160,49 @@ export default function Kanban() {
     });
   };
 
-  // Show input for adding a card in a column
-  const startAddCard = (columnId: string) => {
-    setAddingCardColumnId(columnId);
-    setNewCardTitle("");
-  };
-
-  const handleAddCard = (columnId: string) => {
-    if (!newCardTitle.trim() || !boardId) return;
+  // Start adding a card: create a new card and open the edit dialog
+  const startAddCard = async (columnId: string) => {
+    if (!boardId) return;
 
     // Get the current list to calculate the next order
     const list = lists.find((l) => l.id === columnId);
     const nextOrder = list ? list.cards.length : 0;
 
-    createCard({
-      boardId: boardId,
-      listId: columnId,
-      name: newCardTitle,
-      order: nextOrder,
-    });
+    try {
+      // Create the card with a default title
+      const newCard = await createCardAsync({
+        boardId: boardId,
+        listId: columnId,
+        name: "Untitled Card",
+        order: nextOrder,
+      });
 
-    setNewCardTitle("");
-    setAddingCardColumnId(null);
+      // Create a full CardType object and open the dialog
+      if (newCard) {
+        const fullCard: CardType = {
+          id: newCard.id || "",
+          title: newCard.name || "Untitled Card",
+          description: "",
+          listId: columnId,
+          position: nextOrder,
+          labels: [],
+          members: [],
+          dueDate: undefined,
+          coverUrl: "",
+          coverColor: "",
+          order: nextOrder,
+          coverMode: CardCoverModeValue.NONE,
+          attachments: [],
+          comments: [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        setSelectedCard(fullCard);
+        setIsCardDialogOpen(true);
+      }
+    } catch (error) {
+      console.error("Failed to create card:", error);
+    }
   };
 
   const addColumn = () => {
@@ -269,8 +285,6 @@ export default function Kanban() {
       listId: updatedCard.listId,
       coverColor: updatedCard.coverColor,
       coverUrl: updatedCard.coverUrl,
-      isCover:
-        updatedCard.coverMode === CardCoverModeValue.COVER ? true : false,
       order: updatedCard.order,
     });
     setSelectedCard(updatedCard);
@@ -367,12 +381,10 @@ export default function Kanban() {
                       members: c.members || [],
                       dueDate: c.dueDate,
                       coverUrl: c.coverUrl,
-                      coverColor: c.CoverColor,
+                      coverColor: c.coverColor,
                       coverMode:
                         !c.coverUrl && !c.coverColor
                           ? CardCoverModeValue.NONE
-                          : c.isCover
-                          ? CardCoverModeValue.COVER
                           : CardCoverModeValue.TOP,
                       attachments: c.attachments || [],
                       comments: c.comments || [],
@@ -439,51 +451,12 @@ export default function Kanban() {
                 </KanbanBoardColumnList>
 
                 <KanbanBoardColumnFooter>
-                  {addingCardColumnId === column.id ? (
-                    <div className="flex flex-col gap-2 w-full">
-                      <Input
-                        autoFocus
-                        placeholder="Enter card title..."
-                        value={newCardTitle}
-                        onChange={(e) => setNewCardTitle(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") handleAddCard(column.id);
-                          if (e.key === "Escape") {
-                            setAddingCardColumnId(null);
-                            setNewCardTitle("");
-                          }
-                        }}
-                        className="bg-background"
-                      />
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => handleAddCard(column.id)}
-                          disabled={!newCardTitle.trim()}
-                        >
-                          Add
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            setAddingCardColumnId(null);
-                            setNewCardTitle("");
-                          }}
-                          className="ml-auto"
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <KanbanBoardColumnButton
-                      onClick={() => startAddCard(column.id)}
-                    >
-                      <PlusIcon className="mr-2 size-4" />
-                      Add Card
-                    </KanbanBoardColumnButton>
-                  )}
+                  <KanbanBoardColumnButton
+                    onClick={() => startAddCard(column.id)}
+                  >
+                    <PlusIcon className="mr-2 size-4" />
+                    Add Card
+                  </KanbanBoardColumnButton>
                 </KanbanBoardColumnFooter>
               </KanbanBoardColumn>
             ))}

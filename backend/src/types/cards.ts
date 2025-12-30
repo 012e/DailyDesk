@@ -7,7 +7,6 @@ export const CardSchema = z.object({
   coverUrl: z.string().url().nullable(),
   coverPublicId: z.string().nullable(),
   coverColor: z.string().nullable(),
-  isCover: z.boolean().default(false),
   listId: z.uuidv7(),
 });
 

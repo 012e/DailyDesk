@@ -328,7 +328,6 @@ export default function createCardRoutes() {
           name: req.name,
           order: req.order,
           listId: req.listId,
-          isCover: req.isCover,
           coverColor: req.coverColor,
         })
         .where(eq(cardsTable.id, id))

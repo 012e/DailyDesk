@@ -1,6 +1,7 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import type { Card, CardCoverMode } from "@/types/card";
-import { Wallpaper, X } from "lucide-react";
+import type { Card } from "@/types/card";
+import { CardCoverModeValue } from "@/types/card";
+import { Wallpaper, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CardHeader } from "./card-header";
 import { CardDescription } from "./card-description";
@@ -11,7 +12,7 @@ import { CardDates } from "./card-dates";
 import { useEffect, useMemo, useState } from "react";
 import { BackgroundPickerProvider } from "@/components/background-picker-provider";
 import { CardCoverPicker } from "@/components/card-edit-dialog/card-cover-picker";
-import { useUploadImage } from "@/hooks/use-image";
+import { useUploadImage, useDeleteImage } from "@/hooks/use-image";
 import { useBackgroundPickerContext } from "@/components/background-picker-provider";
 import {
   Popover,
@@ -99,7 +100,9 @@ function InnerDialog({
   setShowDetails,
 }: InnerDialogProps) {
   const [isCoverPickerOpen, setIsCoverPickerOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
+  const { deleteImage } = useDeleteImage();
   const { getBackgroundData } = useBackgroundPickerContext();
   const { color, imageFile } = getBackgroundData();
 
@@ -136,33 +139,66 @@ function InnerDialog({
 
     try {
       if (imageFile) {
+        // Create a temporary preview URL for optimistic update
+        const tempPreviewUrl = URL.createObjectURL(imageFile);
+        
+        // Optimistically update the card with the preview URL immediately
+        onUpdate({ ...card, coverUrl: tempPreviewUrl, coverColor: "" });
+        
+        // Upload the image in the background
         await uploadImage({
           file: imageFile,
           type: "card",
           id: card.id,
         });
-        // Invalidate board query to refetch the updated data
+        
+        // Invalidate board query to get the real URL from the server
         queryClient.invalidateQueries({
           queryKey: ["board", boardId],
         });
       } else if (color) {
-        onUpdate({ ...card, coverColor: color });
+        onUpdate({ ...card, coverColor: color, coverUrl: "" });
       }
     } catch (error) {
       console.error("Error updating card cover:", error);
     }
   };
 
-  const handleUpdateCoverMode = (coverMode: CardCoverMode) => {
-    if (!color && !imageFile) {
-      return;
+
+
+  const handleRemoveCover = async () => {
+    // Optimistically update the card to remove cover immediately
+    onUpdate({ ...card, coverColor: "", coverUrl: "", coverMode: CardCoverModeValue.NONE });
+    
+    // If the card has an existing image cover, delete it from the storage in background
+    if (card.coverUrl) {
+      try {
+        await deleteImage("card", card.id);
+        // Invalidate board query to refetch the updated data
+        queryClient.invalidateQueries({
+          queryKey: ["board", boardId],
+        });
+      } catch (error) {
+        console.error("Error deleting card cover image:", error);
+      }
     }
-    onUpdate({ ...card, coverMode });
   };
 
-  const handleClose = () => {
+  const handleClose = async () => {
+    // If there's a new image to upload, show loading and wait for upload
+    if (imageFile) {
+      setIsUploading(true);
+      try {
+        await handleUpdateCover();
+      } finally {
+        setIsUploading(false);
+      }
+    } else {
+      // For color changes, just update immediately
+      handleUpdateCover();
+    }
+    // Close the dialog after upload completes
     onClose();
-    handleUpdateCover();
   };
 
   return (
@@ -171,6 +207,15 @@ function InnerDialog({
         className="!flex !flex-col max-w-[1200px] w-[95vw] h-[90vh] p-0 gap-0"
         showCloseButton={false}
       >
+        {/* Loading overlay */}
+        {isUploading && (
+          <div className="absolute inset-0 z-50 bg-background/80 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-sm text-muted-foreground">Uploading cover image...</p>
+            </div>
+          </div>
+        )}
         {/* Top-right action buttons */}
         <div className="absolute top-2 right-2 z-10 flex gap-2">
           {/* Edit cover button */}
@@ -264,7 +309,7 @@ function InnerDialog({
             align="start"
             className="w-[400px] p-6 ml-2"
           >
-            <CardCoverPicker card={card} onUpdate={handleUpdateCoverMode} />
+            <CardCoverPicker card={card} onRemoveCover={handleRemoveCover} />
           </PopoverContent>
         </Popover>
       </DialogContent>

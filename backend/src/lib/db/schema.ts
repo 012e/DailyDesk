@@ -36,7 +36,6 @@ export const cardsTable = sqliteTable("cards", {
   coverUrl: text("cover_url"),
   coverPublicId: text("cover_public_id"),
   coverColor: text("cover_color"),
-  isCover: integer("is_cover", { mode: "boolean" }).default(false).notNull(),
   listId: text("list_id")
     .notNull()
     .references(() => listsTable.id, { onDelete: "cascade" }),

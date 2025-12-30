@@ -176,7 +176,16 @@ export function BackgroundPicker() {
 
           <div className="flex gap-3 items-center pt-4">
             <div
-              onClick={() => imagePreview && setShowCropper(true)}
+              onClick={async () => {
+                if (!imagePreview) return;
+                
+                // If we have an imagePreview URL but no selectedFile, convert the URL to a File first
+                if (!selectedFile) {
+                  const file = await imageUrlToFile(imagePreview);
+                  handleFilePick(file);
+                }
+                setShowCropper(true);
+              }}
               className={cn(
                 "w-[57%] h-32 rounded-md  bg-gray-50 bg-cover bg-center  overflow-hidden flex items-center justify-center",
                 imagePreview && "cursor-pointer hover:opacity-80 transition"
