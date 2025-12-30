@@ -9,8 +9,6 @@ export const BoardSchema = z.object({
   id: z.uuid(),
   name: z.string().nonempty(),
   userId: z.string().nonempty(),
-  backgroundUrl: z.string().nullable(),
-  backgroundColor: z.string().regex(hexColorRegex, "Must be a valid hex color code (e.g., #FF5733)").nullable(),
 });
 
 // Schema for list with nested cards
@@ -27,11 +25,18 @@ export const CreateBoardSchema = z.object({
   id: z.uuid(),
   name: z.string().nonempty(),
   backgroundUrl: z.string().optional(),
-  backgroundColor: z.string().regex(hexColorRegex, "Must be a valid hex color code (e.g., #FF5733)").optional(),
+  backgroundColor: z
+    .string()
+    .regex(hexColorRegex, "Must be a valid hex color code (e.g., #FF5733)")
+    .optional(),
 });
 
 export const UpdateBoardSchema = z.object({
   name: z.string().nonempty().optional(),
   backgroundUrl: z.string().nullable().optional(),
-  backgroundColor: z.string().regex(hexColorRegex, "Must be a valid hex color code (e.g., #FF5733)").nullable().optional(),
+  backgroundColor: z
+    .string()
+    .regex(hexColorRegex, "Must be a valid hex color code (e.g., #FF5733)")
+    .nullable()
+    .optional(),
 });

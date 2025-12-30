@@ -368,29 +368,56 @@ describe("Cards API Integration Tests", () => {
     });
 
     test("should update card order", async () => {
-      const cardId = uuidv7();
+      // Create multiple cards first
+      const card1Id = uuidv7();
+      const card2Id = uuidv7();
+      const card3Id = uuidv7();
+      
       await app.request(`/boards/${testBoardId}/cards`, {
         method: "POST",
         headers: createAuthHeaders(),
         body: JSON.stringify({
-          id: cardId,
-          name: "Card to Reorder",
+          id: card1Id,
+          name: "Card 1",
           listId: testListId,
           order: 0,
         }),
       });
+      
+      await app.request(`/boards/${testBoardId}/cards`, {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          id: card2Id,
+          name: "Card 2",
+          listId: testListId,
+          order: 1,
+        }),
+      });
+      
+      await app.request(`/boards/${testBoardId}/cards`, {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          id: card3Id,
+          name: "Card 3",
+          listId: testListId,
+          order: 2,
+        }),
+      });
 
-      const res = await app.request(`/boards/${testBoardId}/cards/${cardId}`, {
+      // Update card1 to position 2 (move it from position 0 to 2)
+      const res = await app.request(`/boards/${testBoardId}/cards/${card1Id}`, {
         method: "PUT",
         headers: createAuthHeaders(),
         body: JSON.stringify({
-          order: 5,
+          order: 2,
         }),
       });
 
       expect(res.status).toBe(200);
       const data = await res.json() as any;
-      expect(data).toHaveProperty("order", 5);
+      expect(data).toHaveProperty("order", 2);
     });
 
     test("should update card dates", async () => {
@@ -795,6 +822,418 @@ describe("Cards API Integration Tests", () => {
       expect(data).toHaveProperty("deadline");
       expect(data).toHaveProperty("latitude", 37.7749);
       expect(data).toHaveProperty("longitude", -122.4194);
+    });
+  });
+
+  describe("Card order bounds validation", () => {
+    test("should reject creating card with order exceeding list size", async () => {
+      // Create 2 cards (order 0 and 1)
+      const card1Id = uuidv7();
+      const card2Id = uuidv7();
+
+      await app.request(`/boards/${testBoardId}/cards`, {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          id: card1Id,
+          name: "Card 1",
+          listId: testListId,
+          order: 0,
+        }),
+      });
+
+      await app.request(`/boards/${testBoardId}/cards`, {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          id: card2Id,
+          name: "Card 2",
+          listId: testListId,
+          order: 1,
+        }),
+      });
+
+      // Try to create a card with order 5 (out of bounds, max should be 2)
+      const invalidCardId = uuidv7();
+      const res = await app.request(`/boards/${testBoardId}/cards`, {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          id: invalidCardId,
+          name: "Invalid Order Card",
+          listId: testListId,
+          order: 5,
+        }),
+      });
+
+      expect(res.status).toBe(400);
+      const error = await res.json() as any;
+      expect(error).toHaveProperty("error");
+      expect(error.error).toMatch(/order/i);
+    });
+
+    test("should allow creating card at exactly list size (at the end)", async () => {
+      // Create 2 cards (order 0 and 1)
+      const card1Id = uuidv7();
+      const card2Id = uuidv7();
+
+      await app.request(`/boards/${testBoardId}/cards`, {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          id: card1Id,
+          name: "Card 1",
+          listId: testListId,
+          order: 0,
+        }),
+      });
+
+      await app.request(`/boards/${testBoardId}/cards`, {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          id: card2Id,
+          name: "Card 2",
+          listId: testListId,
+          order: 1,
+        }),
+      });
+
+      // Creating a card at order 2 (list size) should succeed
+      const validCardId = uuidv7();
+      const res = await app.request(`/boards/${testBoardId}/cards`, {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          id: validCardId,
+          name: "Valid Order Card",
+          listId: testListId,
+          order: 2,
+        }),
+      });
+
+      expect(res.status).toBe(200);
+      const data = await res.json() as any;
+      expect(data).toHaveProperty("order", 2);
+    });
+
+    test("should allow creating first card in empty list with order 0", async () => {
+      // Create a new list
+      const emptyListId = uuidv7();
+      await app.request(`/boards/${testBoardId}/lists`, {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          id: emptyListId,
+          name: "Empty List",
+          order: 1,
+        }),
+      });
+
+      // Create first card with order 0
+      const cardId = uuidv7();
+      const res = await app.request(`/boards/${testBoardId}/cards`, {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          id: cardId,
+          name: "First Card",
+          listId: emptyListId,
+          order: 0,
+        }),
+      });
+
+      expect(res.status).toBe(200);
+      const data = await res.json() as any;
+      expect(data).toHaveProperty("order", 0);
+    });
+
+    test("should reject creating first card in empty list with order > 0", async () => {
+      // Create a new list
+      const emptyListId = uuidv7();
+      await app.request(`/boards/${testBoardId}/lists`, {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          id: emptyListId,
+          name: "Empty List",
+          order: 1,
+        }),
+      });
+
+      // Try to create first card with order 1 (should be 0)
+      const cardId = uuidv7();
+      const res = await app.request(`/boards/${testBoardId}/cards`, {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          id: cardId,
+          name: "Invalid First Card",
+          listId: emptyListId,
+          order: 1,
+        }),
+      });
+
+      expect(res.status).toBe(400);
+      const error = await res.json() as any;
+      expect(error).toHaveProperty("error");
+      expect(error.error).toMatch(/order/i);
+    });
+
+    test("should reject updating card order beyond list size", async () => {
+      // Create 3 cards
+      const cardIds = [uuidv7(), uuidv7(), uuidv7()];
+      for (let i = 0; i < 3; i++) {
+        await app.request(`/boards/${testBoardId}/cards`, {
+          method: "POST",
+          headers: createAuthHeaders(),
+          body: JSON.stringify({
+            id: cardIds[i],
+            name: `Card ${i + 1}`,
+            listId: testListId,
+            order: i,
+          }),
+        });
+      }
+
+      // Try to update card to order 10 (out of bounds, max should be 2)
+      const res = await app.request(`/boards/${testBoardId}/cards/${cardIds[0]}`, {
+        method: "PUT",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          order: 10,
+        }),
+      });
+
+      expect(res.status).toBe(400);
+      const error = await res.json() as any;
+      expect(error).toHaveProperty("error");
+      expect(error.error).toMatch(/order/i);
+    });
+
+    test("should allow updating card order within valid range", async () => {
+      // Create 3 cards
+      const cardIds = [uuidv7(), uuidv7(), uuidv7()];
+      for (let i = 0; i < 3; i++) {
+        await app.request(`/boards/${testBoardId}/cards`, {
+          method: "POST",
+          headers: createAuthHeaders(),
+          body: JSON.stringify({
+            id: cardIds[i],
+            name: `Card ${i + 1}`,
+            listId: testListId,
+            order: i,
+          }),
+        });
+      }
+
+      // Update card from order 0 to order 2 (last position, valid)
+      const res = await app.request(`/boards/${testBoardId}/cards/${cardIds[0]}`, {
+        method: "PUT",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          order: 2,
+        }),
+      });
+
+      expect(res.status).toBe(200);
+      const data = await res.json() as any;
+      expect(data).toHaveProperty("order", 2);
+    });
+
+    test("should reject moving card to another list with order out of bounds", async () => {
+      // Create second list with 2 cards
+      const list2Id = uuidv7();
+      await app.request(`/boards/${testBoardId}/lists`, {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          id: list2Id,
+          name: "List 2",
+          order: 1,
+        }),
+      });
+
+      const list2Card1Id = uuidv7();
+      const list2Card2Id = uuidv7();
+      await app.request(`/boards/${testBoardId}/cards`, {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          id: list2Card1Id,
+          name: "List 2 Card 1",
+          listId: list2Id,
+          order: 0,
+        }),
+      });
+      await app.request(`/boards/${testBoardId}/cards`, {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          id: list2Card2Id,
+          name: "List 2 Card 2",
+          listId: list2Id,
+          order: 1,
+        }),
+      });
+
+      // Create card in first list
+      const cardId = uuidv7();
+      await app.request(`/boards/${testBoardId}/cards`, {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          id: cardId,
+          name: "Card to Move",
+          listId: testListId,
+          order: 0,
+        }),
+      });
+
+      // Try to move card to list2 with order 5 (out of bounds, max should be 2)
+      const res = await app.request(`/boards/${testBoardId}/cards/${cardId}`, {
+        method: "PUT",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          listId: list2Id,
+          order: 5,
+        }),
+      });
+
+      expect(res.status).toBe(400);
+      const error = await res.json() as any;
+      expect(error).toHaveProperty("error");
+      expect(error.error).toMatch(/order/i);
+    });
+
+    test("should allow moving card to another list at valid position", async () => {
+      // Create second list with 2 cards
+      const list2Id = uuidv7();
+      await app.request(`/boards/${testBoardId}/lists`, {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          id: list2Id,
+          name: "List 2",
+          order: 1,
+        }),
+      });
+
+      const list2Card1Id = uuidv7();
+      const list2Card2Id = uuidv7();
+      await app.request(`/boards/${testBoardId}/cards`, {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          id: list2Card1Id,
+          name: "List 2 Card 1",
+          listId: list2Id,
+          order: 0,
+        }),
+      });
+      await app.request(`/boards/${testBoardId}/cards`, {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          id: list2Card2Id,
+          name: "List 2 Card 2",
+          listId: list2Id,
+          order: 1,
+        }),
+      });
+
+      // Create card in first list
+      const cardId = uuidv7();
+      await app.request(`/boards/${testBoardId}/cards`, {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          id: cardId,
+          name: "Card to Move",
+          listId: testListId,
+          order: 0,
+        }),
+      });
+
+      // Move card to list2 at position 1 (between the two existing cards)
+      const res = await app.request(`/boards/${testBoardId}/cards/${cardId}`, {
+        method: "PUT",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          listId: list2Id,
+          order: 1,
+        }),
+      });
+
+      expect(res.status).toBe(200);
+      const data = await res.json() as any;
+      expect(data).toHaveProperty("listId", list2Id);
+      expect(data).toHaveProperty("order", 1);
+    });
+
+    test("should allow moving card to end of another list", async () => {
+      // Create second list with 2 cards
+      const list2Id = uuidv7();
+      await app.request(`/boards/${testBoardId}/lists`, {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          id: list2Id,
+          name: "List 2",
+          order: 1,
+        }),
+      });
+
+      const list2Card1Id = uuidv7();
+      const list2Card2Id = uuidv7();
+      await app.request(`/boards/${testBoardId}/cards`, {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          id: list2Card1Id,
+          name: "List 2 Card 1",
+          listId: list2Id,
+          order: 0,
+        }),
+      });
+      await app.request(`/boards/${testBoardId}/cards`, {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          id: list2Card2Id,
+          name: "List 2 Card 2",
+          listId: list2Id,
+          order: 1,
+        }),
+      });
+
+      // Create card in first list
+      const cardId = uuidv7();
+      await app.request(`/boards/${testBoardId}/cards`, {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          id: cardId,
+          name: "Card to Move",
+          listId: testListId,
+          order: 0,
+        }),
+      });
+
+      // Move card to end of list2 (order 2, which equals list2's card count)
+      const res = await app.request(`/boards/${testBoardId}/cards/${cardId}`, {
+        method: "PUT",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          listId: list2Id,
+          order: 2,
+        }),
+      });
+
+      expect(res.status).toBe(200);
+      const data = await res.json() as any;
+      expect(data).toHaveProperty("listId", list2Id);
+      expect(data).toHaveProperty("order", 2);
     });
   });
 
