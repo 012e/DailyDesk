@@ -268,6 +268,7 @@ export default function Kanban() {
       name: updatedCard.title,
       listId: updatedCard.listId,
       coverColor: updatedCard.coverColor,
+      coverUrl: updatedCard.coverUrl,
       isCover:
         updatedCard.coverMode === CardCoverModeValue.COVER ? true : false,
       order: updatedCard.order,

@@ -20,6 +20,7 @@ export function useUpdateCard() {
       order?: number;
       listId?: string;
       coverColor?: string | null;
+      coverUrl?: string | null;
       isCover?: boolean;
     }) => {
       console.log("param:", params);
@@ -42,7 +43,7 @@ export function useUpdateCard() {
       if (error) {
         throw new Error("Failed to update card");
       }
-      if (params.coverColor) {
+      if (params.coverColor && params.coverUrl) {
         try {
           await deleteImage("board", params.cardId);
         } catch (error) {
