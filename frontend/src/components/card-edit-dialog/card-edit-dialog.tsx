@@ -9,7 +9,7 @@ import { CardMembers } from "./card-members";
 import { CardComments } from "./card-comments";
 import { CardLabels } from "./card-labels";
 import { CardDates } from "./card-dates";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { BackgroundPickerProvider } from "@/components/background-picker-provider";
 import { CardCoverPicker } from "@/components/card-edit-dialog/card-cover-picker";
 import { useUploadImage, useDeleteImage } from "@/hooks/use-image";
@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/popover";
 import { queryClient } from "@/lib/query-client";
 import CheckList from "../check-list";
+import { FileDropzone } from "./card-attachment";
 
 interface CardEditDialogProps {
   card: Card | null;
@@ -40,6 +41,7 @@ export function CardEditDialog({
 }: CardEditDialogProps) {
   const [showDetails, setShowDetails] = useState(true);
   const { uploadImage } = useUploadImage();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   if (!card) return null;
 
@@ -272,6 +274,17 @@ function InnerDialog({
 
             {/* CheckList */}
             <CheckList card={card} boardId={boardId} onUpdate={handleUpdate} />
+            
+            {/* Attachment */}
+            <FileDropzone fileInputRef={fileInputRef} handleBoxClick={function (): void {
+              throw new Error("Function not implemented.");
+            } } handleDragOver={function (e: React.DragEvent): void {
+              throw new Error("Function not implemented.");
+            } } handleDrop={function (e: React.DragEvent): void {
+              throw new Error("Function not implemented.");
+            } } handleFileSelect={function (files: FileList | null): void {
+              throw new Error("Function not implemented.");
+            } } />
           </div>
 
           {/* Right column - Comments and activity */}
