@@ -12,6 +12,7 @@ import getConfig from "@/lib/config";
 import { createBoardTools } from "./tools";
 import { wrapLanguageModel } from "ai";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
+import { ensureUserAuthenticated } from "@/lib/utils";
 
 const config = getConfig();
 const openai = createOpenAI({
@@ -74,6 +75,7 @@ export default function createChatRoutes() {
       );
       const modelId = request.model || config.defaultModel;
       const boardId = request.boardId;
+      const user = ensureUserAuthenticated(c);
 
       // Validate that only ChatGPT models are allowed
       if (!allowedModels.includes(modelId)) {
@@ -100,7 +102,7 @@ export default function createChatRoutes() {
           model: createModel(modelId),
           system: config.systemPrompt,
           messages,
-          tools: createBoardTools(boardId),
+          tools: createBoardTools(boardId, user.sub),
           temperature: 0.7,
           maxOutputTokens: 500,
         });

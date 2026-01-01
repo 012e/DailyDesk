@@ -34,7 +34,17 @@ import {
   ModelSelectorName,
   ModelSelectorTrigger,
 } from "@/components/ai-elements/model-selector";
+import {
+  Confirmation,
+  ConfirmationTitle,
+  ConfirmationRequest,
+  ConfirmationAccepted,
+  ConfirmationRejected,
+  ConfirmationActions,
+  ConfirmationAction,
+} from "@/components/ai-elements/confirmation";
 import { Loader } from "@/components/ai-elements/loader";
+import { CardPreview } from "@/components/card-preview";
 import { useParams } from "react-router";
 
 const chatGPTModels = [
@@ -138,7 +148,7 @@ export function Chatbox() {
                               <ReactMarkdown
                                 remarkPlugins={[remarkGfm]}
                                 components={{
-                                  code: ({ className, children, ...props }: any) => {
+                                  code: ({ className, children, ...props }) => {
                                     const isInline = !className;
                                     return isInline ? (
                                       <code
@@ -167,6 +177,90 @@ export function Chatbox() {
                             </p>
                           );
                         }
+                        
+                        // Handle tool parts with approval (createCard tool)
+                        if (part.type.startsWith("tool-") && "approval" in part && part.approval) {
+                          const toolName = part.type.replace("tool-", "");
+                          
+                          if (toolName === "createCard") {
+                            const input = part.input as {
+                              listId: string;
+                              name: string;
+                              startDate?: string;
+                              deadline?: string;
+                              latitude?: number;
+                              longitude?: number;
+                            };
+                            
+                            return (
+                              <Confirmation
+                                key={i}
+                                approval={part.approval}
+                                state={part.state}
+                              >
+                                <ConfirmationTitle>
+                                  <ConfirmationRequest>
+                                    <div className="space-y-3">
+                                      <p>Create this card?</p>
+                                      <CardPreview
+                                        name={input.name}
+                                        startDate={input.startDate}
+                                        deadline={input.deadline}
+                                        latitude={input.latitude}
+                                        longitude={input.longitude}
+                                      />
+                                    </div>
+                                  </ConfirmationRequest>
+                                  <ConfirmationAccepted>
+                                    <CheckIcon className="size-4 text-green-600 dark:text-green-400" />
+                                    <span>You approved creating this card</span>
+                                  </ConfirmationAccepted>
+                                  <ConfirmationRejected>
+                                    <X className="size-4 text-destructive" />
+                                    <span>You rejected creating this card</span>
+                                  </ConfirmationRejected>
+                                </ConfirmationTitle>
+                                <ConfirmationActions>
+                                  <ConfirmationAction
+                                    variant="outline"
+                                    onClick={() => {
+                                      // Send rejection message
+                                      sendMessage({
+                                        role: "user",
+                                        parts: [
+                                          {
+                                            type: "text",
+                                            text: `No, don't create that card.`,
+                                          },
+                                        ],
+                                      });
+                                    }}
+                                  >
+                                    Reject
+                                  </ConfirmationAction>
+                                  <ConfirmationAction
+                                    variant="default"
+                                    onClick={() => {
+                                      // Send approval message
+                                      sendMessage({
+                                        role: "user",
+                                        parts: [
+                                          {
+                                            type: "text",
+                                            text: `Yes, create that card.`,
+                                          },
+                                        ],
+                                      });
+                                    }}
+                                  >
+                                    Approve
+                                  </ConfirmationAction>
+                                </ConfirmationActions>
+                              </Confirmation>
+                            );
+                          }
+                        }
+                        
                         return null;
                       })}
                     </MessageContent>
