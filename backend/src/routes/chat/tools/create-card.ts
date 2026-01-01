@@ -1,9 +1,7 @@
 import { tool } from "ai";
 import { z } from "zod";
-import db from "@/lib/db";
-import { cardsTable, listsTable } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
 import { uuidv7 } from "uuidv7";
+import { createCard as createCardService, getCardsForBoard } from "@/services/cards.service";
 
 /**
  * Tool to create a new card with user approval
@@ -52,80 +50,44 @@ export const createCardTool = (boardId: string, userId: string) =>
       latitude?: number;
       longitude?: number;
     }) => {
-
       try {
-        // Verify the list exists and belongs to the board
-        const list = await db.query.listsTable.findFirst({
-          where: eq(listsTable.id, listId),
-          with: {
-            board: true,
-          },
+        // Determine order by counting existing cards in the list using service
+        const boardCards = await getCardsForBoard(userId, boardId);
+        const cardsInList = boardCards.filter((c: any) => c.listId === listId);
+        const order = cardsInList.length;
+
+        const id = uuidv7();
+
+        const created = await createCardService(userId, boardId, {
+          id,
+          name,
+          order,
+          listId,
+          startDate: startDate ? new Date(startDate) : null,
+          deadline: deadline ? new Date(deadline) : null,
+          latitude: latitude ?? null,
+          longitude: longitude ?? null,
         });
-
-        if (!list) {
-          return {
-            success: false,
-            error: "List not found",
-          };
-        }
-
-        if (list.board.id !== boardId) {
-          return {
-            success: false,
-            error: "List does not belong to the current board",
-          };
-        }
-
-        if (list.board.userId !== userId) {
-          return {
-            success: false,
-            error: "Unauthorized: You don't own this board",
-          };
-        }
-
-        // Get the number of cards in the list to determine order
-        const cardsInList = await db
-          .select()
-          .from(cardsTable)
-          .where(eq(cardsTable.listId, listId));
-
-        const order = cardsInList.length; // Append to the end
-
-        // Create the card
-        const newCard = await db
-          .insert(cardsTable)
-          .values({
-            id: uuidv7(),
-            name,
-            order,
-            listId,
-            startDate: startDate ? new Date(startDate) : null,
-            deadline: deadline ? new Date(deadline) : null,
-            latitude: latitude ?? null,
-            longitude: longitude ?? null,
-          })
-          .returning();
 
         return {
           success: true,
-          message: `Card "${name}" has been created successfully in list "${list.name}"`,
+          message: `Card "${name}" has been created successfully`,
           card: {
-            id: newCard[0].id,
-            name: newCard[0].name,
-            order: newCard[0].order,
-            listId: newCard[0].listId,
-            listName: list.name,
-            startDate: newCard[0].startDate,
-            deadline: newCard[0].deadline,
-            latitude: newCard[0].latitude,
-            longitude: newCard[0].longitude,
+            id: created.id,
+            name: created.name,
+            order: created.order,
+            listId: created.listId,
+            startDate: created.startDate,
+            deadline: created.deadline,
+            latitude: created.latitude,
+            longitude: created.longitude,
           },
         };
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error creating card:", error);
         return {
           success: false,
-          error: "Failed to create card. Please try again.",
+          error: error?.message ?? "Failed to create card. Please try again.",
         };
       }
     },

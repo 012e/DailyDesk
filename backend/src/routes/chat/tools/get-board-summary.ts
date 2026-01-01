@@ -1,53 +1,36 @@
 import { tool } from "ai";
 import { z } from "zod";
-import db from "@/lib/db";
-import { boardsTable, listsTable, cardsTable } from "@/lib/db/schema";
-import { eq, asc } from "drizzle-orm";
+import { getBoardById } from "@/services/boards.service";
 
 /**
  * Tool to get a quick summary of a board without detailed card information
  */
-export const getBoardSummaryTool = (boardId: string) => tool({
+export const getBoardSummaryTool = (boardId: string, userId: string) => tool({
   description:
     "Get a quick summary of the current board including its name, number of lists, and number of cards. Use this for high-level overview questions.",
   inputSchema: z.object({}),
   execute: async () => {
-    const board = await db.query.boardsTable.findFirst({
-      where: eq(boardsTable.id, boardId),
-      with: {
-        lists: {
-          orderBy: asc(listsTable.order),
-          with: {
-            cards: true,
-          },
-        },
-      },
-    });
+    try {
+      const board = await getBoardById(userId, boardId);
 
-    if (!board) {
+      const totalCards = board.lists.reduce((sum: number, list: any) => sum + list.cards.length, 0);
+
       return {
-        success: false,
-        error: "Board not found",
+        success: true,
+        summary: {
+          id: board.id,
+          name: board.name,
+          totalLists: board.lists.length,
+          totalCards,
+          lists: board.lists.map((list: any) => ({
+            name: list.name,
+            cardCount: list.cards.length,
+          })),
+        },
       };
+    } catch (err: any) {
+      console.error("Error fetching board summary:", err);
+      return { success: false, error: err?.message ?? "Board not found" };
     }
-
-    const totalCards = board.lists.reduce(
-      (sum, list) => sum + list.cards.length,
-      0
-    );
-
-    return {
-      success: true,
-      summary: {
-        id: board.id,
-        name: board.name,
-        totalLists: board.lists.length,
-        totalCards,
-        lists: board.lists.map((list) => ({
-          name: list.name,
-          cardCount: list.cards.length,
-        })),
-      },
-    };
   },
 });
