@@ -25,12 +25,10 @@ export function useAddChecklistItem(boardId: string, cardId: string) {
     mutationFn: async (item: Omit<ChecklistItem, "id">) => {
       // Ensure id and cardId are uuidv7
       const checklistWithId = { ...item, id: uuidv7(), cardId: typeof item.cardId === 'string' ? item.cardId : uuidv7() };
-      console.log("Creating checklist item, payload:", checklistWithId);
       const { data, error, response } = await api.POST("/boards/{boardId}/cards/{cardId}/checklist-items", {
         params: { path: { boardId, cardId } },
         body: checklistWithId,
       });
-      console.log("Create response:", { data, error, status: response?.status });
       if (error) {
         // Include server response body when available for easier debugging
         const msg = error?.message || (await response?.text()) || "Unknown error";

@@ -34,6 +34,7 @@ export type ToolHeaderProps = {
   type: ToolUIPart["type"];
   state: ToolUIPart["state"];
   className?: string;
+  expandable?: boolean;
 };
 
 const getStatusBadge = (status: ToolUIPart["state"]) => {
@@ -72,6 +73,7 @@ export const ToolHeader = ({
   title,
   type,
   state,
+  expandable = true,
   ...props
 }: ToolHeaderProps) => (
   <CollapsibleTrigger
@@ -88,7 +90,7 @@ export const ToolHeader = ({
       </span>
       {getStatusBadge(state)}
     </div>
-    <ChevronDownIcon className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+    {expandable && <ChevronDownIcon className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />}
   </CollapsibleTrigger>
 );
 

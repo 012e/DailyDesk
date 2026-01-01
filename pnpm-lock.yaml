@@ -54,6 +54,9 @@ importers:
         specifier: ^4.2.1
         version: 4.2.1
     devDependencies:
+      '@ai-sdk/devtools':
+        specifier: ^0.0.3
+        version: 0.0.3
       '@types/node':
         specifier: ^24.10.4
         version: 24.10.4
@@ -355,6 +358,10 @@ importers:
 
 packages:
 
+  '@ai-sdk/devtools@0.0.3':
+    resolution: {integrity: sha512-bkkYTuEDqK70bXC30yJLmRH+9xKvo9HCneGH44MKJFssYfwXjyz64G++uEgb+bV2+E/qd/81YNHT+9gcI9q6IA==}
+    hasBin: true
+
   '@ai-sdk/gateway@3.0.2':
     resolution: {integrity: sha512-giJEg9ob45htbu3iautK+2kvplY2JnTj7ir4wZzYSQWvqGatWfBBfDuNCU5wSJt9BCGjymM5ZS9ziD42JGCZBw==}
     engines: {node: '>=18'}
@@ -375,6 +382,10 @@ packages:
 
   '@ai-sdk/provider@3.0.0':
     resolution: {integrity: sha512-m9ka3ptkPQbaHHZHqDXDF9C9B5/Mav0KTdky1k2HZ3/nrW2t1AgObxIVPyGDWQNS9FXT/FS6PIoSjpcP/No8rQ==}
+    engines: {node: '>=18'}
+
+  '@ai-sdk/provider@3.0.1':
+    resolution: {integrity: sha512-2lR4w7mr9XrydzxBSjir4N6YMGdXD+Np1Sh0RXABh7tWdNFFwIeRI1Q+SaYZMbfL8Pg8RRLcrxQm51yxTLhokg==}
     engines: {node: '>=18'}
 
   '@ai-sdk/react@3.0.3':
@@ -7153,6 +7164,12 @@ packages:
 
 snapshots:
 
+  '@ai-sdk/devtools@0.0.3':
+    dependencies:
+      '@ai-sdk/provider': 3.0.1
+      '@hono/node-server': 1.19.7(hono@4.11.2)
+      hono: 4.11.2
+
   '@ai-sdk/gateway@3.0.2(zod@4.1.12)':
     dependencies:
       '@ai-sdk/provider': 3.0.0
@@ -7188,6 +7205,10 @@ snapshots:
       zod: 4.2.1
 
   '@ai-sdk/provider@3.0.0':
+    dependencies:
+      json-schema: 0.4.0
+
+  '@ai-sdk/provider@3.0.1':
     dependencies:
       json-schema: 0.4.0
 

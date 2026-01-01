@@ -55,7 +55,6 @@ const ImageCropper = ({
     if (file) {
       setSelectedFile(file);
       setCroppedImage(null);
-      console.log("Selected file set in cropper:", file);
       const url = URL.createObjectURL(file);
       setImageUrl(url);
 
