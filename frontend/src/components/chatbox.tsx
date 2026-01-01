@@ -223,9 +223,6 @@ export function Chatbox() {
                               key={m.id}
                               onSelect={() => {
                                 setModel(m.id);
-                                console.log(model);
-                                console.log(model);
-                                console.log(model);
                                 setModelSelectorOpen(false);
                               }}
                               value={m.id}
