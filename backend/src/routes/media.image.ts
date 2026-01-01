@@ -4,24 +4,10 @@ import { ensureUserAuthenticated } from "@/lib/utils";
 import { SaveImageBodySchema, SaveImageResponseSchema } from "@/types/media";
 import { successJson, jsonBody, defaultSecurityScheme } from "@/types/openapi";
 import * as mediaService from "@/services/media.service";
-import { boardsTable, cardsTable } from "@/lib/db/schema";
 
 const TAGS = ["Media"];
 
-const entityConfig = {
-  board: {
-    table: boardsTable,
-    urlField: "backgroundUrl" as const,
-    publicIdField: "backgroundPublicId" as const,
-    authorization: true as const,
-  },
-  card: {
-    table: cardsTable,
-    urlField: "coverUrl" as const,
-    publicIdField: "coverPublicId" as const,
-    authorization: false as const,
-  },
-} as const;
+
 
 export default function createImageRoute() {
   const app = new OpenAPIHono();
