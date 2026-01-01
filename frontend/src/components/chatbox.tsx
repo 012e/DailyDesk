@@ -1,8 +1,11 @@
 import { useState, useRef } from "react";
 import { MessageCircle, MessageSquareIcon, X, CheckIcon } from "lucide-react";
 import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport } from "ai";
-import { useAtomValue } from "jotai";
+import {
+  DefaultChatTransport,
+  lastAssistantMessageIsCompleteWithApprovalResponses,
+} from "ai";
+import { useAtom, useAtomValue } from "jotai";
 import { accessTokenAtom } from "@/stores/access-token";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -46,6 +49,7 @@ import {
 import { Loader } from "@/components/ai-elements/loader";
 import { CardPreview } from "@/components/card-preview";
 import { useParams } from "react-router";
+import { atomWithStorage } from "jotai/utils";
 
 const chatGPTModels = [
   {
@@ -60,11 +64,22 @@ const chatGPTModels = [
     chef: "OpenAI",
     chefSlug: "openai",
   },
+  {
+    id: "gpt-5.2",
+    name: "GPT-5.2",
+    chef: "OpenAI",
+    chefSlug: "openai",
+  },
 ];
+
+const selectedModelAtom = atomWithStorage(
+  "selectedChatModel",
+  chatGPTModels[0].id,
+);
 
 export function Chatbox() {
   const [isOpen, setIsOpen] = useState(false);
-  const [model, setModel] = useState<string>(chatGPTModels[0].id);
+  const [model, setModel] = useAtom(selectedModelAtom);
   const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
   const accessToken = useAtomValue(accessTokenAtom);
   const modelRef = useRef<string>(model);
@@ -76,7 +91,7 @@ export function Chatbox() {
 
   const selectedModelData = chatGPTModels.find((m) => m.id === model);
 
-  const { messages, sendMessage, status } = useChat({
+  const { messages, sendMessage, status, addToolApprovalResponse } = useChat({
     transport: new DefaultChatTransport({
       api: "http://localhost:3000/chat",
       headers: {
@@ -86,6 +101,7 @@ export function Chatbox() {
         return { model: modelRef.current, boardId };
       },
     }),
+    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses,
   });
 
   const handleSubmit = (message: { text: string }) => {
@@ -103,28 +119,28 @@ export function Chatbox() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg transition-all hover:bg-blue-700 hover:shadow-xl"
+          className="flex fixed right-6 bottom-6 z-50 justify-center items-center w-14 h-14 text-white bg-blue-600 rounded-full shadow-lg transition-all hover:bg-blue-700 hover:shadow-xl"
           aria-label="Open chat"
         >
-          <MessageCircle className="h-6 w-6" />
+          <MessageCircle className="w-6 h-6" />
         </button>
       )}
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 flex h-[600px] w-[400px] flex-col rounded-lg border border-border bg-background shadow-2xl">
+        <div className="flex fixed right-6 bottom-6 z-50 flex-col rounded-lg border shadow-2xl h-[600px] w-[400px] border-border bg-background">
           {/* Header */}
-          <div className="flex items-center justify-between rounded-t-lg bg-blue-600 p-4 text-white">
-            <div className="flex items-center gap-2">
-              <MessageCircle className="h-5 w-5" />
+          <div className="flex justify-between items-center p-4 text-white bg-blue-600 rounded-t-lg">
+            <div className="flex gap-2 items-center">
+              <MessageCircle className="w-5 h-5" />
               <h3 className="font-semibold">Chat Assistant</h3>
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="rounded-full p-1 transition-colors hover:bg-blue-700"
+              className="p-1 rounded-full transition-colors hover:bg-blue-700"
               aria-label="Close chat"
             >
-              <X className="h-5 w-5" />
+              <X className="w-5 h-5" />
             </button>
           </div>
 
@@ -144,7 +160,10 @@ export function Chatbox() {
                       {message.parts.map((part, i) => {
                         if (part.type === "text") {
                           return message.role === "assistant" ? (
-                            <div key={i} className="prose prose-sm dark:prose-invert max-w-none">
+                            <div
+                              key={i}
+                              className="max-w-none prose prose-sm dark:prose-invert"
+                            >
                               <ReactMarkdown
                                 remarkPlugins={[remarkGfm]}
                                 components={{
@@ -152,14 +171,14 @@ export function Chatbox() {
                                     const isInline = !className;
                                     return isInline ? (
                                       <code
-                                        className="rounded bg-muted px-1.5 py-0.5 font-mono text-sm"
+                                        className="py-0.5 px-1.5 font-mono text-sm rounded bg-muted"
                                         {...props}
                                       >
                                         {children}
                                       </code>
                                     ) : (
                                       <code
-                                        className={`block rounded-lg bg-muted p-4 font-mono text-sm overflow-x-auto ${className || ''}`}
+                                        className={`block rounded-lg bg-muted p-4 font-mono text-sm overflow-x-auto ${className || ""}`}
                                         {...props}
                                       >
                                         {children}
@@ -177,90 +196,76 @@ export function Chatbox() {
                             </p>
                           );
                         }
-                        
+
                         // Handle tool parts with approval (createCard tool)
-                        if (part.type.startsWith("tool-") && "approval" in part && part.approval) {
-                          const toolName = part.type.replace("tool-", "");
-                          
-                          if (toolName === "createCard") {
-                            const input = part.input as {
-                              listId: string;
-                              name: string;
-                              startDate?: string;
-                              deadline?: string;
-                              latitude?: number;
-                              longitude?: number;
-                            };
-                            
-                            return (
-                              <Confirmation
-                                key={i}
-                                approval={part.approval}
-                                state={part.state}
-                              >
-                                <ConfirmationTitle>
-                                  <ConfirmationRequest>
-                                    <div className="space-y-3">
-                                      <p>Create this card?</p>
-                                      <CardPreview
-                                        name={input.name}
-                                        startDate={input.startDate}
-                                        deadline={input.deadline}
-                                        latitude={input.latitude}
-                                        longitude={input.longitude}
-                                      />
-                                    </div>
-                                  </ConfirmationRequest>
-                                  <ConfirmationAccepted>
-                                    <CheckIcon className="size-4 text-green-600 dark:text-green-400" />
-                                    <span>You approved creating this card</span>
-                                  </ConfirmationAccepted>
-                                  <ConfirmationRejected>
-                                    <X className="size-4 text-destructive" />
-                                    <span>You rejected creating this card</span>
-                                  </ConfirmationRejected>
-                                </ConfirmationTitle>
-                                <ConfirmationActions>
-                                  <ConfirmationAction
-                                    variant="outline"
-                                    onClick={() => {
-                                      // Send rejection message
-                                      sendMessage({
-                                        role: "user",
-                                        parts: [
-                                          {
-                                            type: "text",
-                                            text: `No, don't create that card.`,
-                                          },
-                                        ],
-                                      });
-                                    }}
-                                  >
-                                    Reject
-                                  </ConfirmationAction>
-                                  <ConfirmationAction
-                                    variant="default"
-                                    onClick={() => {
-                                      // Send approval message
-                                      sendMessage({
-                                        role: "user",
-                                        parts: [
-                                          {
-                                            type: "text",
-                                            text: `Yes, create that card.`,
-                                          },
-                                        ],
-                                      });
-                                    }}
-                                  >
-                                    Approve
-                                  </ConfirmationAction>
-                                </ConfirmationActions>
-                              </Confirmation>
-                            );
-                          }
+                        if (part.type === "tool-createCard") {
+                          const input = part.input as {
+                            listId: string;
+                            name: string;
+                            startDate?: string;
+                            deadline?: string;
+                            latitude?: number;
+                            longitude?: number;
+                          };
+
+                          return (
+                            <Confirmation
+                              key={i}
+                              approval={part.approval}
+                              state={part.state}
+                            >
+                              <ConfirmationTitle>
+                                <ConfirmationRequest>
+                                  <div className="space-y-3">
+                                    <p>Create this card?</p>
+                                    {/* <CardPreview */}
+                                    {/*   name={input.name} */}
+                                    {/*   startDate={input.startDate} */}
+                                    {/*   deadline={input.deadline} */}
+                                    {/*   latitude={input.latitude} */}
+                                    {/*   longitude={input.longitude} */}
+                                    {/* /> */}
+                                  </div>
+                                </ConfirmationRequest>
+                                <ConfirmationAccepted>
+                                  <CheckIcon className="text-green-600 dark:text-green-400 size-4" />
+                                  <span>You approved creating this card</span>
+                                </ConfirmationAccepted>
+                                <ConfirmationRejected>
+                                  <X className="size-4 text-destructive" />
+                                  <span>You rejected creating this card</span>
+                                </ConfirmationRejected>
+                              </ConfirmationTitle>
+                              <ConfirmationActions>
+                                <ConfirmationAction
+                                  variant="outline"
+                                  onClick={() => {
+                                    addToolApprovalResponse({
+                                      id: part.approval!.id,
+                                      approved: false,
+                                      reason: "User rejected the card creation",
+                                    });
+                                  }}
+                                >
+                                  Reject
+                                </ConfirmationAction>
+                                <ConfirmationAction
+                                  variant="default"
+                                  onClick={() => {
+                                    addToolApprovalResponse({
+                                      id: part.approval!.id,
+                                      approved: true,
+                                      reason: "User approved the card creation",
+                                    });
+                                  }}
+                                >
+                                  Approve
+                                </ConfirmationAction>
+                              </ConfirmationActions>
+                            </Confirmation>
+                          );
                         }
-                        
+
                         return null;
                       })}
                     </MessageContent>
@@ -279,7 +284,7 @@ export function Chatbox() {
           </Conversation>
 
           {/* Input */}
-          <div className="border-t border-border p-4">
+          <div className="p-4 border-t border-border">
             <PromptInput onSubmit={handleSubmit}>
               <PromptInputBody>
                 <PromptInputTextarea

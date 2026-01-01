@@ -35,12 +35,8 @@ export const createCardTool = (boardId: string, userId: string) =>
         .number()
         .optional()
         .describe("Optional longitude for location-based cards"),
-      confirm: z
-        .boolean()
-        .default(false)
-        .describe("Confirmation that the user wants to create this card"),
     }),
-    requireApproval: true,
+    needsApproval: true,
     execute: async ({
       listId,
       name,
@@ -48,7 +44,6 @@ export const createCardTool = (boardId: string, userId: string) =>
       deadline,
       latitude,
       longitude,
-      confirm,
     }: {
       listId: string;
       name: string;
@@ -56,14 +51,7 @@ export const createCardTool = (boardId: string, userId: string) =>
       deadline?: string;
       latitude?: number;
       longitude?: number;
-      confirm: boolean;
     }) => {
-      if (!confirm) {
-        return {
-          success: false,
-          message: "Card creation not confirmed",
-        };
-      }
 
       try {
         // Verify the list exists and belongs to the board
