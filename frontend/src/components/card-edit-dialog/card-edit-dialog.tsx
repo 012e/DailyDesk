@@ -187,6 +187,39 @@ function InnerDialog({
     }
   };
 
+  const handleAddAttachment = (file: File) => {
+    const newAttachment = {
+      id: crypto.randomUUID(),
+      name: file.name,
+      url: URL.createObjectURL(file),
+      type: file.type,
+      size: file.size,
+      uploadedAt: new Date(),
+      uploadedBy: "current-user",
+    };
+    handleUpdate({ attachments: [...(card.attachments || []), newAttachment] });
+  };
+
+  const handleAddLink = (url: string, name?: string) => {
+    const newAttachment = {
+      id: crypto.randomUUID(),
+      name: name || url,
+      url: url,
+      type: "link",
+      size: 0,
+      uploadedAt: new Date(),
+      uploadedBy: "current-user",
+    };
+    handleUpdate({ attachments: [...(card.attachments || []), newAttachment] });
+  };
+
+  const handleRemoveAttachment = (attachmentId: string) => {
+    const updatedAttachments = (card.attachments || []).filter(
+      (a) => a.id !== attachmentId
+    );
+    handleUpdate({ attachments: updatedAttachments });
+  };
+
   const handleClose = async () => {
     // If there's a new image to upload, show loading and wait for upload
     if (imageFile) {
@@ -274,31 +307,9 @@ function InnerDialog({
 
             {/* CheckList */}
             <CheckList card={card} boardId={boardId} onUpdate={handleUpdate} />
-            
+
             {/* Attachment */}
-            <AttachmentArea
-              attachments={card.attachments}
-              onAddAttachment={(file) => {
-                // Create a new attachment entry
-                const newAttachment = {
-                  id: crypto.randomUUID(),
-                  name: file.name,
-                  url: URL.createObjectURL(file),
-                  type: file.type,
-                  size: file.size,
-                  uploadedAt: new Date(),
-                  uploadedBy: "current-user", // Replace with actual user ID
-                };
-                const updatedAttachments = [...(card.attachments || []), newAttachment];
-                handleUpdate({ attachments: updatedAttachments });
-              }}
-              onRemoveAttachment={(attachmentId) => {
-                const updatedAttachments = (card.attachments || []).filter(
-                  (a) => a.id !== attachmentId
-                );
-                handleUpdate({ attachments: updatedAttachments });
-              }}
-            />
+            <AttachmentArea card={card} onUpdate={handleUpdate} />
           </div>
 
           {/* Right column - Comments and activity */}
