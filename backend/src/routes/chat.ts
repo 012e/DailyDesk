@@ -4,30 +4,11 @@ import { convertToModelMessages, streamText, UIMessage } from "ai";
 import { authMiddleware } from "@/lib/auth";
 import { defaultSecurityScheme } from "@/types/openapi";
 import getConfig from "@/lib/config";
+
 const config = getConfig();
 const openai = createOpenAI({
   apiKey: config.openai,
 })
-
-const SYSTEM_PROMPT = `Bạn là trợ lý AI thông minh của DailyDesk - một ứng dụng quản lý công việc (task management) giống Trello.
-
-Thông tin về DailyDesk:
-- DailyDesk giúp người dùng tổ chức công việc bằng Board, List và Card
-- Board: Không gian làm việc cho từng dự án/nhóm
-- List: Các cột trong board (ví dụ: "To Do", "In Progress", "Done")
-- Card: Đơn vị công việc nhỏ nhất, có thể có tiêu đề, mô tả, nhãn, người thực hiện, hạn hoàn thành
-
-Nhiệm vụ của bạn:
-- Trả lời câu hỏi về cách sử dụng DailyDesk
-- Hướng dẫn người dùng tạo board, list, card
-- Giải thích các tính năng
-- Gợi ý cách tổ chức công việc hiệu quả
-- Trả lời bằng tiếng Việt thân thiện, ngắn gọn, dễ hiểu
-
-Lưu ý:
-- Không trả lời các câu hỏi không liên quan đến quản lý công việc
-- Giữ câu trả lời ngắn gọn (2-4 câu), trừ khi cần giải thích chi tiết
-- Sử dụng bullet points khi liệt kê nhiều thông tin`;
 
 const TAGS = ["Chat"];
 
@@ -47,7 +28,7 @@ export default function createChatRoutes() {
             "application/json": {
               schema: z.object({
                 messages: z.array(z.any()),
-                model: z.string().optional().default("gpt-4o-mini"),
+                model: z.string().optional().default(config.defaultModel),
               }),
             },
           },
@@ -91,7 +72,7 @@ export default function createChatRoutes() {
       try {
         const result = streamText({
           model: openai(modelId),
-          system: SYSTEM_PROMPT,
+          system: config.systemPrompt,
           messages,
           temperature: 0.7,
           maxOutputTokens: 500,
