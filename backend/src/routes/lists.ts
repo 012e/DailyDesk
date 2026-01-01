@@ -1,8 +1,5 @@
-import db from "@/lib/db";
-import { boardsTable, listsTable } from "@/lib/db/schema";
 import { ensureUserAuthenticated } from "@/lib/utils";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { eq } from "drizzle-orm";
 import { authMiddleware } from "@/lib/auth";
 import { defaultSecurityScheme, jsonBody, successJson } from "@/types/openapi";
 import {
@@ -10,6 +7,7 @@ import {
   CreateListSchema,
   UpdateListSchema,
 } from "@/types/lists";
+import * as listsService from "@/services/lists.service";
 
 const TAGS = ["Lists"];
 
@@ -45,28 +43,15 @@ export default function createListRoutes() {
     async (c) => {
       const user = ensureUserAuthenticated(c);
       const { boardId } = c.req.valid("param");
-
-      // Check if board exists and user owns it
-      const board = await db
-        .select()
-        .from(boardsTable)
-        .where(eq(boardsTable.id, boardId))
-        .limit(1);
-
-      if (board.length === 0) {
-        return c.json({ error: "Board không tồn tại" }, 404);
+      try {
+        const lists = await listsService.getListsForBoard(user.sub, boardId);
+        return c.json(lists);
+      } catch (err: any) {
+        if (err instanceof listsService.ServiceError) {
+          return c.json({ error: err.message }, err.status);
+        }
+        throw err;
       }
-
-      if (board[0].userId !== user.sub) {
-        return c.json({ error: "Không có quyền truy cập Board này" }, 403);
-      }
-
-      const lists = await db
-        .select()
-        .from(listsTable)
-        .where(eq(listsTable.boardId, boardId));
-
-      return c.json(lists);
     },
   );
 
@@ -100,33 +85,15 @@ export default function createListRoutes() {
       const user = ensureUserAuthenticated(c);
       const { boardId } = c.req.valid("param");
       const req = c.req.valid("json");
-
-      // Check if board exists and user owns it
-      const board = await db
-        .select()
-        .from(boardsTable)
-        .where(eq(boardsTable.id, boardId))
-        .limit(1);
-
-      if (board.length === 0) {
-        return c.json({ error: "Board không tồn tại" }, 404);
+      try {
+        const list = await listsService.createList(user.sub, boardId, req);
+        return c.json(list);
+      } catch (err: any) {
+        if (err instanceof listsService.ServiceError) {
+          return c.json({ error: err.message }, err.status);
+        }
+        throw err;
       }
-
-      if (board[0].userId !== user.sub) {
-        return c.json({ error: "Không có quyền tạo List trong Board này" }, 403);
-      }
-
-      const list = await db
-        .insert(listsTable)
-        .values({
-          id: req.id,
-          name: req.name,
-          order: req.order,
-          boardId: boardId,
-        })
-        .returning();
-
-      return c.json(list[0]);
     },
   );
 
@@ -159,38 +126,15 @@ export default function createListRoutes() {
     async (c) => {
       const user = ensureUserAuthenticated(c);
       const { boardId, id } = c.req.valid("param");
-
-      // Check if board exists and user owns it
-      const board = await db
-        .select()
-        .from(boardsTable)
-        .where(eq(boardsTable.id, boardId))
-        .limit(1);
-
-      if (board.length === 0) {
-        return c.json({ error: "Board không tồn tại" }, 404);
+      try {
+        const list = await listsService.getListById(user.sub, boardId, id);
+        return c.json(list);
+      } catch (err: any) {
+        if (err instanceof listsService.ServiceError) {
+          return c.json({ error: err.message }, err.status);
+        }
+        throw err;
       }
-
-      if (board[0].userId !== user.sub) {
-        return c.json({ error: "Không có quyền truy cập Board này" }, 403);
-      }
-
-      // Get the list
-      const list = await db
-        .select()
-        .from(listsTable)
-        .where(eq(listsTable.id, id))
-        .limit(1);
-
-      if (list.length === 0) {
-        return c.json({ error: "List không tồn tại" }, 404);
-      }
-
-      if (list[0].boardId !== boardId) {
-        return c.json({ error: "List không thuộc Board này" }, 403);
-      }
-
-      return c.json(list[0]);
     },
   );
 
@@ -225,47 +169,15 @@ export default function createListRoutes() {
       const user = ensureUserAuthenticated(c);
       const { boardId, id } = c.req.valid("param");
       const req = c.req.valid("json");
-
-      // Check if board exists and user owns it
-      const board = await db
-        .select()
-        .from(boardsTable)
-        .where(eq(boardsTable.id, boardId))
-        .limit(1);
-
-      if (board.length === 0) {
-        return c.json({ error: "Board không tồn tại" }, 404);
+      try {
+        const updated = await listsService.updateList(user.sub, boardId, id, req);
+        return c.json(updated);
+      } catch (err: any) {
+        if (err instanceof listsService.ServiceError) {
+          return c.json({ error: err.message }, err.status);
+        }
+        throw err;
       }
-
-      if (board[0].userId !== user.sub) {
-        return c.json({ error: "Không có quyền truy cập Board này" }, 403);
-      }
-
-      // Check if list exists and belongs to the board
-      const existingList = await db
-        .select()
-        .from(listsTable)
-        .where(eq(listsTable.id, id))
-        .limit(1);
-
-      if (existingList.length === 0) {
-        return c.json({ error: "List không tồn tại" }, 404);
-      }
-
-      if (existingList[0].boardId !== boardId) {
-        return c.json({ error: "List không thuộc Board này" }, 403);
-      }
-
-      const updatedList = await db
-        .update(listsTable)
-        .set({
-          name: req.name,
-          order: req.order,
-        })
-        .where(eq(listsTable.id, id))
-        .returning();
-
-      return c.json(updatedList[0]);
     },
   );
 
@@ -305,40 +217,15 @@ export default function createListRoutes() {
     async (c) => {
       const user = ensureUserAuthenticated(c);
       const { boardId, id } = c.req.valid("param");
-
-      // Check if board exists and user owns it
-      const board = await db
-        .select()
-        .from(boardsTable)
-        .where(eq(boardsTable.id, boardId))
-        .limit(1);
-
-      if (board.length === 0) {
-        return c.json({ error: "Board không tồn tại" }, 404);
+      try {
+        const result = await listsService.deleteList(user.sub, boardId, id);
+        return c.json(result);
+      } catch (err: any) {
+        if (err instanceof listsService.ServiceError) {
+          return c.json({ error: err.message }, err.status);
+        }
+        throw err;
       }
-
-      if (board[0].userId !== user.sub) {
-        return c.json({ error: "Không có quyền truy cập Board này" }, 403);
-      }
-
-      // Check if list exists and belongs to the board
-      const existingList = await db
-        .select()
-        .from(listsTable)
-        .where(eq(listsTable.id, id))
-        .limit(1);
-
-      if (existingList.length === 0) {
-        return c.json({ error: "List không tồn tại" }, 404);
-      }
-
-      if (existingList[0].boardId !== boardId) {
-        return c.json({ error: "List không thuộc Board này" }, 403);
-      }
-
-      await db.delete(listsTable).where(eq(listsTable.id, id));
-
-      return c.json({ message: "Xóa List thành công" });
     },
   );
 

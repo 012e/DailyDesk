@@ -22,7 +22,6 @@ export function useUpdateCard() {
       coverColor?: string | null;
       coverUrl?: string | null;
     }) => {
-      console.log("param:", params);
       const { data, error } = await api.PUT("/boards/{boardId}/cards/{id}", {
         params: {
           path: {
