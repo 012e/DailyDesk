@@ -38,14 +38,14 @@ import { Loader } from "@/components/ai-elements/loader";
 
 const chatGPTModels = [
   {
-    id: "gpt-4o",
-    name: "GPT-4o",
+    id: "gpt-4o-mini",
+    name: "GPT-4o Mini",
     chef: "OpenAI",
     chefSlug: "openai",
   },
   {
-    id: "gpt-4o-mini",
-    name: "GPT-4o Mini",
+    id: "gpt-4o",
+    name: "GPT-4o",
     chef: "OpenAI",
     chefSlug: "openai",
   },
@@ -121,9 +121,9 @@ export function Chatbox() {
             <ConversationContent>
               {messages.length === 0 ? (
                 <ConversationEmptyState
-                  description="Tôi có thể giúp gì cho bạn?"
+                  description="What can I do for you?"
                   icon={<MessageSquareIcon className="size-6" />}
-                  title="Xin chào! 👋"
+                  title="Hello! 👋"
                 />
               ) : (
                 messages.map((message) => (
