@@ -199,6 +199,9 @@ export function Chatbox() {
 
                         // Handle tool parts with approval (createCard tool)
                         if (part.type === "tool-createCard") {
+                          if (!part.input) {
+                            return <></>;
+                          }
                           const input = part.input as {
                             listId: string;
                             name: string;
@@ -218,13 +221,13 @@ export function Chatbox() {
                                 <ConfirmationRequest>
                                   <div className="space-y-3">
                                     <p>Create this card?</p>
-                                    {/* <CardPreview */}
-                                    {/*   name={input.name} */}
-                                    {/*   startDate={input.startDate} */}
-                                    {/*   deadline={input.deadline} */}
-                                    {/*   latitude={input.latitude} */}
-                                    {/*   longitude={input.longitude} */}
-                                    {/* /> */}
+                                    <CardPreview
+                                      name={input.name}
+                                      startDate={input.startDate}
+                                      deadline={input.deadline}
+                                      latitude={input.latitude}
+                                      longitude={input.longitude}
+                                    />
                                   </div>
                                 </ConfirmationRequest>
                                 <ConfirmationAccepted>
