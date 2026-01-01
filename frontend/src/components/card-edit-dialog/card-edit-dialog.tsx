@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/popover";
 import { queryClient } from "@/lib/query-client";
 import CheckList from "../check-list";
-import { FileDropzone } from "./card-attachment";
+import AttachmentArea from "./card-attachment";
 
 interface CardEditDialogProps {
   card: Card | null;
@@ -276,15 +276,29 @@ function InnerDialog({
             <CheckList card={card} boardId={boardId} onUpdate={handleUpdate} />
             
             {/* Attachment */}
-            <FileDropzone fileInputRef={fileInputRef} handleBoxClick={function (): void {
-              throw new Error("Function not implemented.");
-            } } handleDragOver={function (e: React.DragEvent): void {
-              throw new Error("Function not implemented.");
-            } } handleDrop={function (e: React.DragEvent): void {
-              throw new Error("Function not implemented.");
-            } } handleFileSelect={function (files: FileList | null): void {
-              throw new Error("Function not implemented.");
-            } } />
+            <AttachmentArea
+              attachments={card.attachments}
+              onAddAttachment={(file) => {
+                // Create a new attachment entry
+                const newAttachment = {
+                  id: crypto.randomUUID(),
+                  name: file.name,
+                  url: URL.createObjectURL(file),
+                  type: file.type,
+                  size: file.size,
+                  uploadedAt: new Date(),
+                  uploadedBy: "current-user", // Replace with actual user ID
+                };
+                const updatedAttachments = [...(card.attachments || []), newAttachment];
+                handleUpdate({ attachments: updatedAttachments });
+              }}
+              onRemoveAttachment={(attachmentId) => {
+                const updatedAttachments = (card.attachments || []).filter(
+                  (a) => a.id !== attachmentId
+                );
+                handleUpdate({ attachments: updatedAttachments });
+              }}
+            />
           </div>
 
           {/* Right column - Comments and activity */}
