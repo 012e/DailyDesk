@@ -35,6 +35,7 @@ import {
   ModelSelectorTrigger,
 } from "@/components/ai-elements/model-selector";
 import { Loader } from "@/components/ai-elements/loader";
+import { useParams } from "react-router";
 
 const chatGPTModels = [
   {
@@ -57,6 +58,7 @@ export function Chatbox() {
   const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
   const accessToken = useAtomValue(accessTokenAtom);
   const modelRef = useRef<string>(model);
+  const { boardId } = useParams<{ boardId?: string }>();
 
   // A dirty fix, dirty as hell
   // Keep ref in sync with state
@@ -71,7 +73,7 @@ export function Chatbox() {
         Authorization: `Bearer ${accessToken}`,
       },
       body: () => {
-        return { model: modelRef.current };
+        return { model: modelRef.current, boardId };
       },
     }),
   });

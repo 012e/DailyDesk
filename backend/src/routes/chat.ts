@@ -8,9 +8,17 @@ import getConfig from "@/lib/config";
 const config = getConfig();
 const openai = createOpenAI({
   apiKey: config.openai,
-})
+});
 
 const TAGS = ["Chat"];
+
+const RequestSchema = z.object({
+  messages: z.array(z.any()),
+  model: z.string().optional().default(config.defaultModel),
+  boardId: z.string().optional(),
+});
+
+const allowedModels = ["gpt-4o", "gpt-4o-mini"];
 
 export default function createChatRoutes() {
   const app = new OpenAPIHono();
@@ -26,10 +34,7 @@ export default function createChatRoutes() {
         body: {
           content: {
             "application/json": {
-              schema: z.object({
-                messages: z.array(z.any()),
-                model: z.string().optional().default(config.defaultModel),
-              }),
+              schema: RequestSchema,
             },
           },
         },
@@ -48,12 +53,13 @@ export default function createChatRoutes() {
       },
     }),
     async (c) => {
-      const request = (await c.req.json());
-      const messages = await convertToModelMessages(request.messages as UIMessage[]);
-      const modelId = request.model || "gpt-4o-mini";
+      const request = await c.req.json();
+      const messages = await convertToModelMessages(
+        request.messages as UIMessage[]
+      );
+      const modelId = request.model || config.defaultModel;
 
       // Validate that only ChatGPT models are allowed
-      const allowedModels = ["gpt-4o", "gpt-4o-mini"];
       if (!allowedModels.includes(modelId)) {
         return c.json(
           {
@@ -62,12 +68,6 @@ export default function createChatRoutes() {
           400
         );
       }
-      console.log(modelId);
-      console.log(modelId);
-      console.log(modelId);
-      console.log(modelId);
-      console.log(modelId);
-      console.log(modelId);
 
       try {
         const result = streamText({
@@ -83,7 +83,8 @@ export default function createChatRoutes() {
         console.error("Chat error:", error);
         return c.json(
           {
-            error: "Xin lỗi, hiện tại tôi đang gặp vấn đề kỹ thuật. Vui lòng thử lại sau.",
+            error:
+              "Xin lỗi, hiện tại tôi đang gặp vấn đề kỹ thuật. Vui lòng thử lại sau.",
           },
           500
         );
