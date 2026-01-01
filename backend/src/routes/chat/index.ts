@@ -3,6 +3,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 import {
   convertToModelMessages,
   LanguageModel,
+  stepCountIs,
   streamText,
   UIMessage,
 } from "ai";
@@ -27,7 +28,7 @@ const RequestSchema = z.object({
   boardId: z.string().optional().nullable(),
 });
 
-const allowedModels = ["gpt-4o", "gpt-4o-mini"];
+const allowedModels = ["gpt-4o", "gpt-4o-mini", "gpt-5.2"];
 
 function createModel(model: any) {
   return wrapLanguageModel({
@@ -105,6 +106,7 @@ export default function createChatRoutes() {
           tools: createBoardTools(boardId, user.sub),
           temperature: 0.7,
           maxOutputTokens: 500,
+          stopWhen: stepCountIs(10),
         });
 
         return result.toUIMessageStreamResponse();

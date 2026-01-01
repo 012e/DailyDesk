@@ -1,8 +1,5 @@
-import db from "@/lib/db";
-import { boardsTable, listsTable, cardsTable } from "@/lib/db/schema";
 import { ensureUserAuthenticated } from "@/lib/utils";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { eq, and, gte, gt, lt, lte, sql } from "drizzle-orm";
 import { authMiddleware } from "@/lib/auth";
 import { defaultSecurityScheme, jsonBody, successJson } from "@/types/openapi";
 import {
@@ -10,6 +7,7 @@ import {
   CreateCardSchema,
   UpdateCardSchema,
 } from "@/types/cards";
+import * as cardService from "@/services/cards.service";
 
 const TAGS = ["Cards"];
 
@@ -46,38 +44,15 @@ export default function createCardRoutes() {
       const user = ensureUserAuthenticated(c);
       const { boardId } = c.req.valid("param");
 
-      // Check if board exists and user owns it
-      const board = await db
-        .select()
-        .from(boardsTable)
-        .where(eq(boardsTable.id, boardId))
-        .limit(1);
-
-      if (board.length === 0) {
-        return c.json({ error: "Board không tồn tại" }, 404);
+      try {
+        const cards = await cardService.getCardsForBoard(user.sub, boardId);
+        return c.json(cards);
+      } catch (err: any) {
+        if (err instanceof cardService.ServiceError) {
+          return c.json({ error: err.message }, err.status);
+        }
+        throw err;
       }
-
-      if (board[0].userId !== user.sub) {
-        return c.json({ error: "Không có quyền truy cập Board này" }, 403);
-      }
-
-      // Get all cards for this board by joining with lists
-      const cards = await db
-        .select({
-          id: cardsTable.id,
-          name: cardsTable.name,
-          order: cardsTable.order,
-          listId: cardsTable.listId,
-          startDate: cardsTable.startDate,
-          deadline: cardsTable.deadline,
-          latitude: cardsTable.latitude,
-          longitude: cardsTable.longitude,
-        })
-        .from(cardsTable)
-        .innerJoin(listsTable, eq(cardsTable.listId, listsTable.id))
-        .where(eq(listsTable.boardId, boardId));
-
-      return c.json(cards);
     },
   );
 
@@ -116,66 +91,15 @@ export default function createCardRoutes() {
       const { boardId } = c.req.valid("param");
       const req = c.req.valid("json");
 
-      // Check if board exists and user owns it
-      const board = await db
-        .select()
-        .from(boardsTable)
-        .where(eq(boardsTable.id, boardId))
-        .limit(1);
-
-      if (board.length === 0) {
-        return c.json({ error: "Board không tồn tại" }, 404);
+      try {
+        const card = await cardService.createCard(user.sub, boardId, req);
+        return c.json(card);
+      } catch (err: any) {
+        if (err instanceof cardService.ServiceError) {
+          return c.json({ error: err.message }, err.status);
+        }
+        throw err;
       }
-
-      if (board[0].userId !== user.sub) {
-        return c.json({ error: "Không có quyền tạo Card trong Board này" }, 403);
-      }
-
-      // Check if list exists and belongs to the board
-      const list = await db
-        .select()
-        .from(listsTable)
-        .where(eq(listsTable.id, req.listId))
-        .limit(1);
-
-      if (list.length === 0) {
-        return c.json({ error: "List không tồn tại" }, 404);
-      }
-
-      if (list[0].boardId !== boardId) {
-        return c.json({ error: "List không thuộc Board này" }, 403);
-      }
-
-      // Validate order bounds
-      const cardsInList = await db
-        .select()
-        .from(cardsTable)
-        .where(eq(cardsTable.listId, req.listId));
-      
-      const listSize = cardsInList.length;
-      
-      // Order must be between 0 and list size (inclusive of list size to allow appending)
-      if (req.order < 0 || req.order > listSize) {
-        return c.json({ 
-          error: `Order must be between 0 and ${listSize} for this list` 
-        }, 400);
-      }
-
-      const card = await db
-        .insert(cardsTable)
-        .values({
-          id: req.id,
-          name: req.name,
-          order: req.order,
-          listId: req.listId,
-          startDate: req.startDate,
-          deadline: req.deadline,
-          latitude: req.latitude,
-          longitude: req.longitude,
-        })
-        .returning();
-
-      return c.json(card[0]);
     },
   );
 
@@ -209,54 +133,15 @@ export default function createCardRoutes() {
       const user = ensureUserAuthenticated(c);
       const { boardId, id } = c.req.valid("param");
 
-      // Check if board exists and user owns it
-      const board = await db
-        .select()
-        .from(boardsTable)
-        .where(eq(boardsTable.id, boardId))
-        .limit(1);
-
-      if (board.length === 0) {
-        return c.json({ error: "Board không tồn tại" }, 404);
+      try {
+        const card = await cardService.getCardById(user.sub, boardId, id);
+        return c.json(card);
+      } catch (err: any) {
+        if (err instanceof cardService.ServiceError) {
+          return c.json({ error: err.message }, err.status);
+        }
+        throw err;
       }
-
-      if (board[0].userId !== user.sub) {
-        return c.json({ error: "Không có quyền truy cập Board này" }, 403);
-      }
-
-      // Get the card and verify it belongs to a list in this board
-      const card = await db
-        .select({
-          id: cardsTable.id,
-          name: cardsTable.name,
-          order: cardsTable.order,
-          listId: cardsTable.listId,
-          startDate: cardsTable.startDate,
-          deadline: cardsTable.deadline,
-          latitude: cardsTable.latitude,
-          longitude: cardsTable.longitude,
-        })
-        .from(cardsTable)
-        .innerJoin(listsTable, eq(cardsTable.listId, listsTable.id))
-        .where(eq(cardsTable.id, id))
-        .limit(1);
-
-      if (card.length === 0) {
-        return c.json({ error: "Card không tồn tại" }, 404);
-      }
-
-      // Verify the card belongs to a list in this board
-      const list = await db
-        .select()
-        .from(listsTable)
-        .where(eq(listsTable.id, card[0].listId))
-        .limit(1);
-
-      if (list.length === 0 || list[0].boardId !== boardId) {
-        return c.json({ error: "Card không thuộc Board này" }, 403);
-      }
-
-      return c.json(card[0]);
     },
   );
 
@@ -296,176 +181,15 @@ export default function createCardRoutes() {
       const { boardId, id } = c.req.valid("param");
       const req = c.req.valid("json");
 
-      // Check if board exists and user owns it
-      const board = await db
-        .select()
-        .from(boardsTable)
-        .where(eq(boardsTable.id, boardId))
-        .limit(1);
-
-      if (board.length === 0) {
-        return c.json({ error: "Board không tồn tại" }, 404);
-      }
-
-      if (board[0].userId !== user.sub) {
-        return c.json({ error: "Không có quyền truy cập Board này" }, 403);
-      }
-
-      // Check if card exists
-      const existingCard = await db
-        .select()
-        .from(cardsTable)
-        .where(eq(cardsTable.id, id))
-        .limit(1);
-
-      if (existingCard.length === 0) {
-        return c.json({ error: "Card không tồn tại" }, 404);
-      }
-
-      // Verify the card belongs to a list in this board
-      const currentList = await db
-        .select()
-        .from(listsTable)
-        .where(eq(listsTable.id, existingCard[0].listId))
-        .limit(1);
-
-      if (currentList.length === 0 || currentList[0].boardId !== boardId) {
-        return c.json({ error: "Card không thuộc Board này" }, 403);
-      }
-
-      // If moving to a new list, verify it belongs to the same board
-      if (req.listId && req.listId !== existingCard[0].listId) {
-        const newList = await db
-          .select()
-          .from(listsTable)
-          .where(eq(listsTable.id, req.listId))
-          .limit(1);
-
-        if (newList.length === 0) {
-          return c.json({ error: "List đích không tồn tại" }, 404);
+      try {
+        const updated = await cardService.updateCard(user.sub, boardId, id, req);
+        return c.json(updated);
+      } catch (err: any) {
+        if (err instanceof cardService.ServiceError) {
+          return c.json({ error: err.message }, err.status);
         }
-
-        if (newList[0].boardId !== boardId) {
-          return c.json({ error: "List đích không thuộc Board này" }, 403);
-        }
+        throw err;
       }
-
-      // Validate order bounds if order is being changed
-      if (req.order !== undefined) {
-        const targetListId = req.listId || existingCard[0].listId;
-        const isMovingToNewList = req.listId && req.listId !== existingCard[0].listId;
-        
-        // Get cards in target list (excluding current card if staying in same list)
-        const cardsInTargetList = await db
-          .select()
-          .from(cardsTable)
-          .where(
-            isMovingToNewList
-              ? eq(cardsTable.listId, targetListId)
-              : and(
-                  eq(cardsTable.listId, targetListId),
-                  sql`${cardsTable.id} != ${id}`
-                )
-          );
-        
-        const targetListSize = cardsInTargetList.length;
-        
-        // When moving to new list: order must be 0 to targetListSize (size of destination)
-        // When staying in same list: order must be 0 to targetListSize (size - 1, since we exclude current card)
-        if (req.order < 0 || req.order > targetListSize) {
-          return c.json({ 
-            error: `Order must be between 0 and ${targetListSize} for this list` 
-          }, 400);
-        }
-      }
-
-      // Handle order adjustments when moving cards
-      const isMovingToNewList = req.listId && req.listId !== existingCard[0].listId;
-      const isChangingOrder = req.order !== undefined && req.order !== existingCard[0].order;
-
-      if (isMovingToNewList || isChangingOrder) {
-        const oldListId = existingCard[0].listId;
-        const newListId = req.listId || oldListId;
-        const oldOrder = existingCard[0].order;
-        const newOrder = req.order !== undefined ? req.order : existingCard[0].order;
-
-        if (isMovingToNewList) {
-          // Moving to a different list
-          
-          // 1. Remove gap in source list - decrease order of cards after the removed card
-          await db
-            .update(cardsTable)
-            .set({
-              order: sql`${cardsTable.order} - 1`,
-            })
-            .where(
-              and(
-                eq(cardsTable.listId, oldListId),
-                gt(cardsTable.order, oldOrder)
-              )
-            );
-
-          // 2. Make space in destination list - increase order of cards at or after new position
-          await db
-            .update(cardsTable)
-            .set({
-              order: sql`${cardsTable.order} + 1`,
-            })
-            .where(
-              and(
-                eq(cardsTable.listId, newListId),
-                gte(cardsTable.order, newOrder)
-              )
-            );
-        } else {
-          // Moving within same list - adjust orders between old and new position
-          if (newOrder > oldOrder) {
-            // Moving down - decrease order of cards between old+1 and new (inclusive)
-            await db
-              .update(cardsTable)
-              .set({
-                order: sql`${cardsTable.order} - 1`,
-              })
-              .where(
-                and(
-                  eq(cardsTable.listId, oldListId),
-                  gt(cardsTable.order, oldOrder),
-                  lte(cardsTable.order, newOrder)
-                )
-              );
-          } else {
-            // Moving up - increase order of cards between new (inclusive) and old-1
-            await db
-              .update(cardsTable)
-              .set({
-                order: sql`${cardsTable.order} + 1`,
-              })
-              .where(
-                and(
-                  eq(cardsTable.listId, oldListId),
-                  gte(cardsTable.order, newOrder),
-                  lt(cardsTable.order, oldOrder)
-                )
-              );
-          }
-        }
-      }
-
-      const updatedCard = await db
-        .update(cardsTable)
-        .set({
-          name: req.name,
-          order: req.order,
-          listId: req.listId,
-          startDate: req.startDate,
-          deadline: req.deadline,
-          latitude: req.latitude,
-          longitude: req.longitude,
-        })
-        .where(eq(cardsTable.id, id))
-        .returning();
-
-      return c.json(updatedCard[0]);
     },
   );
 
@@ -506,65 +230,15 @@ export default function createCardRoutes() {
       const user = ensureUserAuthenticated(c);
       const { boardId, id } = c.req.valid("param");
 
-      // Check if board exists and user owns it
-      const board = await db
-        .select()
-        .from(boardsTable)
-        .where(eq(boardsTable.id, boardId))
-        .limit(1);
-
-      if (board.length === 0) {
-        return c.json({ error: "Board không tồn tại" }, 404);
+      try {
+        const result = await cardService.deleteCard(user.sub, boardId, id);
+        return c.json(result);
+      } catch (err: any) {
+        if (err instanceof cardService.ServiceError) {
+          return c.json({ error: err.message }, err.status);
+        }
+        throw err;
       }
-
-      if (board[0].userId !== user.sub) {
-        return c.json({ error: "Không có quyền truy cập Board này" }, 403);
-      }
-
-      // Check if card exists
-      const existingCard = await db
-        .select()
-        .from(cardsTable)
-        .where(eq(cardsTable.id, id))
-        .limit(1);
-
-      if (existingCard.length === 0) {
-        return c.json({ error: "Card không tồn tại" }, 404);
-      }
-
-      // Verify the card belongs to a list in this board
-      const list = await db
-        .select()
-        .from(listsTable)
-        .where(eq(listsTable.id, existingCard[0].listId))
-        .limit(1);
-
-      if (list.length === 0 || list[0].boardId !== boardId) {
-        return c.json({ error: "Card không thuộc Board này" }, 403);
-      }
-
-      // Store the order and listId before deleting
-      const deletedCardOrder = existingCard[0].order;
-      const deletedCardListId = existingCard[0].listId;
-
-      // Delete the card
-      await db.delete(cardsTable).where(eq(cardsTable.id, id));
-
-      // Update the order of remaining cards in the same list
-      // Decrease order by 1 for all cards that had order greater than the deleted card
-      await db
-        .update(cardsTable)
-        .set({
-          order: sql`${cardsTable.order} - 1`,
-        })
-        .where(
-          and(
-            eq(cardsTable.listId, deletedCardListId),
-            gt(cardsTable.order, deletedCardOrder)
-          )
-        );
-
-      return c.json({ message: "Xóa Card thành công" });
     },
   );
 
