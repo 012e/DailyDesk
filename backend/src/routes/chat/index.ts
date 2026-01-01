@@ -4,6 +4,7 @@ import { convertToModelMessages, streamText, UIMessage } from "ai";
 import { authMiddleware } from "@/lib/auth";
 import { defaultSecurityScheme } from "@/types/openapi";
 import getConfig from "@/lib/config";
+import { createBoardTools } from "./tools";
 
 const config = getConfig();
 const openai = createOpenAI({
@@ -15,7 +16,7 @@ const TAGS = ["Chat"];
 const RequestSchema = z.object({
   messages: z.array(z.any()),
   model: z.string().optional().default(config.defaultModel),
-  boardId: z.string().optional(),
+  boardId: z.string().optional().nullable(),
 });
 
 const allowedModels = ["gpt-4o", "gpt-4o-mini"];
@@ -58,6 +59,7 @@ export default function createChatRoutes() {
         request.messages as UIMessage[]
       );
       const modelId = request.model || config.defaultModel;
+      const boardId = request.boardId;
 
       // Validate that only ChatGPT models are allowed
       if (!allowedModels.includes(modelId)) {
@@ -69,11 +71,22 @@ export default function createChatRoutes() {
         );
       }
 
+      // Validate boardId is provided
+      if (!boardId) {
+        return c.json(
+          {
+            error: "boardId is required",
+          },
+          400
+        );
+      }
+
       try {
         const result = streamText({
           model: openai(modelId),
           system: config.systemPrompt,
           messages,
+          tools: createBoardTools(boardId),
           temperature: 0.7,
           maxOutputTokens: 500,
         });
