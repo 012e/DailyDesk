@@ -46,10 +46,18 @@ import {
   ConfirmationActions,
   ConfirmationAction,
 } from "@/components/ai-elements/confirmation";
+import {
+  Tool,
+  ToolContent,
+  ToolHeader,
+  ToolInput,
+  ToolOutput,
+} from "@/components/ai-elements/tool";
 import { Loader } from "@/components/ai-elements/loader";
 import { CardPreview } from "@/components/card-preview";
 import { useParams } from "react-router";
 import { atomWithStorage } from "jotai/utils";
+import type { ToolUIPart } from "ai";
 
 const chatGPTModels = [
   {
@@ -112,6 +120,27 @@ export function Chatbox() {
       parts: [{ type: "text", text: message.text }],
     });
   };
+
+  function humanizeToolName(type: string) {
+    // type comes in like 'database_query' or 'createCard' (without leading 'tool-')
+    const t = type.replace(/[-_]/g, " ").replace(/([a-z0-9])([A-Z])/g, "$1 $2");
+    return t
+      .split(" ")
+      .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+      .join(" ");
+  }
+
+  function looksLikeJson(s: unknown) {
+    if (typeof s !== "string") return false;
+    const trimmed = s.trim();
+    if (!trimmed) return false;
+    try {
+      JSON.parse(trimmed);
+      return true;
+    } catch {
+      return false;
+    }
+  }
 
   return (
     <>
@@ -268,6 +297,25 @@ export function Chatbox() {
                             </Confirmation>
                           );
                         }
+
+                          // Generic tool UI for any tool-* part
+                          if (typeof part.type === "string" && part.type.startsWith("tool-")) {
+                            const toolPart = part as unknown as ToolUIPart;
+                            const toolType = toolPart.type.replace(/^tool-/, "");
+                            const title = humanizeToolName(toolType);
+
+
+                            return (
+                              <Tool key={i} defaultOpen>
+                                <ToolHeader
+                                  state={(toolPart.state as ToolUIPart['state']) || "input-available"}
+                                  title={title}
+                                  type={toolPart.type}
+                                  expandable={false}
+                                />
+                              </Tool>
+                            );
+                          }
 
                         return null;
                       })}
