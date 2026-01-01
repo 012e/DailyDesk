@@ -543,7 +543,26 @@ export default function createCardRoutes() {
         return c.json({ error: "Card không thuộc Board này" }, 403);
       }
 
+      // Store the order and listId before deleting
+      const deletedCardOrder = existingCard[0].order;
+      const deletedCardListId = existingCard[0].listId;
+
+      // Delete the card
       await db.delete(cardsTable).where(eq(cardsTable.id, id));
+
+      // Update the order of remaining cards in the same list
+      // Decrease order by 1 for all cards that had order greater than the deleted card
+      await db
+        .update(cardsTable)
+        .set({
+          order: sql`${cardsTable.order} - 1`,
+        })
+        .where(
+          and(
+            eq(cardsTable.listId, deletedCardListId),
+            gt(cardsTable.order, deletedCardOrder)
+          )
+        );
 
       return c.json({ message: "Xóa Card thành công" });
     },
