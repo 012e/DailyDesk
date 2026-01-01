@@ -1,10 +1,17 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { createOpenAI } from "@ai-sdk/openai";
-import { convertToModelMessages, streamText, UIMessage } from "ai";
+import {
+  convertToModelMessages,
+  LanguageModel,
+  streamText,
+  UIMessage,
+} from "ai";
 import { authMiddleware } from "@/lib/auth";
 import { defaultSecurityScheme } from "@/types/openapi";
 import getConfig from "@/lib/config";
 import { createBoardTools } from "./tools";
+import { wrapLanguageModel } from "ai";
+import { devToolsMiddleware } from "@ai-sdk/devtools";
 
 const config = getConfig();
 const openai = createOpenAI({
@@ -20,6 +27,13 @@ const RequestSchema = z.object({
 });
 
 const allowedModels = ["gpt-4o", "gpt-4o-mini"];
+
+function createModel(model: any) {
+  return wrapLanguageModel({
+    model: openai(model),
+    middleware: devToolsMiddleware(),
+  });
+}
 
 export default function createChatRoutes() {
   const app = new OpenAPIHono();
@@ -56,7 +70,7 @@ export default function createChatRoutes() {
     async (c) => {
       const request = await c.req.json();
       const messages = await convertToModelMessages(
-        request.messages as UIMessage[]
+        request.messages as UIMessage[],
       );
       const modelId = request.model || config.defaultModel;
       const boardId = request.boardId;
@@ -67,7 +81,7 @@ export default function createChatRoutes() {
           {
             error: "Model không được hỗ trợ. Vui lòng chọn model ChatGPT.",
           },
-          400
+          400,
         );
       }
 
@@ -77,13 +91,13 @@ export default function createChatRoutes() {
           {
             error: "boardId is required",
           },
-          400
+          400,
         );
       }
 
       try {
         const result = streamText({
-          model: openai(modelId),
+          model: createModel(modelId),
           system: config.systemPrompt,
           messages,
           tools: createBoardTools(boardId),
@@ -99,10 +113,10 @@ export default function createChatRoutes() {
             error:
               "Xin lỗi, hiện tại tôi đang gặp vấn đề kỹ thuật. Vui lòng thử lại sau.",
           },
-          500
+          500,
         );
       }
-    }
+    },
   );
 
   return app;
