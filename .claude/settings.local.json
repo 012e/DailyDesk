@@ -12,7 +12,9 @@
       "Bash(taskkill:*)",
       "Bash(npx drizzle-kit:*)",
       "Bash(npm run openapi:generate:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)"
     ]
   }
 }

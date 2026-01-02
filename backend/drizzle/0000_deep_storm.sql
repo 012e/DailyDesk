@@ -3,6 +3,7 @@ CREATE TABLE `boards` (
 	`name` text NOT NULL,
 	`user_id` text NOT NULL,
 	`background_url` text,
+	`background_public_id` text,
 	`background_color` text
 );
 --> statement-breakpoint
@@ -10,6 +11,9 @@ CREATE TABLE `cards` (
 	`id` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
 	`order` integer NOT NULL,
+	`cover_url` text,
+	`cover_public_id` text,
+	`cover_color` text,
 	`list_id` text NOT NULL,
 	`start_date` integer,
 	`deadline` integer,

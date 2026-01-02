@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Card } from "@/types/card";
 import { uuidv7 } from "uuidv7";
 import api from "@/lib/api";
+import { useDeleteImage } from "@/hooks/use-image";
 
 /**
  * Hook để update card với optimistic updates
@@ -9,6 +10,7 @@ import api from "@/lib/api";
  */
 export function useUpdateCard() {
   const queryClient = useQueryClient();
+  const { deleteImage } = useDeleteImage();
 
   return useMutation({
     mutationFn: async (params: {
@@ -27,6 +29,8 @@ export function useUpdateCard() {
         initials: string;
       }> | null;
       deadline?: Date | null;
+      coverColor?: string | null;
+      coverUrl?: string | null;
     }) => {
       const { data, error } = await api.PUT("/boards/{boardId}/cards/{id}", {
         params: {
@@ -43,11 +47,21 @@ export function useUpdateCard() {
           labels: params.labels,
           members: params.members,
           deadline: params.deadline,
+          coverColor: params.coverColor,
         },
       });
 
       if (error) {
         throw new Error("Failed to update card");
+      }
+      // When setting a color cover and the card previously had an image, delete the old image
+      if (params.coverColor && params.coverUrl) {
+        try {
+          await deleteImage("card", params.cardId);
+        } catch (error) {
+          console.error(`Failed to delete card cover: ${error}`);
+          // Don't throw - the update succeeded, image deletion is secondary
+        }
       }
 
       return data;

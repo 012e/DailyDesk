@@ -1,8 +1,5 @@
-import db from "@/lib/db";
-import { boardsTable, listsTable, cardsTable } from "@/lib/db/schema";
 import { ensureUserAuthenticated } from "@/lib/utils";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { eq, asc } from "drizzle-orm";
 import { authMiddleware } from "@/lib/auth";
 import { defaultSecurityScheme, jsonBody, successJson } from "@/types/openapi";
 import {
@@ -13,6 +10,7 @@ import {
 } from "@/types/boards";
 import { ListSchema } from "@/types/lists";
 import { CardSchema } from "@/types/cards";
+import * as boardService from "@/services/boards.service";
 
 const TAGS = ["Boards"];
 export default function createBoardRoutes() {
@@ -83,19 +81,16 @@ export default function createBoardRoutes() {
     async (c) => {
       const user = ensureUserAuthenticated(c);
       const req = c.req.valid("json");
-      const board = await db
-        .insert(boardsTable)
-        .values({
-          id: req.id,
-          name: req.name,
-          userId: user.sub,
-          backgroundUrl: req.backgroundUrl ?? null,
-          backgroundColor: req.backgroundColor ?? null,
-        })
-        .returning();
-
-      return c.json(board[0]);
-    },
+      try {
+        const board = await boardService.createBoard(user.sub, req);
+        return c.json(board);
+      } catch (err: any) {
+        if (err instanceof boardService.ServiceError) {
+          return c.json({ error: err.message }, err.status);
+        }
+        throw err;
+      }
+    }
   );
 
   app.openapi(
@@ -125,44 +120,30 @@ export default function createBoardRoutes() {
     async (c) => {
       const user = ensureUserAuthenticated(c);
       const { id } = c.req.valid("param");
+      try {
+        const board = await boardService.getBoardById(user.sub, id);
 
-      const board = await db.query.boardsTable.findFirst({
-        where: eq(boardsTable.id, id),
-        with: {
-          lists: {
-            orderBy: asc(listsTable.order),
-            with: {
-              cards: {
-                orderBy: asc(cardsTable.order),
-              },
-            },
-          },
-        },
-      });
-
-      if (!board) {
-        return c.json({ error: "Board không tồn tại" }, 404);
-      }
-
-      if (board.userId !== user.sub) {
-        return c.json({ error: "Không có quyền truy cập Board này" }, 403);
-      }
-
-      // Parse JSON fields in cards
-      const parsedBoard = {
-        ...board,
-        lists: board.lists.map((list) => ({
-          ...list,
-          cards: list.cards.map((card) => ({
-            ...card,
-            labels: card.labels ? JSON.parse(card.labels) : null,
-            members: card.members ? JSON.parse(card.members) : null,
+        // Parse JSON fields in cards
+        const parsedBoard = {
+          ...board,
+          lists: board.lists.map((list) => ({
+            ...list,
+            cards: list.cards.map((card) => ({
+              ...card,
+              labels: card.labels ? JSON.parse(card.labels) : null,
+              members: card.members ? JSON.parse(card.members) : null,
+            })),
           })),
-        })),
-      };
+        };
 
-      return c.json(parsedBoard);
-    },
+        return c.json(parsedBoard);
+      } catch (err: any) {
+        if (err instanceof boardService.ServiceError) {
+          return c.json({ error: err.message }, err.status);
+        }
+        throw err;
+      }
+    }
   );
 
   app.openapi(
@@ -194,40 +175,16 @@ export default function createBoardRoutes() {
       const user = ensureUserAuthenticated(c);
       const { id } = c.req.valid("param");
       const req = c.req.valid("json");
-
-      // Check if board exists and user owns it
-      const existingBoard = await db
-        .select()
-        .from(boardsTable)
-        .where(eq(boardsTable.id, id))
-        .limit(1);
-
-      if (existingBoard.length === 0) {
-        return c.json({ error: "Board không tồn tại" }, 404);
+      try {
+        const updated = await boardService.updateBoard(user.sub, id, req);
+        return c.json(updated);
+      } catch (err: any) {
+        if (err instanceof boardService.ServiceError) {
+          return c.json({ error: err.message }, err.status);
+        }
+        throw err;
       }
-
-      if (existingBoard[0].userId !== user.sub) {
-        return c.json({ error: "Không có quyền cập nhật Board này" }, 403);
-      }
-
-      const updateData: {
-        name?: string;
-        backgroundUrl?: string | null;
-        backgroundColor?: string | null;
-      } = {};
-
-      if (req.name !== undefined) updateData.name = req.name;
-      if (req.backgroundUrl !== undefined) updateData.backgroundUrl = req.backgroundUrl;
-      if (req.backgroundColor !== undefined) updateData.backgroundColor = req.backgroundColor;
-
-      const updatedBoard = await db
-        .update(boardsTable)
-        .set(updateData)
-        .where(eq(boardsTable.id, id))
-        .returning();
-
-      return c.json(updatedBoard[0]);
-    },
+    }
   );
 
   app.openapi(
@@ -264,26 +221,16 @@ export default function createBoardRoutes() {
     async (c) => {
       const user = ensureUserAuthenticated(c);
       const { id } = c.req.valid("param");
-
-      // Check if board exists and user owns it
-      const existingBoard = await db
-        .select()
-        .from(boardsTable)
-        .where(eq(boardsTable.id, id))
-        .limit(1);
-
-      if (existingBoard.length === 0) {
-        return c.json({ error: "Board không tồn tại" }, 404);
+      try {
+        const result = await boardService.deleteBoard(user.sub, id);
+        return c.json(result);
+      } catch (err: any) {
+        if (err instanceof boardService.ServiceError) {
+          return c.json({ error: err.message }, err.status);
+        }
+        throw err;
       }
-
-      if (existingBoard[0].userId !== user.sub) {
-        return c.json({ error: "Không có quyền xóa Board này" }, 403);
-      }
-
-      await db.delete(boardsTable).where(eq(boardsTable.id, id));
-
-      return c.json({ message: "Xóa Board thành công" });
-    },
+    }
   );
 
   app.openapi(
@@ -313,30 +260,16 @@ export default function createBoardRoutes() {
     async (c) => {
       const user = ensureUserAuthenticated(c);
       const { id } = c.req.valid("param");
-
-      // Check if board exists and user owns it
-      const board = await db
-        .select()
-        .from(boardsTable)
-        .where(eq(boardsTable.id, id))
-        .limit(1);
-
-      if (board.length === 0) {
-        return c.json({ error: "Board không tồn tại" }, 404);
+      try {
+        const lists = await boardService.getListsForBoard(user.sub, id);
+        return c.json(lists);
+      } catch (err: any) {
+        if (err instanceof boardService.ServiceError) {
+          return c.json({ error: err.message }, err.status);
+        }
+        throw err;
       }
-
-      if (board[0].userId !== user.sub) {
-        return c.json({ error: "Không có quyền truy cập Board này" }, 403);
-      }
-
-      // Get all lists for this board
-      const lists = await db
-        .select()
-        .from(listsTable)
-        .where(eq(listsTable.boardId, id));
-
-      return c.json(lists);
-    },
+    }
   );
 
   app.openapi(
@@ -366,36 +299,16 @@ export default function createBoardRoutes() {
     async (c) => {
       const user = ensureUserAuthenticated(c);
       const { id } = c.req.valid("param");
-
-      // Check if board exists and user owns it
-      const board = await db
-        .select()
-        .from(boardsTable)
-        .where(eq(boardsTable.id, id))
-        .limit(1);
-
-      if (board.length === 0) {
-        return c.json({ error: "Board không tồn tại" }, 404);
+      try {
+        const cards = await boardService.getCardsForBoard(user.sub, id);
+        return c.json(cards);
+      } catch (err: any) {
+        if (err instanceof boardService.ServiceError) {
+          return c.json({ error: err.message }, err.status);
+        }
+        throw err;
       }
-
-      if (board[0].userId !== user.sub) {
-        return c.json({ error: "Không có quyền truy cập Board này" }, 403);
-      }
-
-      // Get all cards for this board by joining with lists
-      const cards = await db
-        .select({
-          id: cardsTable.id,
-          name: cardsTable.name,
-          order: cardsTable.order,
-          listId: cardsTable.listId,
-        })
-        .from(cardsTable)
-        .innerJoin(listsTable, eq(cardsTable.listId, listsTable.id))
-        .where(eq(listsTable.boardId, id));
-
-      return c.json(cards);
-    },
+    }
   );
 
   return app;

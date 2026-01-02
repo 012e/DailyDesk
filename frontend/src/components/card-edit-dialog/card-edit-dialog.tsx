@@ -1,49 +1,138 @@
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import type { Card } from "@/types/card";
-import { X, Tag, CheckSquare, UserPlus, Paperclip, MoreHorizontal, CreditCard, Clock } from "lucide-react";
+import { CardCoverModeValue } from "@/types/card";
+import { X, Tag, CheckSquare, UserPlus, Paperclip, Clock, Wallpaper, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { CardHeader } from "./card-header";
 import { CardDescription } from "./card-description";
 import { CardMembers } from "./card-members";
 import { CardComments } from "./card-comments";
 import { CardLabels } from "./card-labels";
 import { CardDates } from "./card-dates";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useUpdateCard } from "@/hooks/use-card";
+import { BackgroundPickerProvider } from "@/components/background-picker-provider";
+import { CardCoverPicker } from "@/components/card-edit-dialog/card-cover-picker";
+import { useUploadImage, useDeleteImage } from "@/hooks/use-image";
+import { useBackgroundPickerContext } from "@/components/background-picker-provider";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { queryClient } from "@/lib/query-client";
+import CheckList from "../check-list";
 
 interface CardEditDialogProps {
   card: Card | null;
+  boardId: string;
   isOpen: boolean;
   onClose: () => void;
   onUpdate: (card: Card) => void;
   onDelete?: (cardId: string) => void;
-  boardId?: string;
 }
 
 export function CardEditDialog({
   card,
+  boardId,
   isOpen,
   onClose,
   onUpdate,
-  boardId,
 }: CardEditDialogProps) {
   const [showDetails, setShowDetails] = useState(true);
-  const [currentList, setCurrentList] = useState("Backlog");
+  const { uploadImage } = useUploadImage();
+
+  if (!card) return null;
+
+  const handleUploadImage = async (options: {
+    file: File;
+    type: "card" | "board";
+    id: string;
+  }): Promise<string> => {
+    const result = await uploadImage(options);
+    return result.secure_url || "";
+  };
+
+  return (
+    <BackgroundPickerProvider
+      initialData={{
+        color: card.coverColor,
+        imageUrl: card.coverUrl,
+        coverMode: card.coverMode,
+      }}
+    >
+      <InnerDialog
+        card={card}
+        boardId={boardId}
+        isOpen={isOpen}
+        onClose={onClose}
+        onUpdate={onUpdate}
+        uploadImage={handleUploadImage}
+        showDetails={showDetails}
+        setShowDetails={setShowDetails}
+      />
+    </BackgroundPickerProvider>
+  );
+}
+
+/* ================= INNER ================= */
+interface InnerDialogProps {
+  card: Card;
+  boardId: string;
+  isOpen: boolean;
+  onClose: () => void;
+  onUpdate: (card: Card) => void;
+  uploadImage: (options: {
+    file: File;
+    type: "card" | "board";
+    id: string;
+  }) => Promise<string>;
+  showDetails: boolean;
+  setShowDetails: (show: boolean) => void;
+}
+
+function InnerDialog({
+  card,
+  boardId,
+  isOpen,
+  onClose,
+  onUpdate,
+  uploadImage,
+  showDetails,
+  setShowDetails,
+}: InnerDialogProps) {
+  const [isCoverPickerOpen, setIsCoverPickerOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [isLabelPopoverOpen, setIsLabelPopoverOpen] = useState(false);
   const [isMemberPopoverOpen, setIsMemberPopoverOpen] = useState(false);
   const [isDatePopoverOpen, setIsDatePopoverOpen] = useState(false);
 
   const { mutate: updateCard } = useUpdateCard();
+  const { deleteImage } = useDeleteImage();
+  const { getBackgroundData } = useBackgroundPickerContext();
+  const { color, imageFile } = getBackgroundData();
+
+  /* ---------- PREVIEW IMAGE ---------- */
+  const previewImageUrl = useMemo(() => {
+    if (imageFile) return URL.createObjectURL(imageFile);
+    if (card.coverUrl) return card.coverUrl;
+    return null;
+  }, [imageFile, card.coverUrl]);
+
+  useEffect(() => {
+    return () => {
+      if (previewImageUrl?.startsWith("blob:")) {
+        URL.revokeObjectURL(previewImageUrl);
+      }
+    };
+  }, [previewImageUrl]);
+
+  const previewColor =
+    !imageFile && color
+      ? color
+      : !imageFile && !card.coverUrl
+      ? card.coverColor
+      : null;
 
   const handleUpdate = useCallback(
     (updates: Partial<Card>) => {
@@ -64,10 +153,75 @@ export function CardEditDialog({
     [card, boardId, onUpdate, updateCard]
   );
 
-  if (!card) return null;
+  const handleUpdateCover = async () => {
+    if (!color && !imageFile) {
+      return;
+    }
+
+    try {
+      if (imageFile) {
+        // Create a temporary preview URL for optimistic update
+        const tempPreviewUrl = URL.createObjectURL(imageFile);
+
+        // Optimistically update the card with the preview URL immediately
+        onUpdate({ ...card, coverUrl: tempPreviewUrl, coverColor: "" });
+
+        // Upload the image in the background
+        await uploadImage({
+          file: imageFile,
+          type: "card",
+          id: card.id,
+        });
+
+        // Invalidate board query to get the real URL from the server
+        queryClient.invalidateQueries({
+          queryKey: ["board", boardId],
+        });
+      } else if (color) {
+        onUpdate({ ...card, coverColor: color, coverUrl: "" });
+      }
+    } catch (error) {
+      console.error("Error updating card cover:", error);
+    }
+  };
+
+  const handleRemoveCover = async () => {
+    // Optimistically update the card to remove cover immediately
+    onUpdate({ ...card, coverColor: "", coverUrl: "", coverMode: CardCoverModeValue.NONE });
+
+    // If the card has an existing image cover, delete it from the storage in background
+    if (card.coverUrl) {
+      try {
+        await deleteImage("card", card.id);
+        // Invalidate board query to refetch the updated data
+        queryClient.invalidateQueries({
+          queryKey: ["board", boardId],
+        });
+      } catch (error) {
+        console.error("Error deleting card cover image:", error);
+      }
+    }
+  };
+
+  const handleClose = async () => {
+    // If there's a new image to upload, show loading and wait for upload
+    if (imageFile) {
+      setIsUploading(true);
+      try {
+        await handleUpdateCover();
+      } finally {
+        setIsUploading(false);
+      }
+    } else {
+      // For color changes, just update immediately
+      handleUpdateCover();
+    }
+    // Close the dialog after upload completes
+    onClose();
+  };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent
         className="!flex !flex-col !p-0 !gap-0"
         style={{
@@ -78,39 +232,53 @@ export function CardEditDialog({
         }}
         showCloseButton={false}
       >
-        {/* Top header bar */}
-        <div className="flex items-center justify-between px-6 py-3 border-b">
-          <div className="flex items-center gap-3">
-            <Select value={currentList} onValueChange={setCurrentList}>
-              <SelectTrigger className="h-8 w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Backlog">Backlog</SelectItem>
-                <SelectItem value="To Do">To Do</SelectItem>
-                <SelectItem value="Doing">Doing</SelectItem>
-                <SelectItem value="Done">Done</SelectItem>
-              </SelectContent>
-            </Select>
+        {/* Loading overlay */}
+        {isUploading && (
+          <div className="absolute inset-0 z-50 bg-background/80 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-sm text-muted-foreground">Uploading cover image...</p>
+            </div>
           </div>
+        )}
+        {/* Top-right action buttons */}
+        <div className="absolute top-2 right-2 z-10 flex gap-2">
+          {/* Edit cover button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsCoverPickerOpen(true)}
+          >
+            <Wallpaper className="h-4 w-4" />
+          </Button>
 
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon">
-              <CreditCard className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="icon">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+          {/* Close button */}
+          <Button variant="ghost" size="icon" onClick={handleClose}>
+            <X className="h-4 w-4" />
+          </Button>
         </div>
 
+        {/* Cover preview */}
+        {(previewImageUrl || previewColor) && (
+          <div
+            className="relative w-full h-40 shrink-0 group"
+            style={{
+              backgroundImage: previewImageUrl
+                ? `url(${previewImageUrl})`
+                : undefined,
+              backgroundColor: previewColor ?? undefined,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
+          ></div>
+        )}
         {/* Main content area - Horizontal flex layout */}
         <div className="flex flex-row h-full w-full overflow-hidden">
           {/* Left column - Main content */}
-          <div className="flex-1 space-y-6 p-6 overflow-y-auto max-h-full min-w-0">
+          <div
+            className="flex-1 space-y-6 p-6 overflow-y-auto max-h-full"
+            style={{ minWidth: "500px" }}
+          >
             {/* Header với checkbox và title */}
             <CardHeader card={card} onUpdate={handleUpdate} />
 
@@ -176,6 +344,9 @@ export function CardEditDialog({
 
             {/* Description */}
             <CardDescription card={card} onUpdate={handleUpdate} />
+
+            {/* CheckList */}
+            <CheckList card={card} boardId={boardId} onUpdate={handleUpdate} />
           </div>
 
           {/* Right column - Comments and activity */}
@@ -183,9 +354,9 @@ export function CardEditDialog({
             <div className="space-y-4">
               {/* Header */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold">Nhận xét và hoạt động</span>
-                </div>
+                <span className="text-sm font-semibold">
+                  Nhận xét và hoạt động
+                </span>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -200,6 +371,26 @@ export function CardEditDialog({
             </div>
           </div>
         </div>
+        {/* Cover picker dialog */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="secondary"
+              size="icon"
+              className="absolute top-2 right-12 z-20"
+            >
+              <Wallpaper className="h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+
+          <PopoverContent
+            side="right"
+            align="start"
+            className="w-[400px] p-6 ml-2"
+          >
+            <CardCoverPicker card={card} onRemoveCover={handleRemoveCover} />
+          </PopoverContent>
+        </Popover>
       </DialogContent>
     </Dialog>
   );

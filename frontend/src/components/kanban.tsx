@@ -27,6 +27,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { CardCoverModeValue, type CardCoverMode } from "@/types/card";
 
 /*
 Accessibility
@@ -927,4 +928,40 @@ export function KanbanBoardCardButton({
       </TooltipContent>
     </Tooltip>
   );
+}
+
+export function KanbanCardCover({
+  mode = "top",
+  color,
+  imageUrl,
+}: {
+  mode?: CardCoverMode;
+  color?: string;
+  imageUrl?: string;
+}) {
+  if (!color && !imageUrl) return null;
+
+  const className =
+    mode === "top" ? "rounded-t-md" : " absolute rounded-md h-full w-full";
+
+  if (color) {
+    return (
+      <div
+        className={`w-full ${mode === "top" ? "h-3" : "h-full"} ${className}`}
+        style={{ backgroundColor: color }}
+      />
+    );
+  } else if (imageUrl) {
+    return (
+      <div
+        className={`w-full ${
+          mode === "top" ? "h-24" : "h-full"
+        } overflow-hidden ${className}`}
+      >
+        <img src={imageUrl} alt="" className="w-full h-full object-cover" />
+      </div>
+    );
+  }
+
+  return null;
 }

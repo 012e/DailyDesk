@@ -12,7 +12,7 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import type { Card as CardType, Label, Member, Attachment, Comment } from "@/types/card";
+import type { Card as CardType, Label, Member, Attachment, Comment, ActivityLog, CardCoverMode } from "@/types/card";
 import { useAtom } from "jotai";
 import { isCardDialogOpenAtom, selectedCardAtom } from "./atoms";
 
@@ -34,9 +34,12 @@ interface KanbanCardProps {
     labels?: Label[];
     members?: Member[];
     dueDate?: Date;
-    cover?: string;
+    coverUrl?: string;
+    coverColor?: string;
+    coverMode?: CardCoverMode;
     attachments?: Attachment[];
     comments?: Comment[];
+    activities?: ActivityLog[];
     createdAt?: Date;
     updatedAt?: Date;
     color?: KanbanBoardCircleColor;
@@ -65,12 +68,16 @@ export function KanbanCard({
     description: card.description || "",
     listId: card.listId || columnId,
     position: card.position || card.order || 0,
+    order: card.order || 0,
     labels: card.labels || [],
     members: card.members || [],
     dueDate: card.dueDate,
-    cover: card.cover,
+    coverUrl: card.coverUrl || "",
+    coverColor: card.coverColor || "",
+    coverMode: card.coverMode,
     attachments: card.attachments || [],
     comments: card.comments || [],
+    activities: card.activities || [],
     createdAt: card.createdAt || new Date(),
     updatedAt: card.updatedAt || new Date(),
     color: card.color,
