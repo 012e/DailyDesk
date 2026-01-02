@@ -154,39 +154,38 @@ export function useBoard({ boardId }: { boardId: string }) {
   return board.data;
 }
 
-// export function useDeleteBoard() {
-//   const queryClient = useQueryClient();
-//   const { deleteImage } = useDeleteImage();
+export function useDeleteBoard() {
+  const queryClient = useQueryClient();
+  const { deleteImage } = useDeleteImage();
 
-//   const { mutateAsync } = queryApi.useMutation("delete", "/boards/{id}", {
-//     onSuccess: (_, variables) => {
-//       // Khi update xong, refresh query cho board cụ thể và list boards
-//       queryClient.invalidateQueries({ queryKey: ["boards"] });
-//     },
-//     onError: (err) => {
-//       console.error("Failed to update board:", err);
-//     },
-//   });
+  const { mutateAsync } = queryApi.useMutation("delete", "/boards/{id}", {
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
+    },
+    onError: (err) => {
+      console.error("Failed to delete board:", err);
+    },
+  });
 
-//   const updateBoard = async (id: string) => {
-//     // validate dữ liệu trước khi gửi
+  const deleteBoard = async (id: string, hasImage: boolean = false) => {
+    // Delete the board image from Cloudinary if it exists
+    if (hasImage) {
+      try {
+        await deleteImage("board", id);
+      } catch (error) {
+        console.warn("Failed to delete board image:", error);
+        // Continue with board deletion even if image deletion fails
+      }
+    }
 
-//     await mutateAsync({
-//       path: { id },
-//     });
+    await mutateAsync({
+      params: { path: { id } },
+    });
 
-//     if (boardData.backgroundColor) {
-//       try {
-//         await deleteImage("board", id);
-//       } catch (error) {
-//         throw new Error(`Failed to delete  board image: ${error}`);
-//       }
-//     }
+    return true;
+  };
 
-//     return true;
-//   };
-
-//   return {
-//     updateBoard,
-//   };
-// }
+  return {
+    deleteBoard,
+  };
+}

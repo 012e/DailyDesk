@@ -1,11 +1,13 @@
-import db from "@/lib/db";
-import { boardsTable, listsTable, cardsTable } from "@/lib/db/schema";
 import { ensureUserAuthenticated } from "@/lib/utils";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { eq } from "drizzle-orm";
 import { authMiddleware } from "@/lib/auth";
 import { defaultSecurityScheme, jsonBody, successJson } from "@/types/openapi";
-import { CardSchema, CreateCardSchema, UpdateCardSchema } from "@/types/cards";
+import {
+  CardSchema,
+  CreateCardSchema,
+  UpdateCardSchema,
+} from "@/types/cards";
+import * as cardService from "@/services/cards.service";
 
 const TAGS = ["Cards"];
 
@@ -42,35 +44,16 @@ export default function createCardRoutes() {
       const user = ensureUserAuthenticated(c);
       const { boardId } = c.req.valid("param");
 
-      // Check if board exists and user owns it
-      const board = await db
-        .select()
-        .from(boardsTable)
-        .where(eq(boardsTable.id, boardId))
-        .limit(1);
-
-      if (board.length === 0) {
-        return c.json({ error: "Board không tồn tại" }, 404);
+      try {
+        const cards = await cardService.getCardsForBoard(user.sub, boardId);
+        return c.json(cards);
+      } catch (err: any) {
+        if (err instanceof cardService.ServiceError) {
+          return c.json({ error: err.message }, err.status);
+        }
+        throw err;
       }
-
-      if (board[0].userId !== user.sub) {
-        return c.json({ error: "Không có quyền truy cập Board này" }, 403);
-      }
-
-      // Get all cards for this board by joining with lists
-      const cards = await db
-        .select({
-          id: cardsTable.id,
-          name: cardsTable.name,
-          order: cardsTable.order,
-          listId: cardsTable.listId,
-        })
-        .from(cardsTable)
-        .innerJoin(listsTable, eq(cardsTable.listId, listsTable.id))
-        .where(eq(listsTable.boardId, boardId));
-
-      return c.json(cards);
-    }
+    },
   );
 
   // POST /boards/{boardId}/cards - Create a new card
@@ -108,51 +91,16 @@ export default function createCardRoutes() {
       const { boardId } = c.req.valid("param");
       const req = c.req.valid("json");
 
-      // Check if board exists and user owns it
-      const board = await db
-        .select()
-        .from(boardsTable)
-        .where(eq(boardsTable.id, boardId))
-        .limit(1);
-
-      if (board.length === 0) {
-        return c.json({ error: "Board không tồn tại" }, 404);
+      try {
+        const card = await cardService.createCard(user.sub, boardId, req);
+        return c.json(card);
+      } catch (err: any) {
+        if (err instanceof cardService.ServiceError) {
+          return c.json({ error: err.message }, err.status);
+        }
+        throw err;
       }
-
-      if (board[0].userId !== user.sub) {
-        return c.json(
-          { error: "Không có quyền tạo Card trong Board này" },
-          403
-        );
-      }
-
-      // Check if list exists and belongs to the board
-      const list = await db
-        .select()
-        .from(listsTable)
-        .where(eq(listsTable.id, req.listId))
-        .limit(1);
-
-      if (list.length === 0) {
-        return c.json({ error: "List không tồn tại" }, 404);
-      }
-
-      if (list[0].boardId !== boardId) {
-        return c.json({ error: "List không thuộc Board này" }, 403);
-      }
-
-      const card = await db
-        .insert(cardsTable)
-        .values({
-          id: req.id,
-          name: req.name,
-          order: req.order,
-          listId: req.listId,
-        })
-        .returning();
-
-      return c.json(card[0]);
-    }
+    },
   );
 
   // GET /boards/{boardId}/cards/{id} - Get a specific card
@@ -185,51 +133,16 @@ export default function createCardRoutes() {
       const user = ensureUserAuthenticated(c);
       const { boardId, id } = c.req.valid("param");
 
-      // Check if board exists and user owns it
-      const board = await db
-        .select()
-        .from(boardsTable)
-        .where(eq(boardsTable.id, boardId))
-        .limit(1);
-
-      if (board.length === 0) {
-        return c.json({ error: "Board không tồn tại" }, 404);
+      try {
+        const card = await cardService.getCardById(user.sub, boardId, id);
+        return c.json(card);
+      } catch (err: any) {
+        if (err instanceof cardService.ServiceError) {
+          return c.json({ error: err.message }, err.status);
+        }
+        throw err;
       }
-
-      if (board[0].userId !== user.sub) {
-        return c.json({ error: "Không có quyền truy cập Board này" }, 403);
-      }
-
-      // Get the card and verify it belongs to a list in this board
-      const card = await db
-        .select({
-          id: cardsTable.id,
-          name: cardsTable.name,
-          order: cardsTable.order,
-          listId: cardsTable.listId,
-        })
-        .from(cardsTable)
-        .innerJoin(listsTable, eq(cardsTable.listId, listsTable.id))
-        .where(eq(cardsTable.id, id))
-        .limit(1);
-
-      if (card.length === 0) {
-        return c.json({ error: "Card không tồn tại" }, 404);
-      }
-
-      // Verify the card belongs to a list in this board
-      const list = await db
-        .select()
-        .from(listsTable)
-        .where(eq(listsTable.id, card[0].listId))
-        .limit(1);
-
-      if (list.length === 0 || list[0].boardId !== boardId) {
-        return c.json({ error: "Card không thuộc Board này" }, 403);
-      }
-
-      return c.json(card[0]);
-    }
+    },
   );
 
   // PUT /boards/{boardId}/cards/{id} - Update a card
@@ -268,73 +181,16 @@ export default function createCardRoutes() {
       const { boardId, id } = c.req.valid("param");
       const req = c.req.valid("json");
 
-      // Check if board exists and user owns it
-      const board = await db
-        .select()
-        .from(boardsTable)
-        .where(eq(boardsTable.id, boardId))
-        .limit(1);
-
-      if (board.length === 0) {
-        return c.json({ error: "Board không tồn tại" }, 404);
-      }
-
-      if (board[0].userId !== user.sub) {
-        return c.json({ error: "Không có quyền truy cập Board này" }, 403);
-      }
-
-      // Check if card exists
-      const existingCard = await db
-        .select()
-        .from(cardsTable)
-        .where(eq(cardsTable.id, id))
-        .limit(1);
-
-      if (existingCard.length === 0) {
-        return c.json({ error: "Card không tồn tại" }, 404);
-      }
-
-      // Verify the card belongs to a list in this board
-      const currentList = await db
-        .select()
-        .from(listsTable)
-        .where(eq(listsTable.id, existingCard[0].listId))
-        .limit(1);
-
-      if (currentList.length === 0 || currentList[0].boardId !== boardId) {
-        return c.json({ error: "Card không thuộc Board này" }, 403);
-      }
-
-      // If moving to a new list, verify it belongs to the same board
-      if (req.listId && req.listId !== existingCard[0].listId) {
-        const newList = await db
-          .select()
-          .from(listsTable)
-          .where(eq(listsTable.id, req.listId))
-          .limit(1);
-
-        if (newList.length === 0) {
-          return c.json({ error: "List đích không tồn tại" }, 404);
+      try {
+        const updated = await cardService.updateCard(user.sub, boardId, id, req);
+        return c.json(updated);
+      } catch (err: any) {
+        if (err instanceof cardService.ServiceError) {
+          return c.json({ error: err.message }, err.status);
         }
-
-        if (newList[0].boardId !== boardId) {
-          return c.json({ error: "List đích không thuộc Board này" }, 403);
-        }
+        throw err;
       }
-
-      const updatedCard = await db
-        .update(cardsTable)
-        .set({
-          name: req.name,
-          order: req.order,
-          listId: req.listId,
-          coverColor: req.coverColor,
-        })
-        .where(eq(cardsTable.id, id))
-        .returning();
-
-      return c.json(updatedCard[0]);
-    }
+    },
   );
 
   // DELETE /boards/{boardId}/cards/{id} - Delete a card
@@ -374,47 +230,16 @@ export default function createCardRoutes() {
       const user = ensureUserAuthenticated(c);
       const { boardId, id } = c.req.valid("param");
 
-      // Check if board exists and user owns it
-      const board = await db
-        .select()
-        .from(boardsTable)
-        .where(eq(boardsTable.id, boardId))
-        .limit(1);
-
-      if (board.length === 0) {
-        return c.json({ error: "Board không tồn tại" }, 404);
+      try {
+        const result = await cardService.deleteCard(user.sub, boardId, id);
+        return c.json(result);
+      } catch (err: any) {
+        if (err instanceof cardService.ServiceError) {
+          return c.json({ error: err.message }, err.status);
+        }
+        throw err;
       }
-
-      if (board[0].userId !== user.sub) {
-        return c.json({ error: "Không có quyền truy cập Board này" }, 403);
-      }
-
-      // Check if card exists
-      const existingCard = await db
-        .select()
-        .from(cardsTable)
-        .where(eq(cardsTable.id, id))
-        .limit(1);
-
-      if (existingCard.length === 0) {
-        return c.json({ error: "Card không tồn tại" }, 404);
-      }
-
-      // Verify the card belongs to a list in this board
-      const list = await db
-        .select()
-        .from(listsTable)
-        .where(eq(listsTable.id, existingCard[0].listId))
-        .limit(1);
-
-      if (list.length === 0 || list[0].boardId !== boardId) {
-        return c.json({ error: "Card không thuộc Board này" }, 403);
-      }
-
-      await db.delete(cardsTable).where(eq(cardsTable.id, id));
-
-      return c.json({ message: "Xóa Card thành công" });
-    }
+    },
   );
 
   return app;

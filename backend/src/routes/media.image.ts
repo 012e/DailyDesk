@@ -1,31 +1,15 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 import { authMiddleware } from "@/lib/auth";
 import { ensureUserAuthenticated } from "@/lib/utils";
-import { deleteFromCloudinary } from "@/lib/cloudinary";
-import db from "@/lib/db";
-import { boardsTable, cardsTable } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
 import { SaveImageBodySchema, SaveImageResponseSchema } from "@/types/media";
 import { successJson, jsonBody, defaultSecurityScheme } from "@/types/openapi";
+import * as mediaService from "@/services/media.service";
 
 const TAGS = ["Media"];
 
-const entityConfig = {
-  board: {
-    table: boardsTable,
-    urlField: "backgroundUrl" as const,
-    publicIdField: "backgroundPublicId" as const,
-    authorization: true as const,
-  },
-  card: {
-    table: cardsTable,
-    urlField: "coverUrl" as const,
-    publicIdField: "coverPublicId" as const,
-    authorization: false as const,
-  },
-} as const;
 
-export default function CreateImageRoute() {
+
+export default function createImageRoute() {
   const app = new OpenAPIHono();
   app.use("*", authMiddleware());
 
@@ -52,47 +36,15 @@ export default function CreateImageRoute() {
       const user = ensureUserAuthenticated(c);
       const { type, id } = c.req.valid("param");
       const { secure_url, public_id } = c.req.valid("json");
-      const config = entityConfig[type];
-      if (!config) return c.json({ error: "Invalid type" }, 400);
-
-      const entity = await db
-        .select()
-        .from(config.table)
-        .where(eq(config.table.id, id))
-        .then((r) => r[0]);
-      if (!entity) {
-        await deleteFromCloudinary(public_id);
-        return c.json({ error: `Không tìm thấy ${type}` }, 404);
+      try {
+        const updated = await mediaService.saveImage(user.sub, type, id, secure_url, public_id);
+        return c.json(updated);
+      } catch (err: any) {
+        if (err instanceof mediaService.ServiceError) {
+          return c.json({ error: err.message }, err.status);
+        }
+        throw err;
       }
-      if (config.authorization && entity.userId !== user.sub) {
-        await deleteFromCloudinary(public_id);
-        return c.json(
-          { error: `Không có quyền upload ảnh của ${type} này` },
-          403
-        );
-      }
-
-      if (entity[config.publicIdField as keyof typeof entity])
-        await deleteFromCloudinary(
-          entity[config.publicIdField as keyof typeof entity] as string
-        );
-
-      const updated = await db
-        .update(config.table)
-        .set({
-          [config.urlField]: secure_url,
-          [config.publicIdField]: public_id,
-        })
-        .where(eq(config.table.id, id))
-        .returning({
-          [config.urlField]:
-            config.table[config.urlField as keyof typeof entity],
-          [config.publicIdField]:
-            config.table[config.publicIdField as keyof typeof entity],
-        })
-        .then((r) => r[0]);
-
-      return c.json(updated);
     }
   );
 
@@ -117,29 +69,15 @@ export default function CreateImageRoute() {
     async (c) => {
       const user = ensureUserAuthenticated(c);
       const { type, id } = c.req.valid("param");
-      const config = entityConfig[type];
-      if (!config) return c.json({ error: "Invalid type" }, 400);
-
-      const entity = await db
-        .select()
-        .from(config.table)
-        .where(eq(config.table.id, id))
-        .then((r) => r[0]);
-      if (!entity) return c.json({ error: `Không tìm thấy ${type}` }, 404);
-      if (config.authorization && entity.userId !== user.sub)
-        return c.json({ error: `Không có quyền xóa ảnh của ${type} này` }, 403);
-
-      if (entity[config.publicIdField as keyof typeof entity])
-        await deleteFromCloudinary(
-          entity[config.publicIdField as keyof typeof entity] as string
-        );
-
-      await db
-        .update(config.table)
-        .set({ [config.urlField]: null, [config.publicIdField]: null })
-        .where(eq(config.table.id, id));
-
-      return c.json({ message: "Xóa ảnh thành công" });
+      try {
+        const result = await mediaService.deleteImage(user.sub, type, id);
+        return c.json(result);
+      } catch (err: any) {
+        if (err instanceof mediaService.ServiceError) {
+          return c.json({ error: err.message }, err.status);
+        }
+        throw err;
+      }
     }
   );
 
