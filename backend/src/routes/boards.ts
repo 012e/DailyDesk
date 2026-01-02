@@ -47,7 +47,20 @@ export default function createBoardRoutes() {
         },
       });
 
-      return c.json(boards);
+      // Parse JSON fields in cards
+      const parsedBoards = boards.map((board) => ({
+        ...board,
+        lists: board.lists.map((list) => ({
+          ...list,
+          cards: list.cards.map((card) => ({
+            ...card,
+            labels: card.labels ? JSON.parse(card.labels) : null,
+            members: card.members ? JSON.parse(card.members) : null,
+          })),
+        })),
+      }));
+
+      return c.json(parsedBoards);
     },
   );
 
@@ -135,7 +148,20 @@ export default function createBoardRoutes() {
         return c.json({ error: "Không có quyền truy cập Board này" }, 403);
       }
 
-      return c.json(board);
+      // Parse JSON fields in cards
+      const parsedBoard = {
+        ...board,
+        lists: board.lists.map((list) => ({
+          ...list,
+          cards: list.cards.map((card) => ({
+            ...card,
+            labels: card.labels ? JSON.parse(card.labels) : null,
+            members: card.members ? JSON.parse(card.members) : null,
+          })),
+        })),
+      };
+
+      return c.json(parsedBoard);
     },
   );
 

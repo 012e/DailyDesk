@@ -31,10 +31,13 @@ export const cardsTable = sqliteTable("cards", {
     .primaryKey()
     .$defaultFn(() => randomUUID()),
   name: text("name").notNull(),
+  description: text("description"), // Card description
   order: integer("order").notNull(),
   listId: text("list_id")
     .notNull()
     .references(() => listsTable.id, { onDelete: "cascade" }),
+  labels: text("labels"), // JSON string: Label[]
+  members: text("members"), // JSON string: Member[]
   startDate: integer("start_date", { mode: "timestamp" }), // Optional start date for events
   deadline: integer("deadline", { mode: "timestamp" }), // Optional deadline for events
   latitude: integer("latitude"), // Optional latitude for location
@@ -60,11 +63,33 @@ export const labelsTable = sqliteTable("labels", {
     .primaryKey()
     .$defaultFn(() => randomUUID()),
   name: text("name").notNull(),
+  color: text("color").notNull(), // Hex color code
+  boardId: text("board_id")
+    .notNull()
+    .references(() => boardsTable.id, { onDelete: "cascade" }),
 });
 
-// Relations - Board to Lists (one-to-many)
+// Board members table - maps Clerk users to boards
+export const boardMembersTable = sqliteTable("board_members", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  boardId: text("board_id")
+    .notNull()
+    .references(() => boardsTable.id, { onDelete: "cascade" }),
+  userId: text("user_id").notNull(), // Clerk user ID
+  name: text("name").notNull(), // User's full name from Clerk
+  email: text("email").notNull(), // User's email from Clerk
+  avatar: text("avatar"), // User's avatar URL from Clerk
+  role: text("role").notNull().default("member"), // member, admin, viewer
+  addedAt: integer("added_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
+// Relations - Board to Lists (one-to-many), Labels (one-to-many), and Members (one-to-many)
 export const boardRelations = relations(boardsTable, ({ many }) => ({
   lists: many(listsTable),
+  labels: many(labelsTable),
+  members: many(boardMembersTable),
 }));
 
 // Relations - List to Board (many-to-one) and List to Cards (one-to-many)
@@ -90,5 +115,21 @@ export const checklistItemRelations = relations(checklistItemsTable, ({ one }) =
   card: one(cardsTable, {
     fields: [checklistItemsTable.cardId],
     references: [cardsTable.id],
+  }),
+}));
+
+// Relations - Label to Board (many-to-one)
+export const labelRelations = relations(labelsTable, ({ one }) => ({
+  board: one(boardsTable, {
+    fields: [labelsTable.boardId],
+    references: [boardsTable.id],
+  }),
+}));
+
+// Relations - Board Member to Board (many-to-one)
+export const boardMemberRelations = relations(boardMembersTable, ({ one }) => ({
+  board: one(boardsTable, {
+    fields: [boardMembersTable.boardId],
+    references: [boardsTable.id],
   }),
 }));

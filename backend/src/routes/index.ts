@@ -3,6 +3,8 @@ import createBoardRoutes from "./boards";
 import createListRoutes from "./lists";
 import createCardRoutes from "./cards";
 import createChecklistItemRoutes from "./checklist-items";
+import createLabelRoutes from "./labels";
+import createMemberRoutes from "./members";
 import createChatRoutes from "./chat";
 
 export default function setupRoutes(app: OpenAPIHono) {
@@ -10,6 +12,8 @@ export default function setupRoutes(app: OpenAPIHono) {
   app.route("/boards", createListRoutes());
   app.route("/boards", createCardRoutes());
   app.route("/boards", createChecklistItemRoutes());
+  app.route("/boards", createLabelRoutes());
+  app.route("/boards", createMemberRoutes());
   app.route("/chat", createChatRoutes());
 
   return app;

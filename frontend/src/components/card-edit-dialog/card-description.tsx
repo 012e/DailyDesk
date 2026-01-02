@@ -67,12 +67,12 @@ export function CardDescription({ card, onUpdate }: CardDescriptionProps) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <AlignLeft className="w-5 h-5" />
-          <h3 className="font-semibold">Description</h3>
+          <h3 className="font-semibold">Mô tả</h3>
         </div>
 
         {!isEditing && card.description && (
           <Button variant="ghost" size="sm" onClick={startEditing}>
-            Edit
+            Sửa
           </Button>
         )}
       </div>
@@ -86,19 +86,19 @@ export function CardDescription({ card, onUpdate }: CardDescriptionProps) {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Add a more detailed description..."
+              placeholder="Thêm mô tả chi tiết hơn..."
               className="min-h-24 resize-y"
             />
 
             <div className="flex items-center gap-2">
               <Button onClick={handleSave} size="sm">
-                Save
+                Lưu
               </Button>
               <Button variant="ghost" size="sm" onClick={handleCancel}>
-                Cancel
+                Hủy
               </Button>
               <span className="text-xs text-muted-foreground ml-2">
-                Ctrl+Enter to save
+                Ctrl+Enter để lưu
               </span>
             </div>
           </div>
@@ -117,7 +117,7 @@ export function CardDescription({ card, onUpdate }: CardDescriptionProps) {
                 className="w-full justify-start h-auto py-2 text-sm text-muted-foreground hover:text-foreground"
                 onClick={startEditing}
               >
-                Add a more detailed description...
+                Thêm mô tả chi tiết hơn...
               </Button>
             )}
           </>

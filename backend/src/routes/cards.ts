@@ -66,8 +66,11 @@ export default function createCardRoutes() {
         .select({
           id: cardsTable.id,
           name: cardsTable.name,
+          description: cardsTable.description,
           order: cardsTable.order,
           listId: cardsTable.listId,
+          labels: cardsTable.labels,
+          members: cardsTable.members,
           startDate: cardsTable.startDate,
           deadline: cardsTable.deadline,
           latitude: cardsTable.latitude,
@@ -77,7 +80,14 @@ export default function createCardRoutes() {
         .innerJoin(listsTable, eq(cardsTable.listId, listsTable.id))
         .where(eq(listsTable.boardId, boardId));
 
-      return c.json(cards);
+      // Parse JSON fields
+      const parsedCards = cards.map((card) => ({
+        ...card,
+        labels: card.labels ? JSON.parse(card.labels) : null,
+        members: card.members ? JSON.parse(card.members) : null,
+      }));
+
+      return c.json(parsedCards);
     },
   );
 
@@ -151,8 +161,11 @@ export default function createCardRoutes() {
         .values({
           id: req.id,
           name: req.name,
+          description: req.description,
           order: req.order,
           listId: req.listId,
+          labels: req.labels ? JSON.stringify(req.labels) : null,
+          members: req.members ? JSON.stringify(req.members) : null,
           startDate: req.startDate,
           deadline: req.deadline,
           latitude: req.latitude,
@@ -160,7 +173,14 @@ export default function createCardRoutes() {
         })
         .returning();
 
-      return c.json(card[0]);
+      // Parse JSON fields for response
+      const parsedCard = {
+        ...card[0],
+        labels: card[0].labels ? JSON.parse(card[0].labels) : null,
+        members: card[0].members ? JSON.parse(card[0].members) : null,
+      };
+
+      return c.json(parsedCard);
     },
   );
 
@@ -214,8 +234,11 @@ export default function createCardRoutes() {
         .select({
           id: cardsTable.id,
           name: cardsTable.name,
+          description: cardsTable.description,
           order: cardsTable.order,
           listId: cardsTable.listId,
+          labels: cardsTable.labels,
+          members: cardsTable.members,
           startDate: cardsTable.startDate,
           deadline: cardsTable.deadline,
           latitude: cardsTable.latitude,
@@ -241,7 +264,14 @@ export default function createCardRoutes() {
         return c.json({ error: "Card không thuộc Board này" }, 403);
       }
 
-      return c.json(card[0]);
+      // Parse JSON fields for response
+      const parsedCard = {
+        ...card[0],
+        labels: card[0].labels ? JSON.parse(card[0].labels) : null,
+        members: card[0].members ? JSON.parse(card[0].members) : null,
+      };
+
+      return c.json(parsedCard);
     },
   );
 
@@ -411,8 +441,11 @@ export default function createCardRoutes() {
         .update(cardsTable)
         .set({
           name: req.name,
+          description: req.description,
           order: req.order,
           listId: req.listId,
+          labels: req.labels !== undefined ? (req.labels ? JSON.stringify(req.labels) : null) : undefined,
+          members: req.members !== undefined ? (req.members ? JSON.stringify(req.members) : null) : undefined,
           startDate: req.startDate,
           deadline: req.deadline,
           latitude: req.latitude,
@@ -421,7 +454,14 @@ export default function createCardRoutes() {
         .where(eq(cardsTable.id, id))
         .returning();
 
-      return c.json(updatedCard[0]);
+      // Parse JSON fields for response
+      const parsedCard = {
+        ...updatedCard[0],
+        labels: updatedCard[0].labels ? JSON.parse(updatedCard[0].labels) : null,
+        members: updatedCard[0].members ? JSON.parse(updatedCard[0].members) : null,
+      };
+
+      return c.json(parsedCard);
     },
   );
 

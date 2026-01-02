@@ -33,7 +33,8 @@ export function CardComments({
   const [isComposing, setIsComposing] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const comments = card.comments || [];
+  // Ensure comments is always an array (defensive programming)
+  const comments = Array.isArray(card.comments) ? card.comments : [];
 
   // Auto-resize textarea
   useEffect(() => {
@@ -100,21 +101,21 @@ export function CardComments({
           onChange={(e) => setCommentText(e.target.value)}
           onFocus={() => setIsComposing(true)}
           onKeyDown={handleKeyDown}
-          placeholder="Write a comment..."
+          placeholder="Viết bình luận..."
           className="resize-none min-h-[80px] text-sm"
         />
 
         {isComposing && (
           <div className="flex gap-2 justify-end">
             <Button onClick={handleCancel} variant="ghost" size="sm">
-              Cancel
+              Hủy
             </Button>
             <Button
               onClick={handleSubmit}
               size="sm"
               disabled={!commentText.trim()}
             >
-              Save
+              Lưu
             </Button>
           </div>
         )}
@@ -175,7 +176,7 @@ export function CardComments({
                   className="h-6 px-2 text-xs"
                   onClick={() => handleDeleteComment(comment.id)}
                 >
-                  Delete
+                  Xóa
                 </Button>
               )}
             </div>

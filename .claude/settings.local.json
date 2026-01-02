@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm dev)",
+      "Bash(npm run dev:*)",
+      "Bash(cat:*)",
+      "Bash(npm run db:generate:*)",
+      "Bash(npm run db:push:*)",
+      "Bash(npm run openapi:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(npx drizzle-kit:*)",
+      "Bash(npm run openapi:generate:*)",
+      "Bash(curl:*)"
+    ]
+  }
+}

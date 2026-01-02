@@ -10,7 +10,7 @@ import { useUpdateCard } from "@/hooks/use-card";
 import { useListActions } from "@/hooks/use-list";
 import type { Card as CardType } from "@/types/card";
 import { useAtom, useSetAtom } from "jotai";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { AddListForm } from "./AddListForm";
 import {
   boardIdAtom,
@@ -18,6 +18,18 @@ import {
   selectedCardAtom,
 } from "./atoms";
 import { KanbanColumn } from "./KanbanColumn";
+import { BoardMembersManager } from "@/components/board-members-manager";
+import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Users } from "lucide-react";
+import { useAuth0 } from "@auth0/auth0-react";
 
 interface KanbanProps {
   boardId?: string;
@@ -28,11 +40,16 @@ export function Kanban({ boardId }: KanbanProps) {
   const { createList } = useListActions();
   const board = useBoard({ boardId: boardId! });
   const lists = board?.lists || [];
+  const { user: currentUser } = useAuth0();
 
   const [selectedCard, setSelectedCard] = useAtom(selectedCardAtom);
   const [isCardDialogOpen, setIsCardDialogOpen] = useAtom(isCardDialogOpenAtom);
+  const [isMembersSheetOpen, setIsMembersSheetOpen] = useState(false);
 
   const { mutate: updateCard } = useUpdateCard();
+
+  // Auth0 user has 'sub' field for user ID
+  const isOwner = currentUser?.sub === board?.userId;
 
   useEffect(() => {
     setBoardId(boardId);
@@ -133,7 +150,31 @@ export function Kanban({ boardId }: KanbanProps) {
   return (
     <KanbanBoardProvider>
       <div className="p-4 w-full h-full">
-        <h2 className="text-lg tracking-tight">{board.name}</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg tracking-tight">{board.name}</h2>
+          <Sheet open={isMembersSheetOpen} onOpenChange={setIsMembersSheetOpen}>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Users className="h-4 w-4 mr-2" />
+                Quản lý thành viên
+              </Button>
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Quản lý thành viên Board</SheetTitle>
+                <SheetDescription>
+                  Thêm hoặc xóa thành viên khỏi board {board.name}
+                </SheetDescription>
+              </SheetHeader>
+              <div className="mt-6">
+                <BoardMembersManager
+                  boardId={boardId!}
+                  isOwner={isOwner}
+                />
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
         <KanbanBoard>
           {lists.map((column) => (
             <KanbanColumn
@@ -163,6 +204,7 @@ export function Kanban({ boardId }: KanbanProps) {
           }}
           onUpdate={handleUpdateCard}
           onDelete={handleDeleteCard}
+          boardId={boardId}
         />
       </div>
     </KanbanBoardProvider>
