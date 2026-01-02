@@ -48,6 +48,7 @@ export function useUpdateCard() {
           members: params.members,
           deadline: params.deadline,
           coverColor: params.coverColor,
+          coverUrl: params.coverUrl,
         },
       });
 

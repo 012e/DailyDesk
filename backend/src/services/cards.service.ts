@@ -33,12 +33,17 @@ export async function getCardsForBoard(userSub: string, boardId: string) {
     .select({
       id: cardsTable.id,
       name: cardsTable.name,
+      description: cardsTable.description,
       order: cardsTable.order,
       listId: cardsTable.listId,
+      labels: cardsTable.labels,
+      members: cardsTable.members,
       startDate: cardsTable.startDate,
       deadline: cardsTable.deadline,
       latitude: cardsTable.latitude,
       longitude: cardsTable.longitude,
+      coverColor: cardsTable.coverColor,
+      coverUrl: cardsTable.coverUrl,
     })
     .from(cardsTable)
     .innerJoin(listsTable, eq(cardsTable.listId, listsTable.id))
@@ -92,12 +97,17 @@ export async function createCard(userSub: string, boardId: string, req: any) {
     .values({
       id: req.id,
       name: req.name,
+      description: req.description,
       order: req.order,
       listId: req.listId,
+      labels: req.labels ? JSON.stringify(req.labels) : null,
+      members: req.members ? JSON.stringify(req.members) : null,
       startDate: req.startDate,
       deadline: req.deadline,
       latitude: req.latitude,
       longitude: req.longitude,
+      coverColor: req.coverColor,
+      coverUrl: req.coverUrl,
     })
     .returning();
 
@@ -123,12 +133,17 @@ export async function getCardById(userSub: string, boardId: string, id: string) 
     .select({
       id: cardsTable.id,
       name: cardsTable.name,
+      description: cardsTable.description,
       order: cardsTable.order,
       listId: cardsTable.listId,
+      labels: cardsTable.labels,
+      members: cardsTable.members,
       startDate: cardsTable.startDate,
       deadline: cardsTable.deadline,
       latitude: cardsTable.latitude,
       longitude: cardsTable.longitude,
+      coverColor: cardsTable.coverColor,
+      coverUrl: cardsTable.coverUrl,
     })
     .from(cardsTable)
     .innerJoin(listsTable, eq(cardsTable.listId, listsTable.id))
@@ -290,17 +305,23 @@ export async function updateCard(userSub: string, boardId: string, id: string, r
     }
   }
 
+  // Build update object, filtering out undefined values
+  const updateData: any = {};
+  if (req.name !== undefined) updateData.name = req.name;
+  if (req.order !== undefined) updateData.order = req.order;
+  if (req.listId !== undefined) updateData.listId = req.listId;
+  if (req.labels !== undefined) updateData.labels = req.labels ? JSON.stringify(req.labels) : null;
+  if (req.members !== undefined) updateData.members = req.members ? JSON.stringify(req.members) : null;
+  if (req.startDate !== undefined) updateData.startDate = req.startDate;
+  if (req.deadline !== undefined) updateData.deadline = req.deadline;
+  if (req.latitude !== undefined) updateData.latitude = req.latitude;
+  if (req.longitude !== undefined) updateData.longitude = req.longitude;
+  if (req.coverColor !== undefined) updateData.coverColor = req.coverColor;
+  if (req.coverUrl !== undefined) updateData.coverUrl = req.coverUrl;
+
   const updatedCard = await db
     .update(cardsTable)
-    .set({
-      name: req.name,
-      order: req.order,
-      listId: req.listId,
-      startDate: req.startDate,
-      deadline: req.deadline,
-      latitude: req.latitude,
-      longitude: req.longitude,
-    })
+    .set(updateData)
     .where(eq(cardsTable.id, id))
     .returning();
 

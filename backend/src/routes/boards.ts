@@ -11,6 +11,9 @@ import {
 import { ListSchema } from "@/types/lists";
 import { CardSchema } from "@/types/cards";
 import * as boardService from "@/services/boards.service";
+import db from "@/lib/db";
+import { boardsTable, listsTable, cardsTable } from "@/lib/db/schema";
+import { eq, asc } from "drizzle-orm";
 
 const TAGS = ["Boards"];
 export default function createBoardRoutes() {

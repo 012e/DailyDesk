@@ -56,4 +56,6 @@ export const UpdateCardSchema = z.object({
   deadline: z.coerce.date().nullable().optional(),
   latitude: z.number().nullable().optional(),
   longitude: z.number().nullable().optional(),
+  coverColor: z.string().nullable().optional(),
+  coverUrl: z.union([z.string().url(), z.literal(""), z.null()]).optional(),
 });

@@ -1,4 +1,5 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import type { Card } from "@/types/card";
 import { CardCoverModeValue } from "@/types/card";
 import { X, Tag, CheckSquare, UserPlus, Paperclip, Clock, Wallpaper, Loader2 } from "lucide-react";
@@ -109,15 +110,21 @@ function InnerDialog({
 
   const { mutate: updateCard } = useUpdateCard();
   const { deleteImage } = useDeleteImage();
-  const { getBackgroundData } = useBackgroundPickerContext();
-  const { color, imageFile } = getBackgroundData();
+  const { getBackgroundData, selectedColor, selectedFile, croppedFile } = useBackgroundPickerContext();
+
+  // Get the effective image file (cropped or original)
+  const imageFile = croppedFile || selectedFile;
 
   /* ---------- PREVIEW IMAGE ---------- */
   const previewImageUrl = useMemo(() => {
+    // If user selected a color, don't show image
+    if (selectedColor) return null;
+    // If user selected an image file, show it
     if (imageFile) return URL.createObjectURL(imageFile);
+    // Otherwise show the current card cover image
     if (card.coverUrl) return card.coverUrl;
     return null;
-  }, [imageFile, card.coverUrl]);
+  }, [imageFile, card.coverUrl, selectedColor]);
 
   useEffect(() => {
     return () => {
@@ -127,12 +134,15 @@ function InnerDialog({
     };
   }, [previewImageUrl]);
 
-  const previewColor =
-    !imageFile && color
-      ? color
-      : !imageFile && !card.coverUrl
-      ? card.coverColor
-      : null;
+  const previewColor = useMemo(() => {
+    // If user selected an image, don't show color
+    if (imageFile) return null;
+    // If user selected a color, show it
+    if (selectedColor) return selectedColor;
+    // Otherwise show the current card cover color (only if no image)
+    if (!card.coverUrl && card.coverColor) return card.coverColor;
+    return null;
+  }, [imageFile, selectedColor, card.coverUrl, card.coverColor]);
 
   const handleUpdate = useCallback(
     (updates: Partial<Card>) => {
@@ -154,21 +164,24 @@ function InnerDialog({
   );
 
   const handleUpdateCover = async () => {
-    if (!color && !imageFile) {
+    // Get latest values from context
+    const { color: currentColor, imageFile: currentImageFile } = getBackgroundData();
+
+    if (!currentColor && !currentImageFile) {
       return;
     }
 
     try {
-      if (imageFile) {
+      if (currentImageFile) {
         // Create a temporary preview URL for optimistic update
-        const tempPreviewUrl = URL.createObjectURL(imageFile);
+        const tempPreviewUrl = URL.createObjectURL(currentImageFile);
 
         // Optimistically update the card with the preview URL immediately
         onUpdate({ ...card, coverUrl: tempPreviewUrl, coverColor: "" });
 
         // Upload the image in the background
         await uploadImage({
-          file: imageFile,
+          file: currentImageFile,
           type: "card",
           id: card.id,
         });
@@ -177,8 +190,10 @@ function InnerDialog({
         queryClient.invalidateQueries({
           queryKey: ["board", boardId],
         });
-      } else if (color) {
-        onUpdate({ ...card, coverColor: color, coverUrl: "" });
+      } else if (currentColor) {
+        // Update local state and sync with backend
+        // Clear coverUrl to null when setting color
+        handleUpdate({ coverColor: currentColor, coverUrl: null });
       }
     } catch (error) {
       console.error("Error updating card cover:", error);
@@ -204,19 +219,19 @@ function InnerDialog({
   };
 
   const handleClose = async () => {
-    // If there's a new image to upload, show loading and wait for upload
-    if (imageFile) {
+    // Get latest background data before closing
+    const { color: latestColor, imageFile: latestImageFile } = getBackgroundData();
+
+    // Check if there are any cover changes to save
+    if (latestImageFile || latestColor) {
       setIsUploading(true);
       try {
         await handleUpdateCover();
       } finally {
         setIsUploading(false);
       }
-    } else {
-      // For color changes, just update immediately
-      handleUpdateCover();
     }
-    // Close the dialog after upload completes
+    // Close the dialog after save completes
     onClose();
   };
 
@@ -232,6 +247,13 @@ function InnerDialog({
         }}
         showCloseButton={false}
       >
+        <VisuallyHidden>
+          <DialogTitle>Edit Card</DialogTitle>
+          <DialogDescription>
+            Edit card details, labels, members, and cover
+          </DialogDescription>
+        </VisuallyHidden>
+
         {/* Loading overlay */}
         {isUploading && (
           <div className="absolute inset-0 z-50 bg-background/80 flex items-center justify-center">
@@ -372,7 +394,24 @@ function InnerDialog({
           </div>
         </div>
         {/* Cover picker dialog */}
-        <Popover>
+        <Popover
+          open={isCoverPickerOpen}
+          onOpenChange={async (open) => {
+            // When closing the popover, save any cover changes immediately
+            if (!open) {
+              setIsUploading(true);
+              try {
+                const { color: latestColor, imageFile: latestImageFile } = getBackgroundData();
+                if (latestColor || latestImageFile) {
+                  await handleUpdateCover();
+                }
+              } finally {
+                setIsUploading(false);
+              }
+            }
+            setIsCoverPickerOpen(open);
+          }}
+        >
           <PopoverTrigger asChild>
             <Button
               variant="secondary"

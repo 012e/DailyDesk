@@ -205,7 +205,6 @@ export function Kanban({ boardId }: KanbanProps) {
           }}
           onUpdate={handleUpdateCard}
           onDelete={handleDeleteCard}
-          boardId={boardId}
         />
       </div>
     </KanbanBoardProvider>
