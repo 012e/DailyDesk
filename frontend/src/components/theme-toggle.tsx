@@ -7,12 +7,20 @@ export function ThemeToggle() {
 
   const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
 
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log("Theme toggle clicked, current theme:", theme);
+    toggleTheme();
+  };
+
   return (
     <Button
       variant="ghost"
       size="icon"
-      onClick={toggleTheme}
+      onClick={handleClick}
       aria-label="Toggle theme"
+      className="relative z-50"
     >
       {isDark ? (
         <Sun className="h-5 w-5" />

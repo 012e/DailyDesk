@@ -11,7 +11,6 @@ import { Link } from "react-router";
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -19,7 +18,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { ThemeToggle } from "./theme-toggle";
 
 // Menu items.
 const items = [
@@ -77,11 +75,6 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter>
-        <div className="flex items-center justify-center p-2">
-          <ThemeToggle />
-        </div>
-      </SidebarFooter>
     </Sidebar>
   );
 }

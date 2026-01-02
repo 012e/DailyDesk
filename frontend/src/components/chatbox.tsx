@@ -148,7 +148,7 @@ export function Chatbox() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="flex fixed right-6 bottom-6 z-50 justify-center items-center w-14 h-14 text-white bg-blue-600 rounded-full shadow-lg transition-all hover:bg-blue-700 hover:shadow-xl"
+          className="flex fixed right-6 bottom-6 z-40 justify-center items-center w-14 h-14 text-white bg-blue-600 rounded-full shadow-lg transition-all hover:bg-blue-700 hover:shadow-xl"
           aria-label="Open chat"
         >
           <MessageCircle className="w-6 h-6" />
@@ -157,7 +157,7 @@ export function Chatbox() {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="flex fixed right-6 bottom-6 z-50 flex-col rounded-lg border shadow-2xl h-[600px] w-[400px] border-border bg-background">
+        <div className="flex fixed right-6 bottom-6 z-40 flex-col rounded-lg border shadow-2xl h-[600px] w-[400px] border-border bg-background">
           {/* Header */}
           <div className="flex justify-between items-center p-4 text-white bg-blue-600 rounded-t-lg">
             <div className="flex gap-2 items-center">

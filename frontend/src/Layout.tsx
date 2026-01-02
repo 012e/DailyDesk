@@ -8,6 +8,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import PageLoader from "./components/full-page-loader";
 import { Toaster } from "react-hot-toast";
 import { Chatbox } from "@/components/chatbox";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function Layout() {
   return (
@@ -16,6 +17,10 @@ export default function Layout() {
         <AppSidebar />
         <main className="flex flex-col w-full h-screen bg-background">
           <ReactQueryDevtools initialIsOpen={false} />
+          {/* Theme Toggle - Fixed position top right */}
+          <div className="fixed top-2 right-2 z-50">
+            <ThemeToggle />
+          </div>
           <SidebarTrigger />
           <ErrorBoundary
             fallback={
