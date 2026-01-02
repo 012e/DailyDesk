@@ -217,6 +217,7 @@ export default function createCardRoutes() {
 
         return c.json(parsedCard);
       } catch (err: any) {
+        console.error("Error in updateCard route:", err);
         if (err instanceof cardService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }

@@ -15,7 +15,8 @@
       "Bash(curl:*)",
       "Bash(git checkout:*)",
       "Bash(git add:*)",
-      "Bash(pnpm add:*)"
+      "Bash(pnpm add:*)",
+      "Bash(sqlite3:*)"
     ]
   }
 }
