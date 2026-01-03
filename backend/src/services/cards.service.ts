@@ -494,9 +494,7 @@ export async function updateCard(userSub: string, boardId: string, id: string, r
           cardId: id,
           labelId: label.id,
         }));
-        console.log("Inserting labels:", labelInserts);
         const result = await db.insert(cardLabelsTable).values(labelInserts);
-        console.log("Labels inserted successfully:", result);
       }
     } catch (error) {
       console.error("Error updating labels:", error);
