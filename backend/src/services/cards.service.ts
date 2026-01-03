@@ -306,10 +306,6 @@ export async function getCardById(userSub: string, boardId: string, id: string) 
 }
 
 export async function updateCard(userSub: string, boardId: string, id: string, req: any) {
-  console.log("=== updateCard called ===");
-  console.log("Card ID:", id);
-  console.log("Request body:", JSON.stringify(req, null, 2));
-
   const board = await db
     .select()
     .from(boardsTable)
