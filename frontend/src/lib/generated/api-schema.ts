@@ -1823,6 +1823,7 @@ export interface paths {
                         messages: unknown[];
                         /** @default gpt-4o-mini */
                         model?: string;
+                        boardId?: string | null;
                     };
                 };
             };

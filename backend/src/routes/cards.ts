@@ -78,7 +78,7 @@ export default function createCardRoutes() {
         body: jsonBody(
           CreateCardSchema.extend({
             listId: z.uuid(),
-          }),
+          })
         ),
       },
       responses: {
@@ -184,7 +184,7 @@ export default function createCardRoutes() {
         body: jsonBody(
           UpdateCardSchema.extend({
             listId: z.uuid().optional(),
-          }),
+          })
         ),
       },
       responses: {

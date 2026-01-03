@@ -410,7 +410,7 @@ function InnerDialog({
           </div>
 
           {/* Right column - Comments and activity */}
-          <div className="w-96 flex-shrink-0 border-l bg-muted/30 p-6 overflow-y-auto">
+          <div className="w-96 flex-shrink-0 border-l bg-muted/30 p-12 overflow-y-auto">
             <div className="space-y-4">
               {/* Header */}
               <div className="flex items-center justify-between">

@@ -32,6 +32,7 @@ export function useUpdateCard() {
       coverColor?: string | null;
       coverUrl?: string | null;
     }) => {
+      console.log("param:", params);
       const { data, error } = await api.PUT("/boards/{boardId}/cards/{id}", {
         params: {
           path: {
@@ -46,7 +47,7 @@ export function useUpdateCard() {
           listId: params.listId,
           labels: params.labels,
           members: params.members,
-          deadline: params.deadline,
+          deadline: params.deadline?.toISOString(),
           coverColor: params.coverColor,
           coverUrl: params.coverUrl,
         },
@@ -134,6 +135,19 @@ export function useCreateCard() {
       listId: string;
       name: string;
       order?: number;
+      description?: string;
+      labels?: Array<{ id: string; name: string; color: string }>;
+      members?: Array<{
+        id: string;
+        name: string;
+        email: string;
+        avatar?: string;
+        initials: string;
+      }>;
+      deadline?: Date;
+      startDate?: Date;
+      coverColor?: string;
+      coverUrl?: string;
     }) => {
       const cardId = uuidv7();
 
@@ -150,6 +164,11 @@ export function useCreateCard() {
             name: params.name,
             order: params.order ?? 0,
             listId: params.listId,
+            description: params.description,
+            labels: params.labels,
+            members: params.members,
+            deadline: params.deadline?.toISOString(),
+            startDate: params.startDate?.toISOString(),
           },
         },
       );
