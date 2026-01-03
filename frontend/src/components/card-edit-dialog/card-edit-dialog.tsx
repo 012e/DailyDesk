@@ -10,7 +10,7 @@ import { CardMembers } from "./card-members";
 import { CardComments } from "./card-comments";
 import { CardLabels } from "./card-labels";
 import { CardDates } from "./card-dates";
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useUpdateCard } from "@/hooks/use-card";
 import { BackgroundPickerProvider } from "@/components/background-picker-provider";
 import { CardCoverPicker } from "@/components/card-edit-dialog/card-cover-picker";
@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/popover";
 import { queryClient } from "@/lib/query-client";
 import CheckList from "../check-list";
+import AttachmentArea from "./card-attachment";
 
 interface CardEditDialogProps {
   card: Card | null;
@@ -42,6 +43,7 @@ export function CardEditDialog({
 }: CardEditDialogProps) {
   const [showDetails, setShowDetails] = useState(true);
   const { uploadImage } = useUploadImage();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   if (!card) return null;
 
@@ -218,6 +220,39 @@ function InnerDialog({
     }
   };
 
+  const handleAddAttachment = (file: File) => {
+    const newAttachment = {
+      id: crypto.randomUUID(),
+      name: file.name,
+      url: URL.createObjectURL(file),
+      type: file.type,
+      size: file.size,
+      uploadedAt: new Date(),
+      uploadedBy: "current-user",
+    };
+    handleUpdate({ attachments: [...(card.attachments || []), newAttachment] });
+  };
+
+  const handleAddLink = (url: string, name?: string) => {
+    const newAttachment = {
+      id: crypto.randomUUID(),
+      name: name || url,
+      url: url,
+      type: "link",
+      size: 0,
+      uploadedAt: new Date(),
+      uploadedBy: "current-user",
+    };
+    handleUpdate({ attachments: [...(card.attachments || []), newAttachment] });
+  };
+
+  const handleRemoveAttachment = (attachmentId: string) => {
+    const updatedAttachments = (card.attachments || []).filter(
+      (a) => a.id !== attachmentId
+    );
+    handleUpdate({ attachments: updatedAttachments });
+  };
+
   const handleClose = async () => {
     // Get latest background data before closing
     const { color: latestColor, imageFile: latestImageFile } = getBackgroundData();
@@ -369,6 +404,9 @@ function InnerDialog({
 
             {/* CheckList */}
             <CheckList card={card} boardId={boardId} onUpdate={handleUpdate} />
+
+            {/* Attachment */}
+            <AttachmentArea card={card} onUpdate={handleUpdate} />
           </div>
 
           {/* Right column - Comments and activity */}
