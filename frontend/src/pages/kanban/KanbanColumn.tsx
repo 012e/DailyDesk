@@ -4,10 +4,7 @@ import {
   KanbanBoardColumnList,
   type KanbanBoardDropDirection,
 } from "@/components/kanban";
-import { useCreateCard } from "@/hooks/use-card";
-import { useAtomValue } from "jotai";
 import { AddCardForm } from "./AddCardForm";
-import { boardIdAtom } from "./atoms";
 import { ColumnHeader } from "./ColumnHeader";
 import { KanbanCard } from "./KanbanCard";
 
@@ -44,22 +41,6 @@ export function KanbanColumn({
   onDeleteColumn,
   onDeleteCard,
 }: KanbanColumnProps) {
-  const boardId = useAtomValue(boardIdAtom);
-  const { mutate: createCard } = useCreateCard();
-
-  const handleAddCard = (columnId: string, title: string) => {
-    if (!boardId) return;
-
-    const nextOrder = column.cards.length;
-
-    createCard({
-      boardId: boardId,
-      listId: columnId,
-      name: title,
-      order: nextOrder,
-    });
-  };
-
   return (
     <KanbanBoardColumn
       key={column.id}
@@ -89,7 +70,8 @@ export function KanbanColumn({
         ))}
       </KanbanBoardColumnList>
 
-      <AddCardForm columnId={column.id} onAddCard={handleAddCard} />
+      <AddCardForm columnId={column.id} cardsCount={column.cards.length} />
     </KanbanBoardColumn>
   );
 }
+
