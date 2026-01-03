@@ -14,11 +14,11 @@ export function CardDescription({ card, onUpdate }: CardDescriptionProps) {
   const [description, setDescription] = useState(card.description || "");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Focus textarea khi bắt đầu edit
+  // Focus textarea when starting edit
   useEffect(() => {
     if (isEditing && textareaRef.current) {
       textareaRef.current.focus();
-      // Đặt cursor ở cuối text
+      // Set cursor at the end of text
       textareaRef.current.setSelectionRange(
         textareaRef.current.value.length,
         textareaRef.current.value.length
@@ -29,7 +29,7 @@ export function CardDescription({ card, onUpdate }: CardDescriptionProps) {
   const handleSave = () => {
     const trimmedDescription = description.trim();
 
-    // Cho phép save empty description
+    // Allow saving empty description
     if (trimmedDescription !== (card.description || "")) {
       onUpdate({ description: trimmedDescription || undefined });
     }
@@ -43,13 +43,13 @@ export function CardDescription({ card, onUpdate }: CardDescriptionProps) {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Ctrl/Cmd + Enter để save
+    // Ctrl/Cmd + Enter to save
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
       e.preventDefault();
       handleSave();
     }
 
-    // Escape để cancel
+    // Escape to cancel
     if (e.key === "Escape") {
       e.preventDefault();
       handleCancel();

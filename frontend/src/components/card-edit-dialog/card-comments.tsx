@@ -15,7 +15,7 @@ interface CardCommentsProps {
   onUpdate: (updates: Partial<Card>) => void;
 }
 
-// Mock current user (trong thực tế sẽ lấy từ auth context)
+// Mock current user (in production, get from auth context)
 const DEFAULT_USER: Member = {
   id: "current",
   name: "You",
@@ -33,7 +33,8 @@ export function CardComments({
   const [isComposing, setIsComposing] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const comments = card.comments || [];
+  // Ensure comments is always an array (defensive programming)
+  const comments = Array.isArray(card.comments) ? card.comments : [];
 
   // Auto-resize textarea
   useEffect(() => {
@@ -64,13 +65,13 @@ export function CardComments({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Ctrl/Cmd + Enter để submit
+    // Ctrl/Cmd + Enter to submit
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
       e.preventDefault();
       handleSubmit();
     }
 
-    // Escape để cancel
+    // Escape to cancel
     if (e.key === "Escape") {
       e.preventDefault();
       handleCancel();

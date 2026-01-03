@@ -32,6 +32,7 @@ export const cardsTable = sqliteTable("cards", {
     .primaryKey()
     .$defaultFn(() => randomUUID()),
   name: text("name").notNull(),
+  description: text("description"), // Card description
   order: integer("order").notNull(),
   coverUrl: text("cover_url"),
   coverPublicId: text("cover_public_id"),
@@ -64,11 +65,59 @@ export const labelsTable = sqliteTable("labels", {
     .primaryKey()
     .$defaultFn(() => randomUUID()),
   name: text("name").notNull(),
+  color: text("color").notNull(), // Hex color code
+  boardId: text("board_id")
+    .notNull()
+    .references(() => boardsTable.id, { onDelete: "cascade" }),
 });
 
-// Relations - Board to Lists (one-to-many)
+// Board members table - maps Clerk users to boards
+export const boardMembersTable = sqliteTable("board_members", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  boardId: text("board_id")
+    .notNull()
+    .references(() => boardsTable.id, { onDelete: "cascade" }),
+  userId: text("user_id").notNull(), // Clerk user ID
+  name: text("name").notNull(), // User's full name from Clerk
+  email: text("email").notNull(), // User's email from Clerk
+  avatar: text("avatar"), // User's avatar URL from Clerk
+  role: text("role").notNull().default("member"), // member, admin, viewer
+  addedAt: integer("added_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
+// Card-Label junction table (many-to-many)
+export const cardLabelsTable = sqliteTable("card_labels", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  cardId: text("card_id")
+    .notNull()
+    .references(() => cardsTable.id, { onDelete: "cascade" }),
+  labelId: text("label_id")
+    .notNull()
+    .references(() => labelsTable.id, { onDelete: "cascade" }),
+});
+
+// Card-Member junction table (many-to-many)
+export const cardMembersTable = sqliteTable("card_members", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  cardId: text("card_id")
+    .notNull()
+    .references(() => cardsTable.id, { onDelete: "cascade" }),
+  memberId: text("member_id")
+    .notNull()
+    .references(() => boardMembersTable.id, { onDelete: "cascade" }),
+});
+
+// Relations - Board to Lists (one-to-many), Labels (one-to-many), and Members (one-to-many)
 export const boardRelations = relations(boardsTable, ({ many }) => ({
   lists: many(listsTable),
+  labels: many(labelsTable),
+  members: many(boardMembersTable),
 }));
 
 // Relations - List to Board (many-to-one) and List to Cards (one-to-many)
@@ -80,13 +129,15 @@ export const listRelations = relations(listsTable, ({ one, many }) => ({
   cards: many(cardsTable),
 }));
 
-// Relations - Card to List (many-to-one) and Card to Checklist Items (one-to-many)
+// Relations - Card to List (many-to-one), Card to Checklist Items (one-to-many), and Card to Labels/Members (many-to-many)
 export const cardRelations = relations(cardsTable, ({ one, many }) => ({
   list: one(listsTable, {
     fields: [cardsTable.listId],
     references: [listsTable.id],
   }),
   checklistItems: many(checklistItemsTable),
+  cardLabels: many(cardLabelsTable),
+  cardMembers: many(cardMembersTable),
 }));
 
 // Relations - Checklist Item to Card (many-to-one)
@@ -94,5 +145,47 @@ export const checklistItemRelations = relations(checklistItemsTable, ({ one }) =
   card: one(cardsTable, {
     fields: [checklistItemsTable.cardId],
     references: [cardsTable.id],
+  }),
+}));
+
+// Relations - Label to Board (many-to-one)
+export const labelRelations = relations(labelsTable, ({ one, many }) => ({
+  board: one(boardsTable, {
+    fields: [labelsTable.boardId],
+    references: [boardsTable.id],
+  }),
+  cardLabels: many(cardLabelsTable),
+}));
+
+// Relations - Board Member to Board (many-to-one)
+export const boardMemberRelations = relations(boardMembersTable, ({ one, many }) => ({
+  board: one(boardsTable, {
+    fields: [boardMembersTable.boardId],
+    references: [boardsTable.id],
+  }),
+  cardMembers: many(cardMembersTable),
+}));
+
+// Relations - Card Label junction (many-to-one to both Card and Label)
+export const cardLabelRelations = relations(cardLabelsTable, ({ one }) => ({
+  card: one(cardsTable, {
+    fields: [cardLabelsTable.cardId],
+    references: [cardsTable.id],
+  }),
+  label: one(labelsTable, {
+    fields: [cardLabelsTable.labelId],
+    references: [labelsTable.id],
+  }),
+}));
+
+// Relations - Card Member junction (many-to-one to both Card and BoardMember)
+export const cardMemberRelations = relations(cardMembersTable, ({ one }) => ({
+  card: one(cardsTable, {
+    fields: [cardMembersTable.cardId],
+    references: [cardsTable.id],
+  }),
+  member: one(boardMembersTable, {
+    fields: [cardMembersTable.memberId],
+    references: [boardMembersTable.id],
   }),
 }));

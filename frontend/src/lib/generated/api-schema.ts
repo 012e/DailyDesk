@@ -31,9 +31,8 @@ export interface paths {
                             id: string;
                             name: string;
                             userId: string;
-                            backgroundUrl?: string | null;
-                            backgroundColor?: string | null;
-                            backgroundPublicId?: string | null;
+                            backgroundUrl: string | null;
+                            backgroundColor: string | null;
                             lists: {
                                 /** Format: uuid */
                                 id: string;
@@ -45,13 +44,22 @@ export interface paths {
                                     /** Format: uuid */
                                     id: string;
                                     name: string;
+                                    description: string | null;
                                     order: number;
-                                    /** Format: uri */
-                                    coverUrl: string | null;
-                                    coverPublicId: string | null;
-                                    coverColor: string | null;
                                     /** Format: uuid */
                                     listId: string;
+                                    labels: {
+                                        id: string;
+                                        name: string;
+                                        color: string;
+                                    }[] | null;
+                                    members: {
+                                        id: string;
+                                        name: string;
+                                        email: string;
+                                        avatar?: string;
+                                        initials: string;
+                                    }[] | null;
                                     /** Format: date */
                                     startDate: string | null;
                                     /** Format: date */
@@ -96,9 +104,8 @@ export interface paths {
                             id: string;
                             name: string;
                             userId: string;
-                            backgroundUrl?: string | null;
-                            backgroundColor?: string | null;
-                            backgroundPublicId?: string | null;
+                            backgroundUrl: string | null;
+                            backgroundColor: string | null;
                         };
                     };
                 };
@@ -139,9 +146,8 @@ export interface paths {
                             id: string;
                             name: string;
                             userId: string;
-                            backgroundUrl?: string | null;
-                            backgroundColor?: string | null;
-                            backgroundPublicId?: string | null;
+                            backgroundUrl: string | null;
+                            backgroundColor: string | null;
                             lists: {
                                 /** Format: uuid */
                                 id: string;
@@ -153,13 +159,22 @@ export interface paths {
                                     /** Format: uuid */
                                     id: string;
                                     name: string;
+                                    description: string | null;
                                     order: number;
-                                    /** Format: uri */
-                                    coverUrl: string | null;
-                                    coverPublicId: string | null;
-                                    coverColor: string | null;
                                     /** Format: uuid */
                                     listId: string;
+                                    labels: {
+                                        id: string;
+                                        name: string;
+                                        color: string;
+                                    }[] | null;
+                                    members: {
+                                        id: string;
+                                        name: string;
+                                        email: string;
+                                        avatar?: string;
+                                        initials: string;
+                                    }[] | null;
                                     /** Format: date */
                                     startDate: string | null;
                                     /** Format: date */
@@ -217,9 +232,8 @@ export interface paths {
                             id: string;
                             name: string;
                             userId: string;
-                            backgroundUrl?: string | null;
-                            backgroundColor?: string | null;
-                            backgroundPublicId?: string | null;
+                            backgroundUrl: string | null;
+                            backgroundColor: string | null;
                         };
                     };
                 };
@@ -369,13 +383,22 @@ export interface paths {
                             /** Format: uuid */
                             id: string;
                             name: string;
+                            description: string | null;
                             order: number;
-                            /** Format: uri */
-                            coverUrl: string | null;
-                            coverPublicId: string | null;
-                            coverColor: string | null;
                             /** Format: uuid */
                             listId: string;
+                            labels: {
+                                id: string;
+                                name: string;
+                                color: string;
+                            }[] | null;
+                            members: {
+                                id: string;
+                                name: string;
+                                email: string;
+                                avatar?: string;
+                                initials: string;
+                            }[] | null;
                             /** Format: date */
                             startDate: string | null;
                             /** Format: date */
@@ -693,13 +716,22 @@ export interface paths {
                             /** Format: uuid */
                             id: string;
                             name: string;
+                            description: string | null;
                             order: number;
-                            /** Format: uri */
-                            coverUrl: string | null;
-                            coverPublicId: string | null;
-                            coverColor: string | null;
                             /** Format: uuid */
                             listId: string;
+                            labels: {
+                                id: string;
+                                name: string;
+                                color: string;
+                            }[] | null;
+                            members: {
+                                id: string;
+                                name: string;
+                                email: string;
+                                avatar?: string;
+                                initials: string;
+                            }[] | null;
                             /** Format: date */
                             startDate: string | null;
                             /** Format: date */
@@ -741,7 +773,20 @@ export interface paths {
                         /** Format: uuid */
                         id: string;
                         name: string;
+                        description?: string;
                         order: number;
+                        labels?: {
+                            id: string;
+                            name: string;
+                            color: string;
+                        }[];
+                        members?: {
+                            id: string;
+                            name: string;
+                            email: string;
+                            avatar?: string;
+                            initials: string;
+                        }[];
                         /** Format: date */
                         startDate?: string | null;
                         /** Format: date */
@@ -764,13 +809,22 @@ export interface paths {
                             /** Format: uuid */
                             id: string;
                             name: string;
+                            description: string | null;
                             order: number;
-                            /** Format: uri */
-                            coverUrl: string | null;
-                            coverPublicId: string | null;
-                            coverColor: string | null;
                             /** Format: uuid */
                             listId: string;
+                            labels: {
+                                id: string;
+                                name: string;
+                                color: string;
+                            }[] | null;
+                            members: {
+                                id: string;
+                                name: string;
+                                email: string;
+                                avatar?: string;
+                                initials: string;
+                            }[] | null;
                             /** Format: date */
                             startDate: string | null;
                             /** Format: date */
@@ -831,13 +885,22 @@ export interface paths {
                             /** Format: uuid */
                             id: string;
                             name: string;
+                            description: string | null;
                             order: number;
-                            /** Format: uri */
-                            coverUrl: string | null;
-                            coverPublicId: string | null;
-                            coverColor: string | null;
                             /** Format: uuid */
                             listId: string;
+                            labels: {
+                                id: string;
+                                name: string;
+                                color: string;
+                            }[] | null;
+                            members: {
+                                id: string;
+                                name: string;
+                                email: string;
+                                avatar?: string;
+                                initials: string;
+                            }[] | null;
                             /** Format: date */
                             startDate: string | null;
                             /** Format: date */
@@ -877,7 +940,20 @@ export interface paths {
                 content: {
                     "application/json": {
                         name?: string;
+                        description?: string | null;
                         order?: number;
+                        labels?: {
+                            id: string;
+                            name: string;
+                            color: string;
+                        }[] | null;
+                        members?: {
+                            id: string;
+                            name: string;
+                            email: string;
+                            avatar?: string;
+                            initials: string;
+                        }[] | null;
                         /** Format: date */
                         startDate?: string | null;
                         /** Format: date */
@@ -900,13 +976,22 @@ export interface paths {
                             /** Format: uuid */
                             id: string;
                             name: string;
+                            description: string | null;
                             order: number;
-                            /** Format: uri */
-                            coverUrl: string | null;
-                            coverPublicId: string | null;
-                            coverColor: string | null;
                             /** Format: uuid */
                             listId: string;
+                            labels: {
+                                id: string;
+                                name: string;
+                                color: string;
+                            }[] | null;
+                            members: {
+                                id: string;
+                                name: string;
+                                email: string;
+                                avatar?: string;
+                                initials: string;
+                            }[] | null;
                             /** Format: date */
                             startDate: string | null;
                             /** Format: date */
@@ -964,104 +1049,6 @@ export interface paths {
                     content?: never;
                 };
                 /** @description Card hoặc Board không tồn tại */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/media/image/{type}/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    type: "board" | "card";
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        /** Format: uri */
-                        secure_url: string;
-                        public_id: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Successful response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** Format: uri */
-                            secure_url?: string;
-                            public_id?: string;
-                        };
-                    };
-                };
-                /** @description Không có quyền upload ảnh */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Không tìm thấy đối tượng */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    type: "board" | "card";
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Xóa ảnh thành công */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Không có quyền xóa ảnh */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Không tìm thấy đối tượng */
                 404: {
                     headers: {
                         [name: string]: unknown;
@@ -1330,6 +1317,477 @@ export interface paths {
                     content?: never;
                 };
                 /** @description Checklist Item, Card hoặc Board không tồn tại */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/boards/{boardId}/labels": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boardId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Lấy danh sách Labels thành công */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            name: string;
+                            color: string;
+                            /** Format: uuid */
+                            boardId: string;
+                        }[];
+                    };
+                };
+                /** @description Không có quyền truy cập Board này */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Board không tồn tại */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boardId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        name: string;
+                        color: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Tạo Label thành công */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            name: string;
+                            color: string;
+                            /** Format: uuid */
+                            boardId: string;
+                        };
+                    };
+                };
+                /** @description Không có quyền tạo Label trong Board này */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Board không tồn tại */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/boards/{boardId}/labels/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boardId: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        name?: string;
+                        color?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Cập nhật Label thành công */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            name: string;
+                            color: string;
+                            /** Format: uuid */
+                            boardId: string;
+                        };
+                    };
+                };
+                /** @description Không có quyền cập nhật Label này */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Label hoặc Board không tồn tại */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boardId: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Xóa Label thành công */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                        };
+                    };
+                };
+                /** @description Không có quyền xóa Label này */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Label hoặc Board không tồn tại */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/boards/{boardId}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boardId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Lấy danh sách Members thành công */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            boardId: string;
+                            userId: string;
+                            name: string;
+                            /** Format: email */
+                            email: string;
+                            avatar?: string | null;
+                            /**
+                             * @default member
+                             * @enum {string}
+                             */
+                            role: "member" | "admin" | "viewer";
+                            /** Format: date */
+                            addedAt: string | null;
+                        }[];
+                    };
+                };
+                /** @description Không có quyền truy cập Board này */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Board không tồn tại */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boardId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        userId: string;
+                        name: string;
+                        /** Format: email */
+                        email: string;
+                        avatar?: string | null;
+                        /**
+                         * @default member
+                         * @enum {string}
+                         */
+                        role?: "member" | "admin" | "viewer";
+                    };
+                };
+            };
+            responses: {
+                /** @description Thêm Member thành công */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            boardId: string;
+                            userId: string;
+                            name: string;
+                            /** Format: email */
+                            email: string;
+                            avatar?: string | null;
+                            /**
+                             * @default member
+                             * @enum {string}
+                             */
+                            role: "member" | "admin" | "viewer";
+                            /** Format: date */
+                            addedAt: string | null;
+                        };
+                    };
+                };
+                /** @description Không có quyền thêm Member vào Board này */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Board không tồn tại */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Member đã tồn tại trong Board */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/boards/{boardId}/members/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boardId: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        role?: "member" | "admin" | "viewer";
+                    };
+                };
+            };
+            responses: {
+                /** @description Cập nhật Member thành công */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            boardId: string;
+                            userId: string;
+                            name: string;
+                            /** Format: email */
+                            email: string;
+                            avatar?: string | null;
+                            /**
+                             * @default member
+                             * @enum {string}
+                             */
+                            role: "member" | "admin" | "viewer";
+                            /** Format: date */
+                            addedAt: string | null;
+                        };
+                    };
+                };
+                /** @description Không có quyền cập nhật Member này */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Member hoặc Board không tồn tại */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boardId: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Xóa Member thành công */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                        };
+                    };
+                };
+                /** @description Không có quyền xóa Member này */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Member hoặc Board không tồn tại */
                 404: {
                     headers: {
                         [name: string]: unknown;

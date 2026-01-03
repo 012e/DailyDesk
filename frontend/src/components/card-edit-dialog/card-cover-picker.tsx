@@ -41,7 +41,7 @@ export function CardCoverPicker({ card, onRemoveCover }: CardCoverPickerProps) {
         size="sm"
         disabled={!hasCover}
         onClick={handleRemoveCover}
-        className="w-full rounded-dm bg-white hover:bg-white/80 cursor-pointer select-none shadow-sm"
+        className="w-full rounded-dm bg-white hover:bg-white/80 cursor-pointer select-none shadow-sm text-black"
       >
         Remove Cover
       </Button>

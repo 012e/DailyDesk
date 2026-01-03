@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Tag, Plus, Check, X } from "lucide-react";
+import { Tag, Plus, Check, X, Pencil, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -9,15 +9,21 @@ import {
 } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Label as UILabel } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import type { Card, Label } from "@/types/card";
 import { cn } from "@/lib/utils";
+import { useLabels, useCreateLabel, useUpdateLabel } from "@/hooks/use-label";
 
 interface CardLabelsProps {
   card: Card;
   onUpdate: (updates: Partial<Card>) => void;
+  boardId: string;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  triggerButton?: React.ReactNode;
 }
 
-// Predefined label colors (giống Trello)
+// Predefined label colors (similar to Trello)
 const LABEL_COLORS = [
   { name: "Green", color: "#61bd4f" },
   { name: "Yellow", color: "#f2d600" },
@@ -31,23 +37,38 @@ const LABEL_COLORS = [
   { name: "Black", color: "#344563" },
 ];
 
-export function CardLabels({ card, onUpdate }: CardLabelsProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export function CardLabels({ card, onUpdate, boardId, isOpen: controlledIsOpen, onOpenChange: controlledOnOpenChange, triggerButton }: CardLabelsProps) {
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [newLabelName, setNewLabelName] = useState("");
   const [selectedColor, setSelectedColor] = useState(LABEL_COLORS[0]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [editingLabelId, setEditingLabelId] = useState<string | null>(null);
+  const [editLabelName, setEditLabelName] = useState("");
+  const [editLabelColor, setEditLabelColor] = useState("");
 
-  const labels = card.labels || [];
+  // Fetch labels from API
+  const { data: availableLabelsData = [] } = useLabels(boardId);
+  const { mutate: createLabel } = useCreateLabel();
+  const { mutate: updateLabel } = useUpdateLabel();
+
+  // Ensure labels is always an array (defensive programming)
+  const labels = Array.isArray(card.labels) ? card.labels : [];
+  const availableLabels = availableLabelsData;
+
+  // Use controlled state if provided, otherwise use internal state
+  const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen;
+  const setIsOpen = controlledOnOpenChange || setInternalIsOpen;
 
   const handleAddLabel = (label: Label) => {
     const existingLabel = labels.find((l) => l.id === label.id);
 
     if (existingLabel) {
-      // Remove label nếu đã tồn tại (toggle)
+      // Remove label if it exists (toggle)
       onUpdate({
         labels: labels.filter((l) => l.id !== label.id),
       });
     } else {
-      // Add label mới
+      // Add new label
       onUpdate({
         labels: [...labels, label],
       });
@@ -74,7 +95,62 @@ export function CardLabels({ card, onUpdate }: CardLabelsProps) {
     });
   };
 
-  // Quick add từ predefined colors
+  const handleToggleLabel = (label: Label) => {
+    const existingLabel = labels.find((l) => l.id === label.id);
+    if (existingLabel) {
+      onUpdate({
+        labels: labels.filter((l) => l.id !== label.id),
+      });
+    } else {
+      onUpdate({
+        labels: [...labels, label],
+      });
+    }
+  };
+
+  const handleStartEdit = (label: Label) => {
+    setEditingLabelId(label.id);
+    setEditLabelName(label.name);
+    setEditLabelColor(label.color);
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingLabelId) {
+      setEditingLabelId(null);
+      return;
+    }
+
+    // Update label via API
+    updateLabel(
+      {
+        boardId,
+        labelId: editingLabelId,
+        name: editLabelName.trim(),
+        color: editLabelColor,
+      },
+      {
+        onSuccess: () => {
+          // Also update in card labels if it's selected
+          if (labels.some((l) => l.id === editingLabelId)) {
+            onUpdate({
+              labels: labels.map((l) =>
+                l.id === editingLabelId
+                  ? { ...l, name: editLabelName.trim(), color: editLabelColor }
+                  : l
+              ),
+            });
+          }
+          setEditingLabelId(null);
+        },
+      }
+    );
+  };
+
+  const handleCancelEdit = () => {
+    setEditingLabelId(null);
+  };
+
+  // Quick add from predefined colors
   const quickAddLabel = (colorDef: { name: string; color: string }) => {
     const newLabel: Label = {
       id: Date.now().toString(),
@@ -84,129 +160,210 @@ export function CardLabels({ card, onUpdate }: CardLabelsProps) {
     handleAddLabel(newLabel);
   };
 
-  return (
-    <div className="space-y-2">
-      {/* Header */}
+  // Filter labels based on search query from available labels pool
+  const filteredLabels = availableLabels.filter((label) =>
+    label.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Popover content to be reused
+  const popoverContent = editingLabelId ? (
+    // Edit mode
+    <div className="space-y-3 p-3 w-80">
       <div className="flex items-center gap-2">
-        <Tag className="w-5 h-5" />
-        <h3 className="font-semibold">Labels</h3>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          onClick={handleCancelEdit}
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <h4 className="font-semibold flex-1 text-center">Edit Label</h4>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          onClick={() => setIsOpen(false)}
+        >
+          <X className="h-4 w-4" />
+        </Button>
       </div>
 
-      {/* Labels display */}
-      <div className="pl-7 flex flex-wrap gap-1">
-        {labels.map((label) => (
-          <Badge
-            key={label.id}
-            className="group relative pr-6 cursor-pointer hover:opacity-80"
-            style={{
-              backgroundColor: label.color,
-              color: "#fff",
-            }}
-            onClick={() => handleRemoveLabel(label.id, {} as React.MouseEvent)}
-          >
-            {label.name}
-            <X className="w-3 h-3 absolute right-1 opacity-0 group-hover:opacity-100 transition-opacity" />
-          </Badge>
-        ))}
+      <div className="space-y-2">
+        <UILabel className="text-xs">Label Name</UILabel>
+        <Input
+          value={editLabelName}
+          onChange={(e) => setEditLabelName(e.target.value)}
+          placeholder="Label name"
+          className="h-8"
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handleSaveEdit();
+            } else if (e.key === "Escape") {
+              handleCancelEdit();
+            }
+          }}
+        />
+      </div>
 
-        {/* Add button */}
-        <Popover open={isOpen} onOpenChange={setIsOpen}>
-          <PopoverTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-6 px-2">
-              <Plus className="w-4 h-4" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-72" align="start">
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-semibold mb-2">Labels</h4>
-                <p className="text-xs text-muted-foreground">
-                  Select a label to add or remove
-                </p>
-              </div>
+      <div className="space-y-2">
+        <UILabel className="text-xs">Color</UILabel>
+        <div className="flex flex-wrap gap-1">
+          {LABEL_COLORS.map((colorDef) => (
+            <button
+              key={colorDef.color}
+              onClick={() => setEditLabelColor(colorDef.color)}
+              className={cn(
+                "w-12 h-8 rounded border-2 transition-all",
+                editLabelColor === colorDef.color
+                  ? "border-foreground scale-110"
+                  : "border-transparent"
+              )}
+              style={{ backgroundColor: colorDef.color }}
+              title={colorDef.name}
+            />
+          ))}
+        </div>
+      </div>
 
-              {/* Quick labels */}
-              <div className="space-y-1">
-                {LABEL_COLORS.map((colorDef) => {
-                  const existingLabel = labels.find(
-                    (l) => l.color === colorDef.color
-                  );
-                  const isSelected = existingLabel !== undefined;
+      <Button onClick={handleSaveEdit} size="sm" className="w-full">
+        Save
+      </Button>
+    </div>
+  ) : (
+    // Normal mode
+    <div className="space-y-3 p-3 w-80">
+      <div className="flex items-center justify-between">
+        <h4 className="font-semibold">Labels</h4>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          onClick={() => setIsOpen(false)}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
 
-                  return (
-                    <button
-                      key={colorDef.color}
-                      onClick={() => {
-                        if (existingLabel) {
-                          handleRemoveLabel(
-                            existingLabel.id,
-                            {} as React.MouseEvent
-                          );
-                        } else {
-                          quickAddLabel(colorDef);
-                        }
-                      }}
-                      className={cn(
-                        "w-full flex items-center gap-2 rounded px-3 py-2 text-sm font-medium text-white hover:opacity-80 transition-opacity"
-                      )}
-                      style={{ backgroundColor: colorDef.color }}
-                    >
-                      <span className="flex-1 text-left">{colorDef.name}</span>
-                      {isSelected && <Check className="w-4 h-4" />}
-                    </button>
-                  );
-                })}
-              </div>
+      {/* Search */}
+      <Input
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        placeholder="Search labels..."
+        className="h-8"
+      />
 
-              {/* Create custom label */}
-              <div className="space-y-2 pt-2 border-t">
-                <UILabel className="text-xs">Create custom label</UILabel>
-                <div className="flex gap-2">
-                  <div className="flex-1">
-                    <Input
-                      value={newLabelName}
-                      onChange={(e) => setNewLabelName(e.target.value)}
-                      placeholder="Label name"
-                      className="h-8"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          handleCreateLabel();
-                        }
-                      }}
-                    />
-                  </div>
-                </div>
+      {/* Labels list */}
+      <div className="space-y-2 max-h-60 overflow-y-auto">
+        <UILabel className="text-xs">Labels</UILabel>
+        {filteredLabels.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-4">
+            No labels found
+          </p>
+        ) : (
+          filteredLabels.map((label) => {
+            const isSelected = labels.some((l) => l.id === label.id);
 
-                <div className="flex flex-wrap gap-1">
-                  {LABEL_COLORS.map((colorDef) => (
-                    <button
-                      key={colorDef.color}
-                      onClick={() => setSelectedColor(colorDef)}
-                      className={cn(
-                        "w-8 h-6 rounded border-2 transition-all",
-                        selectedColor.color === colorDef.color
-                          ? "border-foreground scale-110"
-                          : "border-transparent"
-                      )}
-                      style={{ backgroundColor: colorDef.color }}
-                      title={colorDef.name}
-                    />
-                  ))}
-                </div>
-
-                <Button
-                  onClick={handleCreateLabel}
-                  size="sm"
-                  className="w-full"
-                  disabled={!newLabelName.trim()}
+            return (
+              <div
+                key={label.id}
+                className="flex items-center gap-2 rounded hover:bg-muted p-1"
+              >
+                <Checkbox
+                  checked={isSelected}
+                  onCheckedChange={() => handleToggleLabel(label)}
+                  className="flex-shrink-0"
+                />
+                <div
+                  className="flex-1 h-8 rounded px-3 flex items-center text-sm font-medium text-white cursor-pointer min-w-0"
+                  style={{ backgroundColor: label.color }}
+                  onClick={() => handleToggleLabel(label)}
                 >
-                  Create Label
+                  <span className="truncate">{label.name || ""}</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 flex-shrink-0"
+                  onClick={() => handleStartEdit(label)}
+                >
+                  <Pencil className="h-4 w-4" />
                 </Button>
               </div>
-            </div>
-          </PopoverContent>
-        </Popover>
+            );
+          })
+        )}
+      </div>
+
+      {/* Create new label */}
+      <div className="pt-2 border-t">
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full"
+          onClick={() => {
+            // Create label via API
+            createLabel(
+              {
+                boardId,
+                name: "",
+                color: LABEL_COLORS[0].color,
+              },
+              {
+                onSuccess: (newLabel) => {
+                  // Enter edit mode for the new label
+                  setEditingLabelId(newLabel.id);
+                  setEditLabelName(newLabel.name);
+                  setEditLabelColor(newLabel.color);
+                },
+              }
+            );
+          }}
+        >
+          Create New Label
+        </Button>
       </div>
     </div>
+  );
+
+  return (
+    <>
+      {/* Only show header and display if no custom trigger */}
+      {!triggerButton && (
+        <div className="space-y-2">
+          {/* Header */}
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-sm">Labels</h3>
+          </div>
+
+          {/* Labels display */}
+          <div className="flex flex-wrap gap-2">
+            {labels.map((label) => (
+              <Badge
+                key={label.id}
+                className="h-8 px-3 text-sm font-medium text-white"
+                style={{
+                  backgroundColor: label.color,
+                }}
+              >
+                {label.name}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Custom trigger version */}
+      {triggerButton && (
+        <Popover open={isOpen} onOpenChange={setIsOpen}>
+          <PopoverTrigger asChild>
+            {triggerButton}
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            {popoverContent}
+          </PopoverContent>
+        </Popover>
+      )}
+    </>
   );
 }
