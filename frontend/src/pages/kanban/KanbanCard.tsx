@@ -101,8 +101,38 @@ export function KanbanCard({
     >
       <ContextMenu>
         <ContextMenuTrigger>
-          <KanbanBoardCard data={normalizedCard} onClick={openCardDialog}>
-            <KanbanBoardCardTitle>{normalizedCard.title}</KanbanBoardCardTitle>
+          <KanbanBoardCard 
+            data={normalizedCard} 
+            onClick={openCardDialog}
+            className={(normalizedCard.coverUrl || normalizedCard.coverColor) ? "!p-0 overflow-hidden" : ""}
+          >
+            {normalizedCard.coverUrl ? (
+              <div className="relative w-full">
+                <img 
+                  src={normalizedCard.coverUrl} 
+                  alt="" 
+                  className="w-full h-auto object-contain"
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 pt-8">
+                  <KanbanBoardCardTitle className="text-white drop-shadow-md line-clamp-2">
+                    {normalizedCard.title}
+                  </KanbanBoardCardTitle>
+                </div>
+              </div>
+            ) : normalizedCard.coverColor ? (
+              <div 
+                className="relative w-full min-h-[100px] flex items-end"
+                style={{ backgroundColor: normalizedCard.coverColor }}
+              >
+                <div className="w-full bg-gradient-to-t from-black/70 to-transparent p-3 pt-8">
+                  <KanbanBoardCardTitle className="text-white drop-shadow-sm line-clamp-2">
+                    {normalizedCard.title}
+                  </KanbanBoardCardTitle>
+                </div>
+              </div>
+            ) : (
+              <KanbanBoardCardTitle className="line-clamp-2">{normalizedCard.title}</KanbanBoardCardTitle>
+            )}
           </KanbanBoardCard>
         </ContextMenuTrigger>
         <ContextMenuContent>

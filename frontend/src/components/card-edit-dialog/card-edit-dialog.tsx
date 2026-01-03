@@ -112,7 +112,7 @@ function InnerDialog({
 
   const { mutate: updateCard } = useUpdateCard();
   const { deleteImage } = useDeleteImage();
-  const { getBackgroundData, selectedColor, selectedFile, croppedFile } = useBackgroundPickerContext();
+  const { getBackgroundData, selectedColor, selectedFile, croppedFile, reset: resetBackground } = useBackgroundPickerContext();
 
   // Get the effective image file (cropped or original)
   const imageFile = croppedFile || selectedFile;
@@ -197,6 +197,9 @@ function InnerDialog({
         // Clear coverUrl to null when setting color
         handleUpdate({ coverColor: currentColor, coverUrl: null });
       }
+      
+      // Reset background context after successful save to prevent duplicate updates
+      resetBackground();
     } catch (error) {
       console.error("Error updating card cover:", error);
     }
@@ -294,7 +297,7 @@ function InnerDialog({
           <div className="absolute inset-0 z-50 bg-background/80 flex items-center justify-center">
             <div className="flex flex-col items-center gap-3">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">Uploading cover image...</p>
+              <p className="text-sm text-muted-foreground">Updating card...</p>
             </div>
           </div>
         )}
@@ -437,14 +440,14 @@ function InnerDialog({
           onOpenChange={async (open) => {
             // When closing the popover, save any cover changes immediately
             if (!open) {
-              setIsUploading(true);
-              try {
-                const { color: latestColor, imageFile: latestImageFile } = getBackgroundData();
-                if (latestColor || latestImageFile) {
+              const { color: latestColor, imageFile: latestImageFile } = getBackgroundData();
+              if (latestColor || latestImageFile) {
+                setIsUploading(true);
+                try {
                   await handleUpdateCover();
+                } finally {
+                  setIsUploading(false);
                 }
-              } finally {
-                setIsUploading(false);
               }
             }
             setIsCoverPickerOpen(open);
