@@ -11,9 +11,6 @@ import {
 import { ListSchema } from "@/types/lists";
 import { CardSchema } from "@/types/cards";
 import * as boardService from "@/services/boards.service";
-import db from "@/lib/db";
-import { boardsTable, listsTable, cardsTable } from "@/lib/db/schema";
-import { eq, asc } from "drizzle-orm";
 
 const TAGS = ["Boards"];
 export default function createBoardRoutes() {
@@ -34,34 +31,8 @@ export default function createBoardRoutes() {
 
     async (c) => {
       const user = ensureUserAuthenticated(c);
-      const boards = await db.query.boardsTable.findMany({
-        where: eq(boardsTable.userId, user.sub),
-        with: {
-          lists: {
-            orderBy: asc(listsTable.order),
-            with: {
-              cards: {
-                orderBy: asc(cardsTable.order),
-              },
-            },
-          },
-        },
-      });
-
-      // Parse JSON fields in cards
-      const parsedBoards = boards.map((board) => ({
-        ...board,
-        lists: board.lists.map((list) => ({
-          ...list,
-          cards: list.cards.map((card) => ({
-            ...card,
-            labels: card.labels ? JSON.parse(card.labels) : null,
-            members: card.members ? JSON.parse(card.members) : null,
-          })),
-        })),
-      }));
-
-      return c.json(parsedBoards);
+      const boards = await boardService.getBoardsForUser(user.sub);
+      return c.json(boards);
     },
   );
 
@@ -125,21 +96,7 @@ export default function createBoardRoutes() {
       const { id } = c.req.valid("param");
       try {
         const board = await boardService.getBoardById(user.sub, id);
-
-        // Parse JSON fields in cards
-        const parsedBoard = {
-          ...board,
-          lists: board.lists.map((list) => ({
-            ...list,
-            cards: list.cards.map((card) => ({
-              ...card,
-              labels: card.labels ? JSON.parse(card.labels) : null,
-              members: card.members ? JSON.parse(card.members) : null,
-            })),
-          })),
-        };
-
-        return c.json(parsedBoard);
+        return c.json(board);
       } catch (err: any) {
         if (err instanceof boardService.ServiceError) {
           return c.json({ error: err.message }, err.status);

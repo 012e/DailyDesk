@@ -1,10 +1,10 @@
 import { vi, beforeAll, beforeEach, afterAll } from "vitest";
 import { drizzle } from "drizzle-orm/libsql/node";
-import { migrate } from "drizzle-orm/libsql/migrator";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import crypto from "crypto";
+import { execSync } from "child_process";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -57,8 +57,8 @@ let schema: any;
 beforeAll(async () => {
   // Import schema dynamically
   schema = await import("@/lib/db/schema");
-  
-  // Initialize database connection and run migrations
+
+  // Initialize database connection
   testDbInstance = drizzle({
     connection: {
       url: `file:${currentTestDb}`,
@@ -66,17 +66,33 @@ beforeAll(async () => {
     schema,
   });
 
-  // Run migrations on the test database
-  await migrate(testDbInstance, {
-    migrationsFolder: path.resolve(__dirname, "../drizzle"),
-  });
+  // Run drizzle-kit push to create tables from schema
+  // This is more reliable than migrate() for test databases
+  const drizzleConfigPath = path.resolve(__dirname, "../drizzle.config.ts");
+  try {
+    execSync(`npx drizzle-kit push --config=${drizzleConfigPath}`, {
+      env: {
+        ...process.env,
+        DATABASE_URL: `file:${currentTestDb}`,
+      },
+      stdio: 'ignore',
+    });
+  } catch (error) {
+    console.error("Failed to push database schema:", error);
+    throw error;
+  }
 });
 
 beforeEach(async () => {
   // Clear all tables before each test to ensure isolation
-  await testDbInstance.delete(schema.cardsTable);
+  // Delete in order to respect foreign key constraints
+  await testDbInstance.delete(schema.cardLabelsTable);
+  await testDbInstance.delete(schema.cardMembersTable);
   await testDbInstance.delete(schema.checklistItemsTable);
+  await testDbInstance.delete(schema.cardsTable);
   await testDbInstance.delete(schema.listsTable);
+  await testDbInstance.delete(schema.labelsTable);
+  await testDbInstance.delete(schema.boardMembersTable);
   await testDbInstance.delete(schema.boardsTable);
 });
 

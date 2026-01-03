@@ -17,7 +17,8 @@
       "Bash(git add:*)",
       "Bash(pnpm add:*)",
       "Bash(sqlite3:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(pnpm test:*)"
     ]
   }
 }

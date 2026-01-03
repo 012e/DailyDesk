@@ -98,11 +98,11 @@ export async function getBoardsForUser(userSub: string) {
       ...list,
       cards: list.cards.map(card => ({
         ...card,
-        labels: JSON.stringify(labelsByCard.get(card.id) || []),
-        members: JSON.stringify(membersByCard.get(card.id) || []),
+        labels: labelsByCard.get(card.id) || [],
+        members: membersByCard.get(card.id) || [],
       })),
     })),
-  }));
+  })) as any;
 }
 
 export async function createBoard(userSub: string, req: any) {
@@ -206,11 +206,11 @@ export async function getBoardById(userSub: string, id: string) {
       ...list,
       cards: list.cards.map(card => ({
         ...card,
-        labels: JSON.stringify(labelsByCard.get(card.id) || []),
-        members: JSON.stringify(membersByCard.get(card.id) || []),
+        labels: labelsByCard.get(card.id) || [],
+        members: membersByCard.get(card.id) || [],
       })),
     })),
-  };
+  } as any;
 }
 
 export async function updateBoard(userSub: string, id: string, req: any) {
