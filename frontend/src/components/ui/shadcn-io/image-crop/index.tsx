@@ -134,6 +134,8 @@ export const ImageCrop = ({
   const [crop, setCrop] = useState<PercentCrop>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop | null>(null);
   const [initialCrop, setInitialCrop] = useState<PercentCrop>();
+  const [imageDimensions, setImageDimensions] = useState<{ width: number; height: number } | null>(null);
+  
   useEffect(() => {
     const reader = new FileReader();
     reader.addEventListener("load", () =>
@@ -141,15 +143,25 @@ export const ImageCrop = ({
     );
     reader.readAsDataURL(file);
   }, [file]);
+  
   const onImageLoad = useCallback(
     (e: SyntheticEvent<HTMLImageElement>) => {
       const { width, height } = e.currentTarget;
+      setImageDimensions({ width, height });
       const newCrop = centerAspectCrop(width, height, reactCropProps.aspect);
       setCrop(newCrop);
       setInitialCrop(newCrop);
     },
     [reactCropProps.aspect]
   );
+  
+  // Recalculate crop when aspect ratio changes
+  useEffect(() => {
+    if (imageDimensions) {
+      const newCrop = centerAspectCrop(imageDimensions.width, imageDimensions.height, reactCropProps.aspect);
+      setCrop(newCrop);
+    }
+  }, [reactCropProps.aspect, imageDimensions]);
   const handleChange = (pixelCrop: PixelCrop, percentCrop: PercentCrop) => {
     setCrop(percentCrop);
     onChange?.(pixelCrop, percentCrop);
