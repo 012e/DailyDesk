@@ -156,14 +156,14 @@ export function Kanban({ boardId }: KanbanProps) {
             <SheetTrigger asChild>
               <Button variant="outline" size="sm">
                 <Users className="h-4 w-4 mr-2" />
-                Quản lý thành viên
+                Manage Members
               </Button>
             </SheetTrigger>
             <SheetContent>
               <SheetHeader>
-                <SheetTitle>Quản lý thành viên Board</SheetTitle>
+                <SheetTitle>Manage Board Members</SheetTitle>
                 <SheetDescription>
-                  Thêm hoặc xóa thành viên khỏi board {board.name}
+                  Add or remove members from board {board.name}
                 </SheetDescription>
               </SheetHeader>
               <div className="mt-6">

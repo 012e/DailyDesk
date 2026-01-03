@@ -315,7 +315,7 @@ function InnerDialog({
                 triggerButton={
                   <Button variant="outline" size="sm" className="h-8">
                     <Tag className="h-4 w-4 mr-1" />
-                    Nhãn
+                    Labels
                   </Button>
                 }
               />
@@ -328,7 +328,7 @@ function InnerDialog({
                 triggerButton={
                   <Button variant="outline" size="sm" className="h-8">
                     <UserPlus className="h-4 w-4 mr-1" />
-                    Thành viên
+                    Members
                   </Button>
                 }
               />
@@ -340,17 +340,17 @@ function InnerDialog({
                 triggerButton={
                   <Button variant="outline" size="sm" className="h-8">
                     <Clock className="h-4 w-4 mr-1" />
-                    Ngày hết hạn
+                    Due Date
                   </Button>
                 }
               />
               <Button variant="outline" size="sm" className="h-8">
                 <CheckSquare className="h-4 w-4 mr-1" />
-                Việc cần làm
+                Checklist
               </Button>
               <Button variant="outline" size="sm" className="h-8">
                 <Paperclip className="h-4 w-4 mr-1" />
-                Đính kèm
+                Attachment
               </Button>
             </div>
 
@@ -377,14 +377,14 @@ function InnerDialog({
               {/* Header */}
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold">
-                  Nhận xét và hoạt động
+                  Comments and Activity
                 </span>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowDetails(!showDetails)}
                 >
-                  Hiện chi tiết
+                  Show Details
                 </Button>
               </div>
 

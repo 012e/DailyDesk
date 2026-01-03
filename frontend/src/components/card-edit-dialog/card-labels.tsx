@@ -23,7 +23,7 @@ interface CardLabelsProps {
   triggerButton?: React.ReactNode;
 }
 
-// Predefined label colors (giống Trello)
+// Predefined label colors (similar to Trello)
 const LABEL_COLORS = [
   { name: "Green", color: "#61bd4f" },
   { name: "Yellow", color: "#f2d600" },
@@ -63,12 +63,12 @@ export function CardLabels({ card, onUpdate, boardId, isOpen: controlledIsOpen, 
     const existingLabel = labels.find((l) => l.id === label.id);
 
     if (existingLabel) {
-      // Remove label nếu đã tồn tại (toggle)
+      // Remove label if it exists (toggle)
       onUpdate({
         labels: labels.filter((l) => l.id !== label.id),
       });
     } else {
-      // Add label mới
+      // Add new label
       onUpdate({
         labels: [...labels, label],
       });
@@ -150,7 +150,7 @@ export function CardLabels({ card, onUpdate, boardId, isOpen: controlledIsOpen, 
     setEditingLabelId(null);
   };
 
-  // Quick add từ predefined colors
+  // Quick add from predefined colors
   const quickAddLabel = (colorDef: { name: string; color: string }) => {
     const newLabel: Label = {
       id: Date.now().toString(),
@@ -178,7 +178,7 @@ export function CardLabels({ card, onUpdate, boardId, isOpen: controlledIsOpen, 
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        <h4 className="font-semibold flex-1 text-center">Sửa nhãn</h4>
+        <h4 className="font-semibold flex-1 text-center">Edit Label</h4>
         <Button
           variant="ghost"
           size="icon"
@@ -190,11 +190,11 @@ export function CardLabels({ card, onUpdate, boardId, isOpen: controlledIsOpen, 
       </div>
 
       <div className="space-y-2">
-        <UILabel className="text-xs">Tên nhãn</UILabel>
+        <UILabel className="text-xs">Label Name</UILabel>
         <Input
           value={editLabelName}
           onChange={(e) => setEditLabelName(e.target.value)}
-          placeholder="Tên nhãn"
+          placeholder="Label name"
           className="h-8"
           onKeyDown={(e) => {
             if (e.key === "Enter") {
@@ -207,7 +207,7 @@ export function CardLabels({ card, onUpdate, boardId, isOpen: controlledIsOpen, 
       </div>
 
       <div className="space-y-2">
-        <UILabel className="text-xs">Màu</UILabel>
+        <UILabel className="text-xs">Color</UILabel>
         <div className="flex flex-wrap gap-1">
           {LABEL_COLORS.map((colorDef) => (
             <button
@@ -227,14 +227,14 @@ export function CardLabels({ card, onUpdate, boardId, isOpen: controlledIsOpen, 
       </div>
 
       <Button onClick={handleSaveEdit} size="sm" className="w-full">
-        Lưu
+        Save
       </Button>
     </div>
   ) : (
     // Normal mode
     <div className="space-y-3 p-3 w-80">
       <div className="flex items-center justify-between">
-        <h4 className="font-semibold">Nhãn</h4>
+        <h4 className="font-semibold">Labels</h4>
         <Button
           variant="ghost"
           size="icon"
@@ -249,16 +249,16 @@ export function CardLabels({ card, onUpdate, boardId, isOpen: controlledIsOpen, 
       <Input
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        placeholder="Tìm nhãn..."
+        placeholder="Search labels..."
         className="h-8"
       />
 
       {/* Labels list */}
       <div className="space-y-2 max-h-60 overflow-y-auto">
-        <UILabel className="text-xs">Nhãn</UILabel>
+        <UILabel className="text-xs">Labels</UILabel>
         {filteredLabels.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-4">
-            Không tìm thấy nhãn
+            No labels found
           </p>
         ) : (
           filteredLabels.map((label) => {
@@ -320,7 +320,7 @@ export function CardLabels({ card, onUpdate, boardId, isOpen: controlledIsOpen, 
             );
           }}
         >
-          Tạo nhãn mới
+          Create New Label
         </Button>
       </div>
     </div>
@@ -333,7 +333,7 @@ export function CardLabels({ card, onUpdate, boardId, isOpen: controlledIsOpen, 
         <div className="space-y-2">
           {/* Header */}
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-sm">Nhãn</h3>
+            <h3 className="font-semibold text-sm">Labels</h3>
           </div>
 
           {/* Labels display */}

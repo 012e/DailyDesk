@@ -77,9 +77,9 @@ export function CardDates({ card, onUpdate, isOpen: controlledIsOpen, onOpenChan
   const popoverContent = (
     <div className="space-y-3 p-3">
       <div>
-        <h4 className="font-semibold mb-1">Ngày hết hạn</h4>
+        <h4 className="font-semibold mb-1">Due Date</h4>
         <p className="text-xs text-muted-foreground">
-          Đặt ngày hết hạn để theo dõi khi thẻ này cần hoàn thành
+          Set a due date to track when this card needs to be completed
         </p>
       </div>
 
@@ -92,7 +92,7 @@ export function CardDates({ card, onUpdate, isOpen: controlledIsOpen, onOpenChan
 
       <div className="flex gap-2 pt-2 border-t">
         <Button onClick={handleSave} size="sm" className="flex-1">
-          Lưu
+          Save
         </Button>
         {card.dueDate && (
           <Button
@@ -101,7 +101,7 @@ export function CardDates({ card, onUpdate, isOpen: controlledIsOpen, onOpenChan
             size="sm"
             className="flex-1"
           >
-            Xóa
+            Remove
           </Button>
         )}
       </div>
@@ -116,7 +116,7 @@ export function CardDates({ card, onUpdate, isOpen: controlledIsOpen, onOpenChan
           {/* Header */}
           <div className="flex items-center gap-2">
             <Clock className="w-5 h-5" />
-            <h3 className="font-semibold">Ngày hết hạn</h3>
+            <h3 className="font-semibold">Due Date</h3>
           </div>
 
           {/* Date display */}
@@ -126,7 +126,7 @@ export function CardDates({ card, onUpdate, isOpen: controlledIsOpen, onOpenChan
                 variant={badgeStyle.variant}
                 className={cn("group relative pr-6", badgeStyle.className)}
               >
-                {format(new Date(card.dueDate), "HH:mm dd 'tháng' MM")}
+                {format(new Date(card.dueDate), "MMM dd 'at' HH:mm")}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -142,7 +142,7 @@ export function CardDates({ card, onUpdate, isOpen: controlledIsOpen, onOpenChan
             <Popover open={isOpen} onOpenChange={setIsOpen}>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-6 px-2">
-                  {card.dueDate ? "Sửa" : "Thêm"}
+                  {card.dueDate ? "Edit" : "Add"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">

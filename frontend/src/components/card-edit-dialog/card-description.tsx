@@ -14,11 +14,11 @@ export function CardDescription({ card, onUpdate }: CardDescriptionProps) {
   const [description, setDescription] = useState(card.description || "");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Focus textarea khi bắt đầu edit
+  // Focus textarea when starting edit
   useEffect(() => {
     if (isEditing && textareaRef.current) {
       textareaRef.current.focus();
-      // Đặt cursor ở cuối text
+      // Set cursor at the end of text
       textareaRef.current.setSelectionRange(
         textareaRef.current.value.length,
         textareaRef.current.value.length
@@ -29,7 +29,7 @@ export function CardDescription({ card, onUpdate }: CardDescriptionProps) {
   const handleSave = () => {
     const trimmedDescription = description.trim();
 
-    // Cho phép save empty description
+    // Allow saving empty description
     if (trimmedDescription !== (card.description || "")) {
       onUpdate({ description: trimmedDescription || undefined });
     }
@@ -43,13 +43,13 @@ export function CardDescription({ card, onUpdate }: CardDescriptionProps) {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Ctrl/Cmd + Enter để save
+    // Ctrl/Cmd + Enter to save
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
       e.preventDefault();
       handleSave();
     }
 
-    // Escape để cancel
+    // Escape to cancel
     if (e.key === "Escape") {
       e.preventDefault();
       handleCancel();
@@ -67,12 +67,12 @@ export function CardDescription({ card, onUpdate }: CardDescriptionProps) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <AlignLeft className="w-5 h-5" />
-          <h3 className="font-semibold">Mô tả</h3>
+          <h3 className="font-semibold">Description</h3>
         </div>
 
         {!isEditing && card.description && (
           <Button variant="ghost" size="sm" onClick={startEditing}>
-            Sửa
+            Edit
           </Button>
         )}
       </div>
@@ -86,19 +86,19 @@ export function CardDescription({ card, onUpdate }: CardDescriptionProps) {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Thêm mô tả chi tiết hơn..."
+              placeholder="Add a more detailed description..."
               className="min-h-24 resize-y"
             />
 
             <div className="flex items-center gap-2">
               <Button onClick={handleSave} size="sm">
-                Lưu
+                Save
               </Button>
               <Button variant="ghost" size="sm" onClick={handleCancel}>
-                Hủy
+                Cancel
               </Button>
               <span className="text-xs text-muted-foreground ml-2">
-                Ctrl+Enter để lưu
+                Ctrl+Enter to save
               </span>
             </div>
           </div>
@@ -117,7 +117,7 @@ export function CardDescription({ card, onUpdate }: CardDescriptionProps) {
                 className="w-full justify-start h-auto py-2 text-sm text-muted-foreground hover:text-foreground"
                 onClick={startEditing}
               >
-                Thêm mô tả chi tiết hơn...
+                Add a more detailed description...
               </Button>
             )}
           </>

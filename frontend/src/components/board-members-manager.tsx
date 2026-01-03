@@ -45,7 +45,7 @@ export function BoardMembersManager({ boardId, isOwner }: BoardMembersManagerPro
 
   const handleAddMember = () => {
     if (!email.trim() || !name.trim()) {
-      alert("Vui lòng nhập email và tên");
+      alert("Please enter email and name");
       return;
     }
 
@@ -70,14 +70,14 @@ export function BoardMembersManager({ boardId, isOwner }: BoardMembersManagerPro
           setRole("member");
         },
         onError: (error) => {
-          alert(`Lỗi khi thêm member: ${error.message}`);
+          alert(`Error adding member: ${error.message}`);
         },
       }
     );
   };
 
   const handleDeleteMember = (memberId: string, memberName: string) => {
-    if (confirm(`Bạn có chắc muốn xóa ${memberName} khỏi board?`)) {
+    if (confirm(`Are you sure you want to remove ${memberName} from the board?`)) {
       deleteMember({ boardId, memberId });
     }
   };
@@ -91,7 +91,7 @@ export function BoardMembersManager({ boardId, isOwner }: BoardMembersManagerPro
   };
 
   if (isLoading) {
-    return <div className="p-4">Đang tải...</div>;
+    return <div className="p-4">Loading...</div>;
   }
 
   return (
@@ -99,21 +99,21 @@ export function BoardMembersManager({ boardId, isOwner }: BoardMembersManagerPro
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Users className="h-5 w-5" />
-          <h3 className="font-semibold">Thành viên Board ({members.length})</h3>
+          <h3 className="font-semibold">Board Members ({members.length})</h3>
         </div>
         {isOwner && (
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button size="sm">
                 <Plus className="h-4 w-4 mr-1" />
-                Thêm thành viên
+                Add Member
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Thêm thành viên mới</DialogTitle>
+                <DialogTitle>Add New Member</DialogTitle>
                 <DialogDescription>
-                  Mời người khác tham gia board này
+                  Invite others to join this board
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
@@ -133,11 +133,11 @@ export function BoardMembersManager({ boardId, isOwner }: BoardMembersManagerPro
                 <div className="space-y-2">
                   <Label htmlFor="name">
                     <UserIcon className="h-4 w-4 inline mr-1" />
-                    Tên *
+                    Name *
                   </Label>
                   <Input
                     id="name"
-                    placeholder="Nguyễn Văn A"
+                    placeholder="John Doe"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                   />
@@ -152,15 +152,15 @@ export function BoardMembersManager({ boardId, isOwner }: BoardMembersManagerPro
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="role">Vai trò</Label>
+                  <Label htmlFor="role">Role</Label>
                   <Select value={role} onValueChange={(value) => setRole(value as any)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="viewer">Viewer (Chỉ xem)</SelectItem>
-                      <SelectItem value="member">Member (Chỉnh sửa)</SelectItem>
-                      <SelectItem value="admin">Admin (Quản trị)</SelectItem>
+                      <SelectItem value="viewer">Viewer (View only)</SelectItem>
+                      <SelectItem value="member">Member (Can edit)</SelectItem>
+                      <SelectItem value="admin">Admin (Full access)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -170,10 +170,10 @@ export function BoardMembersManager({ boardId, isOwner }: BoardMembersManagerPro
                   variant="outline"
                   onClick={() => setIsAddDialogOpen(false)}
                 >
-                  Hủy
+                  Cancel
                 </Button>
                 <Button onClick={handleAddMember} disabled={isCreating}>
-                  {isCreating ? "Đang thêm..." : "Thêm thành viên"}
+                  {isCreating ? "Adding..." : "Add Member"}
                 </Button>
               </div>
             </DialogContent>
@@ -186,10 +186,10 @@ export function BoardMembersManager({ boardId, isOwner }: BoardMembersManagerPro
         {members.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
-            <p>Chưa có thành viên nào</p>
+            <p>No members yet</p>
             {isOwner && (
               <p className="text-sm mt-1">
-                Nhấn "Thêm thành viên" để mời người khác
+                Click "Add Member" to invite others
               </p>
             )}
           </div>

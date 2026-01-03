@@ -156,7 +156,7 @@ export function CardMembers({ card, onUpdate, boardId, isOpen: controlledIsOpen,
         <div className="space-y-2">
           {/* Header */}
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-sm">Thành viên</h3>
+            <h3 className="font-semibold text-sm">Members</h3>
           </div>
 
           {/* Members display */}
