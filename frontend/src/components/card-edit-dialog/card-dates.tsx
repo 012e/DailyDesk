@@ -83,12 +83,14 @@ export function CardDates({ card, onUpdate, isOpen: controlledIsOpen, onOpenChan
         </p>
       </div>
 
-      <Calendar
-        mode="single"
-        selected={selectedDate}
-        onSelect={handleDateSelect}
-        initialFocus
-      />
+      <div className="flex justify-center">
+        <Calendar
+          mode="single"
+          selected={selectedDate}
+          onSelect={handleDateSelect}
+          initialFocus
+        />
+      </div>
 
       <div className="flex gap-2 pt-2 border-t">
         <Button onClick={handleSave} size="sm" className="flex-1">
