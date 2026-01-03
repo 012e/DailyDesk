@@ -1,6 +1,5 @@
 import {
   KanbanBoardCard,
-  KanbanBoardCardDescription,
   KanbanBoardCardTitle,
   KanbanBoardColumnListItem,
   type KanbanBoardCircleColor,
@@ -104,11 +103,6 @@ export function KanbanCard({
         <ContextMenuTrigger>
           <KanbanBoardCard data={normalizedCard} onClick={openCardDialog}>
             <KanbanBoardCardTitle>{normalizedCard.title}</KanbanBoardCardTitle>
-            {normalizedCard.description && (
-              <KanbanBoardCardDescription>
-                {normalizedCard.description}
-              </KanbanBoardCardDescription>
-            )}
           </KanbanBoardCard>
         </ContextMenuTrigger>
         <ContextMenuContent>
