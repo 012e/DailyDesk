@@ -46,7 +46,15 @@ export default function createCardRoutes() {
 
       try {
         const cards = await cardService.getCardsForBoard(user.sub, boardId);
-        return c.json(cards);
+
+        // Parse JSON fields
+        const parsedCards = cards.map((card) => ({
+          ...card,
+          labels: card.labels ? JSON.parse(card.labels) : null,
+          members: card.members ? JSON.parse(card.members) : null,
+        }));
+
+        return c.json(parsedCards);
       } catch (err: any) {
         if (err instanceof cardService.ServiceError) {
           return c.json({ error: err.message }, err.status);
@@ -93,7 +101,15 @@ export default function createCardRoutes() {
 
       try {
         const card = await cardService.createCard(user.sub, boardId, req);
-        return c.json(card);
+
+        // Parse JSON fields for response
+        const parsedCard = {
+          ...card,
+          labels: card.labels ? JSON.parse(card.labels) : null,
+          members: card.members ? JSON.parse(card.members) : null,
+        };
+
+        return c.json(parsedCard);
       } catch (err: any) {
         if (err instanceof cardService.ServiceError) {
           return c.json({ error: err.message }, err.status);
@@ -135,7 +151,15 @@ export default function createCardRoutes() {
 
       try {
         const card = await cardService.getCardById(user.sub, boardId, id);
-        return c.json(card);
+
+        // Parse JSON fields for response
+        const parsedCard = {
+          ...card,
+          labels: card.labels ? JSON.parse(card.labels) : null,
+          members: card.members ? JSON.parse(card.members) : null,
+        };
+
+        return c.json(parsedCard);
       } catch (err: any) {
         if (err instanceof cardService.ServiceError) {
           return c.json({ error: err.message }, err.status);
@@ -183,8 +207,17 @@ export default function createCardRoutes() {
 
       try {
         const updated = await cardService.updateCard(user.sub, boardId, id, req);
-        return c.json(updated);
+
+        // Parse JSON fields for response
+        const parsedCard = {
+          ...updated,
+          labels: updated.labels ? JSON.parse(updated.labels) : null,
+          members: updated.members ? JSON.parse(updated.members) : null,
+        };
+
+        return c.json(parsedCard);
       } catch (err: any) {
+        console.error("Error in updateCard route:", err);
         if (err instanceof cardService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }

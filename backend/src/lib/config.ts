@@ -65,7 +65,7 @@ export default function getConfig(): Config {
     isProduction: process.env.NODE_ENV === "production",
     authIssuerUrl: "https://" + process.env.AUTH0_DOMAIN! + "/",
     authAudience: process.env.AUTH0_API_AUDIENCE!,
-    openai: process.env.OPENAI_API_KEY!,
+    openai: process.env.OPENAI_API_KEY || undefined,
   };
 
   return configSchema.parse(rawConfig);

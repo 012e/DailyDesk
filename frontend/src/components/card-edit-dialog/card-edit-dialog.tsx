@@ -1,7 +1,8 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import type { Card } from "@/types/card";
 import { CardCoverModeValue } from "@/types/card";
-import { Wallpaper, X, Loader2 } from "lucide-react";
+import { X, Tag, CheckSquare, UserPlus, Paperclip, Clock, Wallpaper, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CardHeader } from "./card-header";
 import { CardDescription } from "./card-description";
@@ -9,7 +10,8 @@ import { CardMembers } from "./card-members";
 import { CardComments } from "./card-comments";
 import { CardLabels } from "./card-labels";
 import { CardDates } from "./card-dates";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { useUpdateCard } from "@/hooks/use-card";
 import { BackgroundPickerProvider } from "@/components/background-picker-provider";
 import { CardCoverPicker } from "@/components/card-edit-dialog/card-cover-picker";
 import { useUploadImage, useDeleteImage } from "@/hooks/use-image";
@@ -104,17 +106,27 @@ function InnerDialog({
 }: InnerDialogProps) {
   const [isCoverPickerOpen, setIsCoverPickerOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isLabelPopoverOpen, setIsLabelPopoverOpen] = useState(false);
+  const [isMemberPopoverOpen, setIsMemberPopoverOpen] = useState(false);
+  const [isDatePopoverOpen, setIsDatePopoverOpen] = useState(false);
 
+  const { mutate: updateCard } = useUpdateCard();
   const { deleteImage } = useDeleteImage();
-  const { getBackgroundData } = useBackgroundPickerContext();
-  const { color, imageFile } = getBackgroundData();
+  const { getBackgroundData, selectedColor, selectedFile, croppedFile } = useBackgroundPickerContext();
+
+  // Get the effective image file (cropped or original)
+  const imageFile = croppedFile || selectedFile;
 
   /* ---------- PREVIEW IMAGE ---------- */
   const previewImageUrl = useMemo(() => {
+    // If user selected a color, don't show image
+    if (selectedColor) return null;
+    // If user selected an image file, show it
     if (imageFile) return URL.createObjectURL(imageFile);
+    // Otherwise show the current card cover image
     if (card.coverUrl) return card.coverUrl;
     return null;
-  }, [imageFile, card.coverUrl]);
+  }, [imageFile, card.coverUrl, selectedColor]);
 
   useEffect(() => {
     return () => {
@@ -124,55 +136,76 @@ function InnerDialog({
     };
   }, [previewImageUrl]);
 
-  const previewColor =
-    !imageFile && color
-      ? color
-      : !imageFile && !card.coverUrl
-      ? card.coverUrl
-      : null;
+  const previewColor = useMemo(() => {
+    // If user selected an image, don't show color
+    if (imageFile) return null;
+    // If user selected a color, show it
+    if (selectedColor) return selectedColor;
+    // Otherwise show the current card cover color (only if no image)
+    if (!card.coverUrl && card.coverColor) return card.coverColor;
+    return null;
+  }, [imageFile, selectedColor, card.coverUrl, card.coverColor]);
 
-  const handleUpdate = (updates: Partial<Card>) => {
-    onUpdate({ ...card, ...updates });
-  };
+  const handleUpdate = useCallback(
+    (updates: Partial<Card>) => {
+      if (!card) return;
+
+      // Update local state immediately for optimistic UI
+      onUpdate({ ...card, ...updates });
+
+      // Sync with backend if boardId is available
+      if (boardId) {
+        updateCard({
+          boardId,
+          cardId: card.id,
+          ...updates,
+        });
+      }
+    },
+    [card, boardId, onUpdate, updateCard]
+  );
 
   const handleUpdateCover = async () => {
-    if (!color && !imageFile) {
+    // Get latest values from context
+    const { color: currentColor, imageFile: currentImageFile } = getBackgroundData();
+
+    if (!currentColor && !currentImageFile) {
       return;
     }
 
     try {
-      if (imageFile) {
+      if (currentImageFile) {
         // Create a temporary preview URL for optimistic update
-        const tempPreviewUrl = URL.createObjectURL(imageFile);
-        
+        const tempPreviewUrl = URL.createObjectURL(currentImageFile);
+
         // Optimistically update the card with the preview URL immediately
         onUpdate({ ...card, coverUrl: tempPreviewUrl, coverColor: "" });
-        
+
         // Upload the image in the background
         await uploadImage({
-          file: imageFile,
+          file: currentImageFile,
           type: "card",
           id: card.id,
         });
-        
+
         // Invalidate board query to get the real URL from the server
         queryClient.invalidateQueries({
           queryKey: ["board", boardId],
         });
-      } else if (color) {
-        onUpdate({ ...card, coverColor: color, coverUrl: "" });
+      } else if (currentColor) {
+        // Update local state and sync with backend
+        // Clear coverUrl to null when setting color
+        handleUpdate({ coverColor: currentColor, coverUrl: null });
       }
     } catch (error) {
       console.error("Error updating card cover:", error);
     }
   };
 
-
-
   const handleRemoveCover = async () => {
     // Optimistically update the card to remove cover immediately
     onUpdate({ ...card, coverColor: "", coverUrl: "", coverMode: CardCoverModeValue.NONE });
-    
+
     // If the card has an existing image cover, delete it from the storage in background
     if (card.coverUrl) {
       try {
@@ -221,28 +254,41 @@ function InnerDialog({
   };
 
   const handleClose = async () => {
-    // If there's a new image to upload, show loading and wait for upload
-    if (imageFile) {
+    // Get latest background data before closing
+    const { color: latestColor, imageFile: latestImageFile } = getBackgroundData();
+
+    // Check if there are any cover changes to save
+    if (latestImageFile || latestColor) {
       setIsUploading(true);
       try {
         await handleUpdateCover();
       } finally {
         setIsUploading(false);
       }
-    } else {
-      // For color changes, just update immediately
-      handleUpdateCover();
     }
-    // Close the dialog after upload completes
+    // Close the dialog after save completes
     onClose();
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent
-        className="!flex !flex-col max-w-[1200px] w-[95vw] h-[90vh] p-0 gap-0"
+        className="!flex !flex-col !p-0 !gap-0"
+        style={{
+          maxWidth: '1200px',
+          width: '90vw',
+          height: '600px',
+          minHeight: '600px'
+        }}
         showCloseButton={false}
       >
+        <VisuallyHidden>
+          <DialogTitle>Edit Card</DialogTitle>
+          <DialogDescription>
+            Edit card details, labels, members, and cover
+          </DialogDescription>
+        </VisuallyHidden>
+
         {/* Loading overlay */}
         {isUploading && (
           <div className="absolute inset-0 z-50 bg-background/80 flex items-center justify-center">
@@ -293,14 +339,65 @@ function InnerDialog({
             {/* Header với checkbox và title */}
             <CardHeader card={card} onUpdate={handleUpdate} />
 
-            {/* Labels */}
-            <CardLabels card={card} onUpdate={handleUpdate} />
+            {/* Action buttons row */}
+            <div className="flex flex-wrap gap-2">
+              <CardLabels
+                card={card}
+                onUpdate={handleUpdate}
+                boardId={boardId || ""}
+                isOpen={isLabelPopoverOpen}
+                onOpenChange={setIsLabelPopoverOpen}
+                triggerButton={
+                  <Button variant="outline" size="sm" className="h-8">
+                    <Tag className="h-4 w-4 mr-1" />
+                    Labels
+                  </Button>
+                }
+              />
+              <CardMembers
+                card={card}
+                onUpdate={handleUpdate}
+                boardId={boardId || ""}
+                isOpen={isMemberPopoverOpen}
+                onOpenChange={setIsMemberPopoverOpen}
+                triggerButton={
+                  <Button variant="outline" size="sm" className="h-8">
+                    <UserPlus className="h-4 w-4 mr-1" />
+                    Members
+                  </Button>
+                }
+              />
+              <CardDates
+                card={card}
+                onUpdate={handleUpdate}
+                isOpen={isDatePopoverOpen}
+                onOpenChange={setIsDatePopoverOpen}
+                triggerButton={
+                  <Button variant="outline" size="sm" className="h-8">
+                    <Clock className="h-4 w-4 mr-1" />
+                    Due Date
+                  </Button>
+                }
+              />
+              <Button variant="outline" size="sm" className="h-8">
+                <CheckSquare className="h-4 w-4 mr-1" />
+                Checklist
+              </Button>
+              <Button variant="outline" size="sm" className="h-8">
+                <Paperclip className="h-4 w-4 mr-1" />
+                Attachment
+              </Button>
+            </div>
 
-            {/* Members */}
-            <CardMembers card={card} onUpdate={handleUpdate} />
+            {/* Labels display - only show if has labels */}
+            {card.labels && card.labels.length > 0 && (
+              <CardLabels card={card} onUpdate={handleUpdate} boardId={boardId || ""} />
+            )}
 
-            {/* Dates */}
-            <CardDates card={card} onUpdate={handleUpdate} />
+            {/* Members display - only show if has members */}
+            {card.members && card.members.length > 0 && (
+              <CardMembers card={card} onUpdate={handleUpdate} boardId={boardId || ""} />
+            )}
 
             {/* Description */}
             <CardDescription card={card} onUpdate={handleUpdate} />
@@ -313,29 +410,46 @@ function InnerDialog({
           </div>
 
           {/* Right column - Comments and activity */}
-          <div className="w-80 flex-shrink-0 border-l bg-muted/30 p-6 overflow-y-auto">
+          <div className="w-96 flex-shrink-0 border-l bg-muted/30 p-6 overflow-y-auto">
             <div className="space-y-4">
               {/* Header */}
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold">
-                  Comments and activity
+                  Comments and Activity
                 </span>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowDetails(!showDetails)}
                 >
-                  {showDetails ? "Hide details" : "Show details"}
+                  Show Details
                 </Button>
               </div>
 
               {/* Comments section */}
-              <CardComments card={card} onUpdate={handleUpdate} />
+              {showDetails && <CardComments card={card} onUpdate={handleUpdate} />}
             </div>
           </div>
         </div>
         {/* Cover picker dialog */}
-        <Popover>
+        <Popover
+          open={isCoverPickerOpen}
+          onOpenChange={async (open) => {
+            // When closing the popover, save any cover changes immediately
+            if (!open) {
+              setIsUploading(true);
+              try {
+                const { color: latestColor, imageFile: latestImageFile } = getBackgroundData();
+                if (latestColor || latestImageFile) {
+                  await handleUpdateCover();
+                }
+              } finally {
+                setIsUploading(false);
+              }
+            }
+            setIsCoverPickerOpen(open);
+          }}
+        >
           <PopoverTrigger asChild>
             <Button
               variant="secondary"

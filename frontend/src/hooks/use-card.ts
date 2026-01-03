@@ -17,8 +17,18 @@ export function useUpdateCard() {
       boardId: string;
       cardId: string;
       name?: string;
+      description?: string | null;
       order?: number;
       listId?: string;
+      labels?: Array<{ id: string; name: string; color: string }> | null;
+      members?: Array<{
+        id: string;
+        name: string;
+        email: string;
+        avatar?: string;
+        initials: string;
+      }> | null;
+      deadline?: Date | null;
       coverColor?: string | null;
       coverUrl?: string | null;
     }) => {
@@ -31,9 +41,14 @@ export function useUpdateCard() {
         },
         body: {
           name: params.name,
+          description: params.description,
           order: params.order,
           listId: params.listId,
+          labels: params.labels,
+          members: params.members,
+          deadline: params.deadline,
           coverColor: params.coverColor,
+          coverUrl: params.coverUrl,
         },
       });
 

@@ -29,7 +29,6 @@ export function BackgroundPicker() {
     "https://res.cloudinary.com/dpqv7ag5w/image/upload/v1765610458/japan-background-digital-art_1_v64imy.jpg",
     "https://res.cloudinary.com/dpqv7ag5w/image/upload/v1765610457/japan-background-digital-art_2_t9ezt8.jpg",
     "https://res.cloudinary.com/dpqv7ag5w/image/upload/v1765610797/japan-background-digital-art_nzenvh.jpg",
-    "https://res.cloudinary.com/dpqv7ag5w/image/upload/v1765610459/japan-background-digital-art_ftw16m.jpg",
   ];
 
   const {
@@ -138,26 +137,24 @@ export function BackgroundPicker() {
           <div className="grid grid-cols-4 gap-2 w-full">
             {preExistingImages.map((c, index) => {
               return (
-                <>
-                  <button
-                    key={c}
-                    type="button"
-                    aria-label={`Select ${c}`}
-                    onClick={async () => {
-                      setSelectedBGIndex(index);
-                      handleFilePick(await imageUrlToFile(c));
-                    }}
-                    className={cn(
-                      "h-12 rounded-md transition overflow-hidden bg-center bg-cover bg-no-repeat  cursor-pointer select-none ",
-                      selectedBGIndex === index
-                        ? " ring-1 ring-sky-200 scale-105 z-10 shadow-lg"
-                        : "border-transparent"
-                    )}
-                    style={{
-                      backgroundImage: `url(${c})`,
-                    }}
-                  />
-                </>
+                <button
+                  key={index}
+                  type="button"
+                  aria-label={`Select ${c}`}
+                  onClick={async () => {
+                    setSelectedBGIndex(index);
+                    handleFilePick(await imageUrlToFile(c));
+                  }}
+                  className={cn(
+                    "h-12 rounded-md transition overflow-hidden bg-center bg-cover bg-no-repeat  cursor-pointer select-none ",
+                    selectedBGIndex === index
+                      ? " ring-1 ring-sky-200 scale-105 z-10 shadow-lg"
+                      : "border-transparent"
+                  )}
+                  style={{
+                    backgroundImage: `url(${c})`,
+                  }}
+                />
               );
             })}
             <Card

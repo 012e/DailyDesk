@@ -1,6 +1,6 @@
 import db from "@/lib/db";
-import { boardsTable, listsTable, cardsTable } from "@/lib/db/schema";
-import { eq, asc } from "drizzle-orm";
+import { boardsTable, listsTable, cardsTable, cardLabelsTable, cardMembersTable, labelsTable, boardMembersTable } from "@/lib/db/schema";
+import { eq, asc, sql } from "drizzle-orm";
 import { ContentfulStatusCode } from "hono/utils/http-status";
 
 export class ServiceError extends Error {
@@ -28,7 +28,81 @@ export async function getBoardsForUser(userSub: string) {
     },
   });
 
-  return boards;
+  // Get all card IDs from all boards
+  const cardIds = boards.flatMap(board =>
+    board.lists.flatMap(list => list.cards.map(card => card.id))
+  );
+
+  if (cardIds.length === 0) {
+    return boards;
+  }
+
+  // Get labels for all cards
+  const cardLabelsData = await db
+    .select({
+      cardId: cardLabelsTable.cardId,
+      labelId: labelsTable.id,
+      labelName: labelsTable.name,
+      labelColor: labelsTable.color,
+    })
+    .from(cardLabelsTable)
+    .innerJoin(labelsTable, eq(cardLabelsTable.labelId, labelsTable.id))
+    .where(sql`${cardLabelsTable.cardId} IN (${sql.join(cardIds.map(id => sql`${id}`), sql`, `)})`);
+
+  // Get members for all cards
+  const cardMembersData = await db
+    .select({
+      cardId: cardMembersTable.cardId,
+      memberId: boardMembersTable.id,
+      memberName: boardMembersTable.name,
+      memberEmail: boardMembersTable.email,
+      memberAvatar: boardMembersTable.avatar,
+    })
+    .from(cardMembersTable)
+    .innerJoin(boardMembersTable, eq(cardMembersTable.memberId, boardMembersTable.id))
+    .where(sql`${cardMembersTable.cardId} IN (${sql.join(cardIds.map(id => sql`${id}`), sql`, `)})`);
+
+  // Group labels and members by card ID
+  const labelsByCard = new Map<string, Array<{ id: string; name: string; color: string }>>();
+  for (const cl of cardLabelsData) {
+    if (!labelsByCard.has(cl.cardId)) {
+      labelsByCard.set(cl.cardId, []);
+    }
+    labelsByCard.get(cl.cardId)!.push({
+      id: cl.labelId,
+      name: cl.labelName,
+      color: cl.labelColor,
+    });
+  }
+
+  const membersByCard = new Map<string, Array<{ id: string; name: string; email: string; avatar: string | null; initials: string }>>();
+  for (const cm of cardMembersData) {
+    if (!membersByCard.has(cm.cardId)) {
+      membersByCard.set(cm.cardId, []);
+    }
+    // Generate initials from name
+    const initials = cm.memberName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    membersByCard.get(cm.cardId)!.push({
+      id: cm.memberId,
+      name: cm.memberName,
+      email: cm.memberEmail,
+      avatar: cm.memberAvatar,
+      initials,
+    });
+  }
+
+  // Add labels and members to cards in all boards
+  return boards.map(board => ({
+    ...board,
+    lists: board.lists.map(list => ({
+      ...list,
+      cards: list.cards.map(card => ({
+        ...card,
+        labels: labelsByCard.get(card.id) || [],
+        members: membersByCard.get(card.id) || [],
+      })),
+    })),
+  })) as any;
 }
 
 export async function createBoard(userSub: string, req: any) {
@@ -64,7 +138,79 @@ export async function getBoardById(userSub: string, id: string) {
   if (!board) throw new ServiceError("Board không tồn tại", 404);
   if (board.userId !== userSub) throw new ServiceError("Không có quyền truy cập Board này", 403);
 
-  return board;
+  // Get all card IDs from the board
+  const cardIds = board.lists.flatMap(list => list.cards.map(card => card.id));
+
+  if (cardIds.length === 0) {
+    return board;
+  }
+
+  // Get labels for all cards
+  const cardLabelsData = await db
+    .select({
+      cardId: cardLabelsTable.cardId,
+      labelId: labelsTable.id,
+      labelName: labelsTable.name,
+      labelColor: labelsTable.color,
+    })
+    .from(cardLabelsTable)
+    .innerJoin(labelsTable, eq(cardLabelsTable.labelId, labelsTable.id))
+    .where(sql`${cardLabelsTable.cardId} IN (${sql.join(cardIds.map(id => sql`${id}`), sql`, `)})`);
+
+  // Get members for all cards
+  const cardMembersData = await db
+    .select({
+      cardId: cardMembersTable.cardId,
+      memberId: boardMembersTable.id,
+      memberName: boardMembersTable.name,
+      memberEmail: boardMembersTable.email,
+      memberAvatar: boardMembersTable.avatar,
+    })
+    .from(cardMembersTable)
+    .innerJoin(boardMembersTable, eq(cardMembersTable.memberId, boardMembersTable.id))
+    .where(sql`${cardMembersTable.cardId} IN (${sql.join(cardIds.map(id => sql`${id}`), sql`, `)})`);
+
+  // Group labels and members by card ID
+  const labelsByCard = new Map<string, Array<{ id: string; name: string; color: string }>>();
+  for (const cl of cardLabelsData) {
+    if (!labelsByCard.has(cl.cardId)) {
+      labelsByCard.set(cl.cardId, []);
+    }
+    labelsByCard.get(cl.cardId)!.push({
+      id: cl.labelId,
+      name: cl.labelName,
+      color: cl.labelColor,
+    });
+  }
+
+  const membersByCard = new Map<string, Array<{ id: string; name: string; email: string; avatar: string | null; initials: string }>>();
+  for (const cm of cardMembersData) {
+    if (!membersByCard.has(cm.cardId)) {
+      membersByCard.set(cm.cardId, []);
+    }
+    // Generate initials from name
+    const initials = cm.memberName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    membersByCard.get(cm.cardId)!.push({
+      id: cm.memberId,
+      name: cm.memberName,
+      email: cm.memberEmail,
+      avatar: cm.memberAvatar,
+      initials,
+    });
+  }
+
+  // Add labels and members to cards
+  return {
+    ...board,
+    lists: board.lists.map(list => ({
+      ...list,
+      cards: list.cards.map(card => ({
+        ...card,
+        labels: labelsByCard.get(card.id) || [],
+        members: membersByCard.get(card.id) || [],
+      })),
+    })),
+  } as any;
 }
 
 export async function updateBoard(userSub: string, id: string, req: any) {

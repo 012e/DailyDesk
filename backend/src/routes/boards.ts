@@ -31,16 +31,9 @@ export default function createBoardRoutes() {
 
     async (c) => {
       const user = ensureUserAuthenticated(c);
-      try {
-        const boards = await boardService.getBoardsForUser(user.sub);
-        return c.json(boards);
-      } catch (err: any) {
-        if (err instanceof boardService.ServiceError) {
-          return c.json({ error: err.message }, err.status);
-        }
-        throw err;
-      }
-    }
+      const boards = await boardService.getBoardsForUser(user.sub);
+      return c.json(boards);
+    },
   );
 
   app.openapi(
