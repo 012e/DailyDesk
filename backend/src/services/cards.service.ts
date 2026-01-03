@@ -64,9 +64,6 @@ export async function getCardsForBoard(userSub: string, boardId: string) {
     .innerJoin(labelsTable, eq(cardLabelsTable.labelId, labelsTable.id))
     .where(sql`${cardLabelsTable.cardId} IN (${sql.join(cardIds.map(id => sql`${id}`), sql`, `)})`);
 
-  console.log("Card IDs:", cardIds);
-  console.log("Card Labels Data:", cardLabelsData);
-
   // Get members for all cards using inArray
   const cardMembersData = await db
     .select({
