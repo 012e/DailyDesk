@@ -5,12 +5,14 @@ import { Button } from "./ui/button";
 export function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
 
-  const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  const isDark =
+    theme === "dark" ||
+    (theme === "system" &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches);
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log("Theme toggle clicked, current theme:", theme);
     toggleTheme();
   };
 
@@ -22,11 +24,7 @@ export function ThemeToggle() {
       aria-label="Toggle theme"
       className="relative z-50"
     >
-      {isDark ? (
-        <Sun className="h-5 w-5" />
-      ) : (
-        <Moon className="h-5 w-5" />
-      )}
+      {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
     </Button>
   );
 }
