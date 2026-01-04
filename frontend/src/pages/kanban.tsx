@@ -4,6 +4,7 @@ import { useParams } from "react-router";
 import EventCalendarPage from "@/components/comp-542";
 import { Kanban } from "./kanban/Kanban";
 import { useBoard } from "@/hooks/use-board";
+import { useUpdateCard } from "@/hooks/use-card";
 import { listsCardsToCalendarEvents } from "@/components/event-calendar";
 import { EventCalendar, type CalendarEvent } from "@/components/event-calendar";
 import { toast } from "sonner";
@@ -14,6 +15,7 @@ export default function KanbanPage() {
   
   // Get board data - always call the hook, but conditionally use the data
   const board = useBoard({ boardId: boardId || "" });
+  const { mutate: updateCard } = useUpdateCard();
   
   // Convert cards to calendar events
   const calendarEvents = useMemo(() => {
@@ -21,7 +23,7 @@ export default function KanbanPage() {
     return listsCardsToCalendarEvents(board.lists);
   }, [boardId, board?.lists]);
 
-  // Handle event operations (read-only for now since calendar events are synced from cards)
+  // Handle event operations - now writable!
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleEventAdd = (_event: CalendarEvent) => {
     toast("Create cards in Kanban view to add events", {
@@ -30,12 +32,48 @@ export default function KanbanPage() {
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleEventUpdate = (_updatedEvent: CalendarEvent) => {
-    toast("Edit cards in Kanban view to update events", {
-      description: "Calendar events are automatically synced from cards",
-      position: "bottom-left",
-    });
+  // Update card deadline when event is moved
+  const handleEventUpdate = (updatedEvent: CalendarEvent) => {
+    if (!boardId || !board?.lists) return;
+
+    // Find the card that corresponds to this event
+    let targetCard: { id: string; name: string; deadline?: Date | string | null } | null = null;
+    let targetListId: string | null = null;
+
+    for (const list of board.lists) {
+      const card = list.cards.find((c) => c.id === updatedEvent.id);
+      if (card) {
+        targetCard = card;
+        targetListId = list.id;
+        break;
+      }
+    }
+
+    if (!targetCard || !targetListId) {
+      toast.error("Card not found");
+      return;
+    }
+
+    // Update the card's deadline to match the new event end time
+    updateCard(
+      {
+        boardId,
+        cardId: targetCard.id,
+        listId: targetListId,
+        deadline: new Date(updatedEvent.end),
+      },
+      {
+        onSuccess: () => {
+          toast.success("Card deadline updated", {
+            description: `Updated to ${new Date(updatedEvent.end).toLocaleString()}`,
+            position: "bottom-left",
+          });
+        },
+        onError: () => {
+          toast.error("Failed to update card deadline");
+        },
+      }
+    );
   };
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
