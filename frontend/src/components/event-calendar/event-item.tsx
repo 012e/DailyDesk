@@ -212,11 +212,6 @@ export function EventItem({
                 </span>
               )}
             </div>
-            {event.location && (
-              <div className="text-[9px] opacity-60 truncate">
-                📍 {event.location}
-              </div>
-            )}
           </div>
         ) : (
           <>
@@ -224,11 +219,6 @@ export function EventItem({
             {showTime && (
               <div className="font-normal opacity-70 truncate sm:text-[11px]">
                 {getEventTime()}
-              </div>
-            )}
-            {event.location && (
-              <div className="text-[9px] opacity-60 truncate mt-0.5">
-                📍 {event.location}
               </div>
             )}
           </>
@@ -266,7 +256,6 @@ export function EventItem({
         {event.location && (
           <>
             <span className="px-1 opacity-35"> · </span>
-            <span>{event.location}</span>
           </>
         )}
       </div>
