@@ -1,19 +1,24 @@
 import { isSameDay, addHours } from "date-fns";
 
 import type { CalendarEvent, EventColor } from "@/components/event-calendar";
+import type { Card } from "@/types/card";
 
 /**
- * CardLike type that works with both frontend Card and backend API response
+ * API card type - what the backend actually returns
+ * Different from frontend Card type (uses 'name' instead of 'title', 'deadline' instead of 'dueDate')
  */
-type CardLike = {
+type ApiCard = {
   id: string;
-  title?: string;
-  name?: string;
+  name: string;
   description?: string | null;
-  dueDate?: Date | null;
   deadline?: Date | string | null;
   labels?: Array<{ color?: string }> | null;
 };
+
+/**
+ * Accept both frontend Card and backend ApiCard
+ */
+type CardInput = Card | ApiCard;
 
 /**
  * Get CSS classes for event colors
@@ -229,9 +234,9 @@ function mapLabelColorToEventColor(labelColor?: string): EventColor {
  * //   location: "To Do"
  * // }
  */
-export function cardToCalendarEvent(card: CardLike, listName?: string): CalendarEvent | null {
+export function cardToCalendarEvent(card: CardInput, listName?: string): CalendarEvent | null {
   // Handle both 'deadline' (backend) and 'dueDate' (frontend) fields
-  const dueDateValue = card.dueDate ?? card.deadline;
+  const dueDateValue = ('dueDate' in card && card.dueDate) || ('deadline' in card && card.deadline);
   
   if (!dueDateValue) {
     return null; // Only cards with due dates should appear in calendar
@@ -241,7 +246,7 @@ export function cardToCalendarEvent(card: CardLike, listName?: string): Calendar
   const dueDate = typeof dueDateValue === 'string' ? new Date(dueDateValue) : dueDateValue;
   
   // Handle both 'name' (backend) and 'title' (frontend) fields
-  const title = card.title ?? card.name ?? "Untitled";
+  const title = ('title' in card && card.title) || ('name' in card && card.name) || "Untitled";
   
   // Determine color based on card labels
   const color = card.labels && card.labels.length > 0 && card.labels[0].color
@@ -251,10 +256,13 @@ export function cardToCalendarEvent(card: CardLike, listName?: string): Calendar
   // Create a 1-hour event ending at the due date
   const start = addHours(dueDate, -1);
   
+  // Get description - handle null/undefined
+  const description = 'description' in card ? card.description : undefined;
+  
   return {
     id: card.id,
     title: title,
-    description: card.description ?? undefined,
+    description: description ?? undefined,
     start: start,
     end: dueDate,
     allDay: false,
@@ -266,10 +274,10 @@ export function cardToCalendarEvent(card: CardLike, listName?: string): Calendar
 /**
  * Convert multiple Cards to CalendarEvents
  * Filters out cards without due dates
- * @param cards - Array of cards to convert (works with both frontend and backend types)
+ * @param cards - Array of cards (frontend Card or backend ApiCard)
  * @param listName - Optional list name to include in event location
  */
-export function cardsToCalendarEvents(cards: CardLike[], listName?: string): CalendarEvent[] {
+export function cardsToCalendarEvents(cards: CardInput[], listName?: string): CalendarEvent[] {
   return cards
     .map((card) => cardToCalendarEvent(card, listName))
     .filter((event): event is CalendarEvent => event !== null);
@@ -277,10 +285,10 @@ export function cardsToCalendarEvents(cards: CardLike[], listName?: string): Cal
 
 /**
  * Convert all cards from multiple lists to calendar events
- * @param lists - Array of lists containing cards (works with both frontend and backend types)
+ * @param lists - Array of lists containing cards
  * @returns Array of calendar events with list names as locations
  */
-export function listsCardsToCalendarEvents(lists: Array<{ id: string; name?: string; title?: string; cards: CardLike[] }>): CalendarEvent[] {
+export function listsCardsToCalendarEvents(lists: Array<{ id: string; name?: string; title?: string; cards: CardInput[] }>): CalendarEvent[] {
   const allEvents: CalendarEvent[] = [];
   
   for (const list of lists) {
