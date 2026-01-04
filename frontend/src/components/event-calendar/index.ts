@@ -18,6 +18,6 @@ export * from "./hooks/use-current-time-indicator";
 export * from "./hooks/use-event-visibility";
 export { MonthView } from "./month-view";
 // Type exports
-export type { CalendarEvent, CalendarView, EventColor } from "./types";
+export type { CalendarEvent, CalendarView, EventColor, Label, Member } from "./types";
 export * from "./utils";
 export { WeekView } from "./week-view";

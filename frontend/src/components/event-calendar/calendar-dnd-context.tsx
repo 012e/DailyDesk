@@ -348,6 +348,7 @@ export function CalendarDndProvider({
         <DragOverlay adjustScale={false} dropAnimation={null}>
           {activeEvent && activeView && (
             <div
+              className="shadow-2xl ring-2 ring-primary/50"
               style={{
                 height: eventHeight ? `${eventHeight}px` : "auto",
                 width:
@@ -363,7 +364,14 @@ export function CalendarDndProvider({
                 isLastDay={dragHandlePosition?.data?.isLastDay !== false}
                 showTime={activeView !== "month"}
                 view={activeView}
-              />
+              >
+                {/* Enhanced card-like preview when dragging */}
+                {activeEvent.location && (
+                  <div className="text-[10px] opacity-75 truncate mt-0.5">
+                    {activeEvent.location}
+                  </div>
+                )}
+              </EventItem>
             </div>
           )}
         </DragOverlay>

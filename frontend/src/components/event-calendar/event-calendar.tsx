@@ -54,6 +54,8 @@ export interface EventCalendarProps {
   onEventDelete?: (eventId: string) => void;
   className?: string;
   initialView?: CalendarView;
+  boardId?: string;
+  lists?: Array<{ id: string; title: string }>;
 }
 
 export function EventCalendar({
@@ -63,6 +65,8 @@ export function EventCalendar({
   onEventDelete,
   className,
   initialView = "month",
+  boardId,
+  lists,
 }: EventCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<CalendarView>(initialView);
@@ -409,6 +413,8 @@ export function EventCalendar({
           }}
           onDelete={handleEventDelete}
           onSave={handleEventSave}
+          boardId={boardId}
+          lists={lists}
         />
       </CalendarDndProvider>
     </div>
