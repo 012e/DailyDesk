@@ -48,13 +48,17 @@ export default function createCommentRoutes() {
       try {
         const comment = await commentService.addComment(user.sub, cardId, req);
 
-        // Log activity for adding comment
-        await activityService.logActivity({
-          cardId,
-          userId: user.sub,
-          actionType: "comment.added",
-          description: `added a comment`,
-        });
+        // Log activity for adding comment (non-blocking)
+        try {
+          await activityService.logActivity({
+            cardId,
+            userId: user.sub,
+            actionType: "comment.added",
+            description: `added a comment`,
+          });
+        } catch (activityError) {
+          console.error("Failed to log comment activity:", activityError);
+        }
 
         return c.json(comment);
       } catch (err: any) {
@@ -157,13 +161,17 @@ export default function createCommentRoutes() {
       try {
         const result = await commentService.deleteComment(user.sub, commentId);
 
-        // Log activity for deleting comment
-        await activityService.logActivity({
-          cardId,
-          userId: user.sub,
-          actionType: "comment.deleted",
-          description: `deleted a comment`,
-        });
+        // Log activity for deleting comment (non-blocking)
+        try {
+          await activityService.logActivity({
+            cardId,
+            userId: user.sub,
+            actionType: "comment.deleted",
+            description: `deleted a comment`,
+          });
+        } catch (activityError) {
+          console.error("Failed to log comment deletion activity:", activityError);
+        }
 
         return c.json(result);
       } catch (err: any) {

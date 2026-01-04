@@ -205,13 +205,18 @@ export async function createCard(userSub: string, boardId: string, req: any) {
     await db.insert(cardMembersTable).values(memberInserts);
   }
 
-  // Log activity for card creation
-  await logActivity({
-    cardId: createdCard.id,
-    userId: userSub,
-    actionType: "card.created",
-    description: `created this card`,
-  });
+  // Log activity for card creation (non-blocking)
+  try {
+    await logActivity({
+      cardId: createdCard.id,
+      userId: userSub,
+      actionType: "card.created",
+      description: `created this card`,
+    });
+  } catch (error) {
+    console.error("Failed to log activity for card creation:", error);
+    // Don't fail the main operation if activity logging fails
+  }
 
   // Return card with labels and members as JSON for compatibility
   return {
@@ -521,80 +526,85 @@ export async function updateCard(userSub: string, boardId: string, id: string, r
     }
   }
 
-  // Log activities for detected changes
-  // Name changed
-  if (req.name && req.name !== existingCard[0].name) {
-    await logActivity({
-      cardId: id,
-      userId: userSub,
-      actionType: "card.renamed",
-      description: `renamed this card from "${existingCard[0].name}" to "${req.name}"`,
-      metadata: { oldName: existingCard[0].name, newName: req.name },
-    });
-  }
-
-  // Description updated
-  if (req.description !== undefined && req.description !== existingCard[0].description) {
-    await logActivity({
-      cardId: id,
-      userId: userSub,
-      actionType: "card.description.updated",
-      description: req.description ? `updated the description` : `removed the description`,
-    });
-  }
-
-  // Card moved to different list
-  if (req.listId && req.listId !== existingCard[0].listId) {
-    // Get list names for better description
-    const [oldListResult, newListResult] = await Promise.all([
-      db.select({ name: listsTable.name }).from(listsTable).where(eq(listsTable.id, existingCard[0].listId)).limit(1),
-      db.select({ name: listsTable.name }).from(listsTable).where(eq(listsTable.id, req.listId)).limit(1),
-    ]);
-
-    const oldListName = oldListResult[0]?.name || "Unknown";
-    const newListName = newListResult[0]?.name || "Unknown";
-
-    await logActivity({
-      cardId: id,
-      userId: userSub,
-      actionType: "card.moved",
-      description: `moved this card from "${oldListName}" to "${newListName}"`,
-      metadata: {
-        oldListId: existingCard[0].listId,
-        newListId: req.listId,
-        oldListName,
-        newListName,
-      },
-    });
-  }
-
-  // Deadline changed
-  if (req.deadline !== undefined) {
-    const oldDeadline = existingCard[0].deadline;
-    if (!oldDeadline && req.deadline) {
+  // Log activities for detected changes (non-blocking)
+  try {
+    // Name changed
+    if (req.name && req.name !== existingCard[0].name) {
       await logActivity({
         cardId: id,
         userId: userSub,
-        actionType: "deadline.set",
-        description: `set the deadline to ${new Date(req.deadline).toLocaleDateString()}`,
-        metadata: { deadline: req.deadline },
-      });
-    } else if (oldDeadline && !req.deadline) {
-      await logActivity({
-        cardId: id,
-        userId: userSub,
-        actionType: "deadline.removed",
-        description: `removed the deadline`,
-      });
-    } else if (oldDeadline && req.deadline && oldDeadline.getTime() !== new Date(req.deadline).getTime()) {
-      await logActivity({
-        cardId: id,
-        userId: userSub,
-        actionType: "deadline.changed",
-        description: `changed the deadline from ${oldDeadline.toLocaleDateString()} to ${new Date(req.deadline).toLocaleDateString()}`,
-        metadata: { oldDeadline, newDeadline: req.deadline },
+        actionType: "card.renamed",
+        description: `renamed this card from "${existingCard[0].name}" to "${req.name}"`,
+        metadata: { oldName: existingCard[0].name, newName: req.name },
       });
     }
+
+    // Description updated
+    if (req.description !== undefined && req.description !== existingCard[0].description) {
+      await logActivity({
+        cardId: id,
+        userId: userSub,
+        actionType: "card.description.updated",
+        description: req.description ? `updated the description` : `removed the description`,
+      });
+    }
+
+    // Card moved to different list
+    if (req.listId && req.listId !== existingCard[0].listId) {
+      // Get list names for better description
+      const [oldListResult, newListResult] = await Promise.all([
+        db.select({ name: listsTable.name }).from(listsTable).where(eq(listsTable.id, existingCard[0].listId)).limit(1),
+        db.select({ name: listsTable.name }).from(listsTable).where(eq(listsTable.id, req.listId)).limit(1),
+      ]);
+
+      const oldListName = oldListResult[0]?.name || "Unknown";
+      const newListName = newListResult[0]?.name || "Unknown";
+
+      await logActivity({
+        cardId: id,
+        userId: userSub,
+        actionType: "card.moved",
+        description: `moved this card from "${oldListName}" to "${newListName}"`,
+        metadata: {
+          oldListId: existingCard[0].listId,
+          newListId: req.listId,
+          oldListName,
+          newListName,
+        },
+      });
+    }
+
+    // Deadline changed
+    if (req.deadline !== undefined) {
+      const oldDeadline = existingCard[0].deadline;
+      if (!oldDeadline && req.deadline) {
+        await logActivity({
+          cardId: id,
+          userId: userSub,
+          actionType: "deadline.set",
+          description: `set the deadline to ${new Date(req.deadline).toLocaleDateString()}`,
+          metadata: { deadline: req.deadline },
+        });
+      } else if (oldDeadline && !req.deadline) {
+        await logActivity({
+          cardId: id,
+          userId: userSub,
+          actionType: "deadline.removed",
+          description: `removed the deadline`,
+        });
+      } else if (oldDeadline && req.deadline && oldDeadline.getTime() !== new Date(req.deadline).getTime()) {
+        await logActivity({
+          cardId: id,
+          userId: userSub,
+          actionType: "deadline.changed",
+          description: `changed the deadline from ${oldDeadline.toLocaleDateString()} to ${new Date(req.deadline).toLocaleDateString()}`,
+          metadata: { oldDeadline, newDeadline: req.deadline },
+        });
+      }
+    }
+  } catch (error) {
+    console.error("Failed to log activity for card update:", error);
+    // Don't fail the main operation if activity logging fails
   }
 
   // Return card with labels and members as JSON for compatibility
