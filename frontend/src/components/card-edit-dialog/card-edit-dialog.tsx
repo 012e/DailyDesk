@@ -109,6 +109,7 @@ function InnerDialog({
   const [isLabelPopoverOpen, setIsLabelPopoverOpen] = useState(false);
   const [isMemberPopoverOpen, setIsMemberPopoverOpen] = useState(false);
   const [isDatePopoverOpen, setIsDatePopoverOpen] = useState(false);
+  const [showActivities, setShowActivities] = useState(true); // For comments/activities toggle
 
   const { mutate: updateCard } = useUpdateCard();
   const { deleteImage } = useDeleteImage();
@@ -420,17 +421,15 @@ function InnerDialog({
                 <span className="text-sm font-semibold">
                   Comments and Activity
                 </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowDetails(!showDetails)}
-                >
-                  Show Details
-                </Button>
               </div>
 
               {/* Comments section */}
-              {showDetails && <CardComments card={card} onUpdate={handleUpdate} />}
+              <CardComments
+                card={card}
+                boardId={boardId}
+                showActivities={showActivities}
+                onToggleActivities={() => setShowActivities(!showActivities)}
+              />
             </div>
           </div>
         </div>

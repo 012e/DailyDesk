@@ -1,0 +1,327 @@
+import { ensureUserAuthenticated } from "@/lib/utils";
+import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { authMiddleware } from "@/lib/auth";
+import { defaultSecurityScheme, jsonBody, successJson } from "@/types/openapi";
+import { CommentSchema, CreateCommentSchema } from "@/types/comments";
+import { ActivitySchema } from "@/types/activities";
+import * as commentService from "@/services/comments.service";
+import * as activityService from "@/services/activities.service";
+
+const TAGS = ["Comments & Activities"];
+
+export default function createCommentRoutes() {
+  const app = new OpenAPIHono();
+  app.use("*", authMiddleware());
+
+  // POST /boards/{boardId}/cards/{cardId}/comments - Add a comment
+  app.openapi(
+    createRoute({
+      method: "post",
+      tags: TAGS,
+      path: "/{boardId}/cards/{cardId}/comments",
+      security: defaultSecurityScheme(),
+      request: {
+        params: z.object({
+          boardId: z.uuid(),
+          cardId: z.uuid(),
+        }),
+        body: jsonBody(CreateCommentSchema),
+      },
+      responses: {
+        200: successJson(CommentSchema, {
+          description: "Thêm comment thành công",
+        }),
+        404: {
+          description: "Card không tồn tại",
+        },
+        403: {
+          description: "Không có quyền truy cập card này",
+        },
+      },
+    }),
+
+    async (c) => {
+      const user = ensureUserAuthenticated(c);
+      const { cardId } = c.req.valid("param");
+      const req = c.req.valid("json");
+
+      try {
+        const comment = await commentService.addComment(user.sub, cardId, req);
+
+        // Log activity for adding comment
+        await activityService.logActivity({
+          cardId,
+          userId: user.sub,
+          actionType: "comment.added",
+          description: `added a comment`,
+        });
+
+        return c.json(comment);
+      } catch (err: any) {
+        if (err instanceof commentService.ServiceError) {
+          return c.json({ error: err.message }, err.status);
+        }
+        throw err;
+      }
+    }
+  );
+
+  // PUT /boards/{boardId}/cards/{cardId}/comments/{commentId} - Update a comment
+  app.openapi(
+    createRoute({
+      method: "put",
+      tags: TAGS,
+      path: "/{boardId}/cards/{cardId}/comments/{commentId}",
+      security: defaultSecurityScheme(),
+      request: {
+        params: z.object({
+          boardId: z.uuid(),
+          cardId: z.uuid(),
+          commentId: z.uuid(),
+        }),
+        body: jsonBody(CreateCommentSchema),
+      },
+      responses: {
+        200: successJson(CommentSchema, {
+          description: "Cập nhật comment thành công",
+        }),
+        404: {
+          description: "Comment không tồn tại",
+        },
+        403: {
+          description: "Chỉ có thể chỉnh sửa comment của chính mình",
+        },
+      },
+    }),
+
+    async (c) => {
+      const user = ensureUserAuthenticated(c);
+      const { commentId } = c.req.valid("param");
+      const req = c.req.valid("json");
+
+      try {
+        const comment = await commentService.updateComment(
+          user.sub,
+          commentId,
+          req.content
+        );
+
+        return c.json(comment);
+      } catch (err: any) {
+        if (err instanceof commentService.ServiceError) {
+          return c.json({ error: err.message }, err.status);
+        }
+        throw err;
+      }
+    }
+  );
+
+  // DELETE /boards/{boardId}/cards/{cardId}/comments/{commentId} - Delete a comment
+  app.openapi(
+    createRoute({
+      method: "delete",
+      tags: TAGS,
+      path: "/{boardId}/cards/{cardId}/comments/{commentId}",
+      security: defaultSecurityScheme(),
+      request: {
+        params: z.object({
+          boardId: z.uuid(),
+          cardId: z.uuid(),
+          commentId: z.uuid(),
+        }),
+      },
+      responses: {
+        200: {
+          description: "Xóa comment thành công",
+          content: {
+            "application/json": {
+              schema: z.object({
+                message: z.string(),
+              }),
+            },
+          },
+        },
+        404: {
+          description: "Comment không tồn tại",
+        },
+        403: {
+          description: "Chỉ có thể xóa comment của chính mình",
+        },
+      },
+    }),
+
+    async (c) => {
+      const user = ensureUserAuthenticated(c);
+      const { cardId, commentId } = c.req.valid("param");
+
+      try {
+        const result = await commentService.deleteComment(user.sub, commentId);
+
+        // Log activity for deleting comment
+        await activityService.logActivity({
+          cardId,
+          userId: user.sub,
+          actionType: "comment.deleted",
+          description: `deleted a comment`,
+        });
+
+        return c.json(result);
+      } catch (err: any) {
+        if (err instanceof commentService.ServiceError) {
+          return c.json({ error: err.message }, err.status);
+        }
+        throw err;
+      }
+    }
+  );
+
+  // GET /boards/{boardId}/cards/{cardId}/comments - Get all comments for a card
+  app.openapi(
+    createRoute({
+      method: "get",
+      tags: TAGS,
+      path: "/{boardId}/cards/{cardId}/comments",
+      security: defaultSecurityScheme(),
+      request: {
+        params: z.object({
+          boardId: z.uuid(),
+          cardId: z.uuid(),
+        }),
+      },
+      responses: {
+        200: successJson(CommentSchema.array(), {
+          description: "Lấy danh sách comments thành công",
+        }),
+        404: {
+          description: "Card không tồn tại",
+        },
+        403: {
+          description: "Không có quyền truy cập card này",
+        },
+      },
+    }),
+
+    async (c) => {
+      const user = ensureUserAuthenticated(c);
+      const { cardId } = c.req.valid("param");
+
+      try {
+        const comments = await commentService.getCommentsForCard(
+          user.sub,
+          cardId
+        );
+        return c.json(comments);
+      } catch (err: any) {
+        if (err instanceof commentService.ServiceError) {
+          return c.json({ error: err.message }, err.status);
+        }
+        throw err;
+      }
+    }
+  );
+
+  // GET /boards/{boardId}/cards/{cardId}/activities - Get all activities for a card
+  app.openapi(
+    createRoute({
+      method: "get",
+      tags: TAGS,
+      path: "/{boardId}/cards/{cardId}/activities",
+      security: defaultSecurityScheme(),
+      request: {
+        params: z.object({
+          boardId: z.uuid(),
+          cardId: z.uuid(),
+        }),
+      },
+      responses: {
+        200: successJson(ActivitySchema.array(), {
+          description: "Lấy danh sách activities thành công",
+        }),
+        404: {
+          description: "Card không tồn tại",
+        },
+        403: {
+          description: "Không có quyền truy cập card này",
+        },
+      },
+    }),
+
+    async (c) => {
+      const user = ensureUserAuthenticated(c);
+      const { cardId } = c.req.valid("param");
+
+      try {
+        const activities = await activityService.getActivitiesForCard(
+          user.sub,
+          cardId
+        );
+        return c.json(activities);
+      } catch (err: any) {
+        if (err instanceof activityService.ServiceError) {
+          return c.json({ error: err.message }, err.status);
+        }
+        throw err;
+      }
+    }
+  );
+
+  // GET /boards/{boardId}/cards/{cardId}/timeline - Get timeline (comments + activities merged)
+  app.openapi(
+    createRoute({
+      method: "get",
+      tags: TAGS,
+      path: "/{boardId}/cards/{cardId}/timeline",
+      security: defaultSecurityScheme(),
+      request: {
+        params: z.object({
+          boardId: z.uuid(),
+          cardId: z.uuid(),
+        }),
+      },
+      responses: {
+        200: {
+          description: "Lấy timeline thành công",
+          content: {
+            "application/json": {
+              schema: z.array(
+                z.union([
+                  CommentSchema.extend({ type: z.literal("comment") }),
+                  ActivitySchema.extend({ type: z.literal("activity") }),
+                ])
+              ),
+            },
+          },
+        },
+        404: {
+          description: "Card không tồn tại",
+        },
+        403: {
+          description: "Không có quyền truy cập card này",
+        },
+      },
+    }),
+
+    async (c) => {
+      const user = ensureUserAuthenticated(c);
+      const { cardId } = c.req.valid("param");
+
+      try {
+        const timeline = await activityService.getCardTimeline(
+          user.sub,
+          cardId
+        );
+        return c.json(timeline);
+      } catch (err: any) {
+        if (
+          err instanceof commentService.ServiceError ||
+          err instanceof activityService.ServiceError
+        ) {
+          return c.json({ error: err.message }, err.status);
+        }
+        throw err;
+      }
+    }
+  );
+
+  return app;
+}
