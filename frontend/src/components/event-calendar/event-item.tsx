@@ -167,14 +167,16 @@ export function EventItem({
         onTouchStart={onTouchStart}
       >
         {children || (
-          <span className="truncate">
-            {!event.allDay && (
-              <span className="font-normal opacity-70 truncate sm:text-[11px]">
-                {formatTimeWithOptionalMinutes(displayStart)}{" "}
-              </span>
-            )}
-            {event.title}
-          </span>
+          <div className="flex items-center gap-1 truncate w-full">
+            <span className="truncate flex-1">
+              {!event.allDay && (
+                <span className="font-normal opacity-70 truncate sm:text-[11px]">
+                  {formatTimeWithOptionalMinutes(displayStart)}{" "}
+                </span>
+              )}
+              {event.title}
+            </span>
+          </div>
         )}
       </EventWrapper>
     );
@@ -201,13 +203,15 @@ export function EventItem({
         onTouchStart={onTouchStart}
       >
         {durationMinutes < 45 ? (
-          <div className="truncate">
-            {event.title}{" "}
-            {showTime && (
-              <span className="opacity-70">
-                {formatTimeWithOptionalMinutes(displayStart)}
-              </span>
-            )}
+          <div className="flex flex-col gap-0.5 w-full">
+            <div className="truncate">
+              {event.title}{" "}
+              {showTime && (
+                <span className="opacity-70">
+                  {formatTimeWithOptionalMinutes(displayStart)}
+                </span>
+              )}
+            </div>
           </div>
         ) : (
           <>
@@ -252,7 +256,6 @@ export function EventItem({
         {event.location && (
           <>
             <span className="px-1 opacity-35"> · </span>
-            <span>{event.location}</span>
           </>
         )}
       </div>
