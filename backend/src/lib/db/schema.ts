@@ -32,7 +32,7 @@ export const cardsTable = sqliteTable("cards", {
     .primaryKey()
     .$defaultFn(() => randomUUID()),
   name: text("name").notNull(),
-  description: text("description"), // Card description
+  description: text("description"),
   order: integer("order").notNull(),
   coverUrl: text("cover_url"),
   coverPublicId: text("cover_public_id"),
@@ -40,10 +40,11 @@ export const cardsTable = sqliteTable("cards", {
   listId: text("list_id")
     .notNull()
     .references(() => listsTable.id, { onDelete: "cascade" }),
-  startDate: integer("start_date", { mode: "timestamp" }), // Optional start date for events
-  deadline: integer("deadline", { mode: "timestamp" }), // Optional deadline for events
-  latitude: integer("latitude"), // Optional latitude for location
-  longitude: integer("longitude"), // Optional longitude for location
+  startDate: integer("start_date", { mode: "timestamp" }),
+  deadline: integer("deadline", { mode: "timestamp" }),
+  latitude: integer("latitude"),
+  longitude: integer("longitude"),
+  completed: integer("completed", { mode: "boolean" }).default(false),
 });
 
 // Checklist items table with foreign key to cards

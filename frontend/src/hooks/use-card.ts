@@ -31,8 +31,8 @@ export function useUpdateCard() {
       deadline?: Date | null;
       coverColor?: string | null;
       coverUrl?: string | null;
+      completed?: boolean | null;
     }) => {
-      console.log("param:", params);
       const { data, error } = await api.PUT("/boards/{boardId}/cards/{id}", {
         params: {
           path: {
@@ -50,19 +50,19 @@ export function useUpdateCard() {
           deadline: params.deadline?.toISOString(),
           coverColor: params.coverColor,
           coverUrl: params.coverUrl,
+          completed: params.completed,
         },
       });
 
       if (error) {
         throw new Error("Failed to update card");
       }
-      // When setting a color cover and the card previously had an image, delete the old image
+
       if (params.coverColor && params.coverUrl) {
         try {
           await deleteImage("card", params.cardId);
         } catch (error) {
           console.error(`Failed to delete card cover: ${error}`);
-          // Don't throw - the update succeeded, image deletion is secondary
         }
       }
 
@@ -70,7 +70,6 @@ export function useUpdateCard() {
     },
 
     onSuccess: (_data, variables) => {
-      // Invalidate board query to refetch the updated data
       queryClient.invalidateQueries({ queryKey: ["board", variables.boardId] });
     },
 
@@ -88,9 +87,6 @@ export function useDeleteCard() {
 
   return useMutation({
     mutationFn: async (cardId: string) => {
-      // TODO: Replace với API call thực tế
-      // await api.DELETE(`/cards/${cardId}`);
-
       await new Promise((resolve) => setTimeout(resolve, 300));
       return cardId;
     },
@@ -184,7 +180,6 @@ export function useCreateCard() {
     },
 
     onSuccess: (_newCard, variables) => {
-      // Invalidate board query to refetch the updated data
       queryClient.invalidateQueries({ queryKey: ["board", variables.boardId] });
     },
 

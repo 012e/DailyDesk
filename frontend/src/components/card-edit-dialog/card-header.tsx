@@ -13,7 +13,6 @@ export function CardHeader({ card, onUpdate }: CardHeaderProps) {
   const [title, setTitle] = useState(card.title);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Focus textarea khi bắt đầu edit
   useEffect(() => {
     if (isEditing && textareaRef.current) {
       textareaRef.current.focus();
@@ -21,7 +20,6 @@ export function CardHeader({ card, onUpdate }: CardHeaderProps) {
     }
   }, [isEditing]);
 
-  // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -33,7 +31,6 @@ export function CardHeader({ card, onUpdate }: CardHeaderProps) {
     const trimmedTitle = title.trim();
 
     if (trimmedTitle === "") {
-      // Nếu title rỗng, revert về giá trị cũ
       setTitle(card.title);
       setIsEditing(false);
       return;
@@ -58,9 +55,18 @@ export function CardHeader({ card, onUpdate }: CardHeaderProps) {
     }
   };
 
+  const handleToggleCompleted = (checked: boolean) => {
+    onUpdate({ completed: checked });
+  };
+
   return (
     <div className="flex items-start gap-3">
-      <Checkbox className="mt-1" />
+      <Checkbox
+        className="mt-1"
+        checked={card.completed || false}
+        onCheckedChange={handleToggleCompleted}
+        aria-label="Mark card as complete"
+      />
 
       <div className="flex-1 min-w-0">
         {isEditing ? (
@@ -75,7 +81,9 @@ export function CardHeader({ card, onUpdate }: CardHeaderProps) {
           />
         ) : (
           <h2
-            className="font-semibold text-xl cursor-pointer hover:bg-muted rounded px-2 py-1 -mx-2 -my-1 break-words"
+            className={`font-semibold text-xl cursor-pointer hover:bg-muted rounded px-2 py-1 -mx-2 -my-1 break-words ${
+              card.completed ? "line-through text-muted-foreground" : ""
+            }`}
             onClick={() => setIsEditing(true)}
           >
             {card.title}
