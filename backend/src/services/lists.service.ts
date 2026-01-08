@@ -2,6 +2,7 @@ import db from "@/lib/db";
 import { boardsTable, listsTable } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { ContentfulStatusCode } from "hono/utils/http-status";
+import { publishBoardChanged } from "./events.service";
 
 export class ServiceError extends Error {
   status: ContentfulStatusCode;
@@ -60,6 +61,9 @@ export async function createList(userSub: string, boardId: string, req: any) {
       boardId: boardId,
     })
     .returning();
+
+  // Publish list created event
+  publishBoardChanged(boardId, 'list', list[0].id, 'created', userSub);
 
   return list[0];
 }
@@ -134,6 +138,9 @@ export async function updateList(userSub: string, boardId: string, id: string, r
     .where(eq(listsTable.id, id))
     .returning();
 
+  // Publish list updated event
+  publishBoardChanged(boardId, 'list', id, 'updated', userSub);
+
   return updatedList[0];
 }
 
@@ -167,6 +174,9 @@ export async function deleteList(userSub: string, boardId: string, id: string) {
   }
 
   await db.delete(listsTable).where(eq(listsTable.id, id));
+
+  // Publish list deleted event
+  publishBoardChanged(boardId, 'list', id, 'deleted', userSub);
 
   return { message: "Xóa List thành công" };
 }

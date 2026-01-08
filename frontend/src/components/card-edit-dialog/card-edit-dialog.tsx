@@ -115,6 +115,7 @@ function InnerDialog({
   const [linkUrl, setLinkUrl] = useState("");
   const [linkName, setLinkName] = useState("");
   const attachmentFileInputRef = useRef<HTMLInputElement | null>(null);
+  const [showActivities, setShowActivities] = useState(true); // For comments/activities toggle
 
   const { mutate: updateCard } = useUpdateCard();
   const { deleteImage } = useDeleteImage();
@@ -647,17 +648,15 @@ function InnerDialog({
                 <span className="text-sm font-semibold">
                   Comments and Activity
                 </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowDetails(!showDetails)}
-                >
-                  Show Details
-                </Button>
               </div>
 
               {/* Comments section */}
-              {showDetails && <CardComments card={card} onUpdate={handleUpdate} />}
+              <CardComments
+                card={card}
+                boardId={boardId}
+                showActivities={showActivities}
+                onToggleActivities={() => setShowActivities(!showActivities)}
+              />
             </div>
           </div>
         </div>

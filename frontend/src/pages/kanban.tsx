@@ -8,6 +8,7 @@ import { useUpdateCard, useCreateCard } from "@/hooks/use-card";
 import { listsCardsToCalendarEvents } from "@/components/event-calendar";
 import { EventCalendar, type CalendarEvent, type Label, type Member } from "@/components/event-calendar";
 import { toast } from "sonner";
+import { BoardEventsProvider } from "@/components/board-events-provider";
 
 export default function KanbanPage() {
   const { boardId } = useParams();
@@ -124,7 +125,12 @@ export default function KanbanPage() {
 
   return (
     <div>
-      {page === "kanban" && <Kanban boardId={boardId} />}
+      {page === "kanban" && boardId && (
+        <BoardEventsProvider boardId={boardId}>
+          <Kanban boardId={boardId} />
+        </BoardEventsProvider>
+      )}
+      {page === "kanban" && !boardId && <Kanban boardId={boardId} />}
       {page === "calendar" && boardId ? (
         <EventCalendar
           events={calendarEvents}
