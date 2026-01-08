@@ -10,7 +10,7 @@
     "preview": "pnpm run build && vite preview",
     "deploy": "pnpm run build && wrangler deploy",
     "cf-typegen": "wrangler types",
-    "openapi": "curl localhost:3000/doc > schema.json && pnpm dlx openapi-typescript schema.json -o src/lib/generated/api-schema.ts"
+    "openapi": "curl localhost:3000/doc > schema.json && pnpm exec openapi-typescript schema.json -o src/lib/generated/api-schema.ts"
   },
   "dependencies": {
     "@ai-sdk/react": "^3.0.21",
@@ -77,7 +77,6 @@
     "shiki": "^3.21.0",
     "sonner": "^2.0.7",
     "streamdown": "^1.6.11",
-    "swagger-ui-react": "^5.31.0",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.18",
     "tokenlens": "^1.3.1",

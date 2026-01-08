@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "pnpm --filter backend test",
-    "dev": "concurrently --kill-others --prefix-colors red,blue,yellow --names backend,frontend,ai-devtool \"pnpm --filter backend dev\" \"pnpm --filter frontend dev\" \"pnpm --filter backend ai-devtool\"",
+    "dev": "pnpm exec tsx cleanup.ts; concurrently --prefix-colors red,blue,yellow --names backend,frontend,ai-devtool \"pnpm --filter backend dev\" \"pnpm --filter frontend dev\" \"pnpm --filter backend ai-devtool\"",
     "update-db": "pnpm --filter backend db:push"
   },
   "keywords": [],
@@ -13,6 +13,8 @@
   "license": "ISC",
   "packageManager": "pnpm@10.24.0",
   "devDependencies": {
-    "concurrently": "^9.2.1"
+    "@types/node": "^24.10.4",
+    "concurrently": "^9.2.1",
+    "tsx": "^4.21.0"
   }
 }
