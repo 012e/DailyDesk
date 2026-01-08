@@ -52,6 +52,7 @@ export default function createCardRoutes() {
           ...card,
           labels: card.labels ? JSON.parse(card.labels) : null,
           members: card.members ? JSON.parse(card.members) : null,
+          attachments: card.attachments ? JSON.parse(card.attachments) : null,
         }));
 
         return c.json(parsedCards);
@@ -107,6 +108,7 @@ export default function createCardRoutes() {
           ...card,
           labels: card.labels ? JSON.parse(card.labels) : null,
           members: card.members ? JSON.parse(card.members) : null,
+          attachments: card.attachments ? JSON.parse(card.attachments) : null,
         };
 
         return c.json(parsedCard);
@@ -157,6 +159,7 @@ export default function createCardRoutes() {
           ...card,
           labels: card.labels ? JSON.parse(card.labels) : null,
           members: card.members ? JSON.parse(card.members) : null,
+          attachments: card.attachments ? JSON.parse(card.attachments) : null,
         };
 
         return c.json(parsedCard);
@@ -213,6 +216,7 @@ export default function createCardRoutes() {
           ...updated,
           labels: updated.labels ? JSON.parse(updated.labels) : null,
           members: updated.members ? JSON.parse(updated.members) : null,
+          attachments: updated.attachments ? JSON.parse(updated.attachments) : null,
         };
 
         return c.json(parsedCard);

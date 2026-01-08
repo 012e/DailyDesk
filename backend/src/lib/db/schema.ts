@@ -60,6 +60,23 @@ export const checklistItemsTable = sqliteTable("checklist_items", {
     .references(() => cardsTable.id, { onDelete: "cascade" }),
 });
 
+// Attachments table with foreign key to cards
+export const attachmentsTable = sqliteTable("attachments", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  name: text("name").notNull(),
+  url: text("url").notNull(),
+  publicId: text("public_id"),
+  type: text("type").notNull(),
+  size: integer("size").notNull().default(0),
+  uploadedAt: integer("uploaded_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+  uploadedBy: text("uploaded_by").notNull(),
+  cardId: text("card_id")
+    .notNull()
+    .references(() => cardsTable.id, { onDelete: "cascade" }),
+});
+
 // Labels table
 export const labelsTable = sqliteTable("labels", {
   id: text("id")
@@ -130,13 +147,14 @@ export const listRelations = relations(listsTable, ({ one, many }) => ({
   cards: many(cardsTable),
 }));
 
-// Relations - Card to List (many-to-one), Card to Checklist Items (one-to-many), and Card to Labels/Members (many-to-many)
+// Relations - Card to List (many-to-one), Card to Checklist Items (one-to-many), Card to Attachments (one-to-many), and Card to Labels/Members (many-to-many)
 export const cardRelations = relations(cardsTable, ({ one, many }) => ({
   list: one(listsTable, {
     fields: [cardsTable.listId],
     references: [listsTable.id],
   }),
   checklistItems: many(checklistItemsTable),
+  attachments: many(attachmentsTable),
   cardLabels: many(cardLabelsTable),
   cardMembers: many(cardMembersTable),
 }));
@@ -145,6 +163,14 @@ export const cardRelations = relations(cardsTable, ({ one, many }) => ({
 export const checklistItemRelations = relations(checklistItemsTable, ({ one }) => ({
   card: one(cardsTable, {
     fields: [checklistItemsTable.cardId],
+    references: [cardsTable.id],
+  }),
+}));
+
+// Relations - Attachment to Card (many-to-one)
+export const attachmentRelations = relations(attachmentsTable, ({ one }) => ({
+  card: one(cardsTable, {
+    fields: [attachmentsTable.cardId],
     references: [cardsTable.id],
   }),
 }));

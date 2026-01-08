@@ -6,7 +6,8 @@ import {
   cardLabelsTable,
   cardMembersTable,
   labelsTable,
-  boardMembersTable
+  boardMembersTable,
+  attachmentsTable
 } from "@/lib/db/schema";
 import { eq, and, gte, gt, lt, lte, sql } from "drizzle-orm";
 import { ContentfulStatusCode } from "hono/utils/http-status";
@@ -73,6 +74,13 @@ export async function getCardsForBoard(userSub: string, boardId: string) {
     .innerJoin(boardMembersTable, eq(cardMembersTable.memberId, boardMembersTable.id))
     .where(sql`${cardMembersTable.cardId} IN (${sql.join(cardIds.map(id => sql`${id}`), sql`, `)})`);
 
+  const cardAttachmentsData = await db
+    .select()
+    .from(attachmentsTable)
+    .where(sql`${attachmentsTable.cardId} IN (${sql.join(cardIds.map(id => sql`${id}`), sql`, `)})`);
+
+  console.log("[GET CARDS] Found attachments:", cardAttachmentsData.length);
+
   const labelsByCard = new Map<string, Array<{ id: string; name: string; color: string }>>();
   for (const cl of cardLabelsData) {
     if (!labelsByCard.has(cl.cardId)) {
@@ -100,6 +108,14 @@ export async function getCardsForBoard(userSub: string, boardId: string) {
     });
   }
 
+  const attachmentsByCard = new Map<string, Array<any>>();
+  for (const attachment of cardAttachmentsData) {
+    if (!attachmentsByCard.has(attachment.cardId)) {
+      attachmentsByCard.set(attachment.cardId, []);
+    }
+    attachmentsByCard.get(attachment.cardId)!.push(attachment);
+  }
+
   return cards.map(c => ({
     id: c.cards.id,
     name: c.cards.name,
@@ -108,6 +124,7 @@ export async function getCardsForBoard(userSub: string, boardId: string) {
     listId: c.cards.listId,
     labels: JSON.stringify(labelsByCard.get(c.cards.id) || []),
     members: JSON.stringify(membersByCard.get(c.cards.id) || []),
+    attachments: JSON.stringify(attachmentsByCard.get(c.cards.id) || []),
     startDate: c.cards.startDate,
     deadline: c.cards.deadline,
     latitude: c.cards.latitude,
@@ -260,6 +277,11 @@ export async function getCardById(userSub: string, boardId: string, id: string) 
     .innerJoin(boardMembersTable, eq(cardMembersTable.memberId, boardMembersTable.id))
     .where(eq(cardMembersTable.cardId, id));
 
+  const cardAttachments = await db
+    .select()
+    .from(attachmentsTable)
+    .where(eq(attachmentsTable.cardId, id));
+
   const labels = cardLabelsData.map(cl => ({
     id: cl.labelId,
     name: cl.labelName,
@@ -285,6 +307,7 @@ export async function getCardById(userSub: string, boardId: string, id: string) 
     listId: card[0].cards.listId,
     labels: JSON.stringify(labels),
     members: JSON.stringify(members),
+    attachments: JSON.stringify(cardAttachments),
     startDate: card[0].cards.startDate,
     deadline: card[0].cards.deadline,
     latitude: card[0].cards.latitude,
@@ -494,10 +517,17 @@ export async function updateCard(userSub: string, boardId: string, id: string, r
     }
   }
 
+  // Always fetch and return attachments
+  const cardAttachments = await db
+    .select()
+    .from(attachmentsTable)
+    .where(eq(attachmentsTable.cardId, id));
+
   return {
     ...updatedCard,
     labels: req.labels !== undefined ? JSON.stringify(req.labels) : undefined,
     members: req.members !== undefined ? JSON.stringify(req.members) : undefined,
+    attachments: JSON.stringify(cardAttachments),
   };
 }
 
