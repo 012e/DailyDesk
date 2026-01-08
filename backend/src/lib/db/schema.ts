@@ -32,7 +32,7 @@ export const cardsTable = sqliteTable("cards", {
     .primaryKey()
     .$defaultFn(() => randomUUID()),
   name: text("name").notNull(),
-  description: text("description"), // Card description
+  description: text("description"),
   order: integer("order").notNull(),
   coverUrl: text("cover_url"),
   coverPublicId: text("cover_public_id"),
@@ -40,10 +40,11 @@ export const cardsTable = sqliteTable("cards", {
   listId: text("list_id")
     .notNull()
     .references(() => listsTable.id, { onDelete: "cascade" }),
-  startDate: integer("start_date", { mode: "timestamp" }), // Optional start date for events
-  deadline: integer("deadline", { mode: "timestamp" }), // Optional deadline for events
-  latitude: integer("latitude"), // Optional latitude for location
-  longitude: integer("longitude"), // Optional longitude for location
+  startDate: integer("start_date", { mode: "timestamp" }),
+  deadline: integer("deadline", { mode: "timestamp" }),
+  latitude: integer("latitude"),
+  longitude: integer("longitude"),
+  completed: integer("completed", { mode: "boolean" }).default(false),
 });
 
 // Checklist items table with foreign key to cards
@@ -54,6 +55,23 @@ export const checklistItemsTable = sqliteTable("checklist_items", {
   name: text("name").notNull(),
   completed: integer("completed", { mode: "boolean" }).notNull().default(false),
   order: integer("order").notNull(),
+  cardId: text("card_id")
+    .notNull()
+    .references(() => cardsTable.id, { onDelete: "cascade" }),
+});
+
+// Attachments table with foreign key to cards
+export const attachmentsTable = sqliteTable("attachments", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  name: text("name").notNull(),
+  url: text("url").notNull(),
+  publicId: text("public_id"),
+  type: text("type").notNull(),
+  size: integer("size").notNull().default(0),
+  uploadedAt: integer("uploaded_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+  uploadedBy: text("uploaded_by").notNull(),
   cardId: text("card_id")
     .notNull()
     .references(() => cardsTable.id, { onDelete: "cascade" }),
@@ -161,13 +179,14 @@ export const listRelations = relations(listsTable, ({ one, many }) => ({
   cards: many(cardsTable),
 }));
 
-// Relations - Card to List (many-to-one), Card to Checklist Items (one-to-many), and Card to Labels/Members (many-to-many)
+// Relations - Card to List (many-to-one), Card to Checklist Items (one-to-many), Card to Attachments (one-to-many), and Card to Labels/Members (many-to-many)
 export const cardRelations = relations(cardsTable, ({ one, many }) => ({
   list: one(listsTable, {
     fields: [cardsTable.listId],
     references: [listsTable.id],
   }),
   checklistItems: many(checklistItemsTable),
+  attachments: many(attachmentsTable),
   cardLabels: many(cardLabelsTable),
   cardMembers: many(cardMembersTable),
   comments: many(commentsTable),
@@ -178,6 +197,14 @@ export const cardRelations = relations(cardsTable, ({ one, many }) => ({
 export const checklistItemRelations = relations(checklistItemsTable, ({ one }) => ({
   card: one(cardsTable, {
     fields: [checklistItemsTable.cardId],
+    references: [cardsTable.id],
+  }),
+}));
+
+// Relations - Attachment to Card (many-to-one)
+export const attachmentRelations = relations(attachmentsTable, ({ one }) => ({
+  card: one(cardsTable, {
+    fields: [attachmentsTable.cardId],
     references: [cardsTable.id],
   }),
 }));

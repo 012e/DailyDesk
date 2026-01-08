@@ -1,5 +1,5 @@
 import db from "@/lib/db";
-import { boardsTable, listsTable, cardsTable, cardLabelsTable, cardMembersTable, labelsTable, boardMembersTable } from "@/lib/db/schema";
+import { boardsTable, listsTable, cardsTable, cardLabelsTable, cardMembersTable, labelsTable, boardMembersTable, attachmentsTable } from "@/lib/db/schema";
 import { eq, asc, sql } from "drizzle-orm";
 import { ContentfulStatusCode } from "hono/utils/http-status";
 import { publishBoardChanged } from "./events.service";
@@ -63,6 +63,12 @@ export async function getBoardsForUser(userSub: string) {
     .innerJoin(boardMembersTable, eq(cardMembersTable.memberId, boardMembersTable.id))
     .where(sql`${cardMembersTable.cardId} IN (${sql.join(cardIds.map(id => sql`${id}`), sql`, `)})`);
 
+  // Get attachments for all cards
+  const cardAttachmentsData = await db
+    .select()
+    .from(attachmentsTable)
+    .where(sql`${attachmentsTable.cardId} IN (${sql.join(cardIds.map(id => sql`${id}`), sql`, `)})`);
+
   // Group labels and members by card ID
   const labelsByCard = new Map<string, Array<{ id: string; name: string; color: string }>>();
   for (const cl of cardLabelsData) {
@@ -92,7 +98,15 @@ export async function getBoardsForUser(userSub: string) {
     });
   }
 
-  // Add labels and members to cards in all boards
+  const attachmentsByCard = new Map<string, Array<any>>();
+  for (const attachment of cardAttachmentsData) {
+    if (!attachmentsByCard.has(attachment.cardId)) {
+      attachmentsByCard.set(attachment.cardId, []);
+    }
+    attachmentsByCard.get(attachment.cardId)!.push(attachment);
+  }
+
+  // Add labels, members, and attachments to cards in all boards
   return boards.map(board => ({
     ...board,
     lists: board.lists.map(list => ({
@@ -101,6 +115,7 @@ export async function getBoardsForUser(userSub: string) {
         ...card,
         labels: labelsByCard.get(card.id) || [],
         members: membersByCard.get(card.id) || [],
+        attachments: attachmentsByCard.get(card.id) || [],
       })),
     })),
   })) as any;
@@ -174,6 +189,14 @@ export async function getBoardById(userSub: string, id: string) {
     .innerJoin(boardMembersTable, eq(cardMembersTable.memberId, boardMembersTable.id))
     .where(sql`${cardMembersTable.cardId} IN (${sql.join(cardIds.map(id => sql`${id}`), sql`, `)})`);
 
+  // Get attachments for all cards
+  const cardAttachmentsData = await db
+    .select()
+    .from(attachmentsTable)
+    .where(sql`${attachmentsTable.cardId} IN (${sql.join(cardIds.map(id => sql`${id}`), sql`, `)})`);
+
+  console.log("[GET BOARD BY ID] Found attachments:", cardAttachmentsData.length);
+
   // Group labels and members by card ID
   const labelsByCard = new Map<string, Array<{ id: string; name: string; color: string }>>();
   for (const cl of cardLabelsData) {
@@ -203,7 +226,15 @@ export async function getBoardById(userSub: string, id: string) {
     });
   }
 
-  // Add labels and members to cards
+  const attachmentsByCard = new Map<string, Array<any>>();
+  for (const attachment of cardAttachmentsData) {
+    if (!attachmentsByCard.has(attachment.cardId)) {
+      attachmentsByCard.set(attachment.cardId, []);
+    }
+    attachmentsByCard.get(attachment.cardId)!.push(attachment);
+  }
+
+  // Add labels, members, and attachments to cards
   return {
     ...board,
     lists: board.lists.map(list => ({
@@ -212,6 +243,7 @@ export async function getBoardById(userSub: string, id: string) {
         ...card,
         labels: labelsByCard.get(card.id) || [],
         members: membersByCard.get(card.id) || [],
+        attachments: attachmentsByCard.get(card.id) || [],
       })),
     })),
   } as any;

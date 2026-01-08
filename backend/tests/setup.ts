@@ -74,9 +74,17 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   // Clear all tables before each test to ensure isolation
-  await testDbInstance.delete(schema.cardsTable);
+  // Delete in order to respect foreign key constraints
+  await testDbInstance.delete(schema.activitiesTable);
+  await testDbInstance.delete(schema.commentsTable);
+  await testDbInstance.delete(schema.attachmentsTable);
+  await testDbInstance.delete(schema.cardLabelsTable);
+  await testDbInstance.delete(schema.cardMembersTable);
   await testDbInstance.delete(schema.checklistItemsTable);
+  await testDbInstance.delete(schema.cardsTable);
   await testDbInstance.delete(schema.listsTable);
+  await testDbInstance.delete(schema.labelsTable);
+  await testDbInstance.delete(schema.boardMembersTable);
   await testDbInstance.delete(schema.boardsTable);
 });
 

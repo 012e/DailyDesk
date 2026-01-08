@@ -77,6 +77,7 @@ export interface Card {
   createdAt: Date;
   updatedAt: Date;
   order: number;
+  completed?: boolean;
 }
 
 export interface List {

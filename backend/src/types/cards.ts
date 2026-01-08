@@ -31,6 +31,7 @@ export const CardSchema = z.object({
   deadline: z.coerce.date().nullable(),
   latitude: z.number().nullable(),
   longitude: z.number().nullable(),
+  completed: z.boolean().nullable(),
 });
 
 export const CreateCardSchema = z.object({
@@ -44,6 +45,7 @@ export const CreateCardSchema = z.object({
   deadline: z.coerce.date().optional(),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
+  completed: z.boolean().optional(),
 });
 
 export const UpdateCardSchema = z.object({
@@ -58,4 +60,5 @@ export const UpdateCardSchema = z.object({
   longitude: z.number().nullable().optional(),
   coverColor: z.string().nullable().optional(),
   coverUrl: z.union([z.string().url(), z.literal(""), z.null()]).optional(),
+  completed: z.boolean().nullable().optional(),
 });
