@@ -10,7 +10,7 @@
     "preview": "pnpm run build && vite preview",
     "deploy": "pnpm run build && wrangler deploy",
     "cf-typegen": "wrangler types",
-    "openapi": "curl localhost:3000/doc > schema.json && pnpm dlx openapi-typescript schema.json -o src/lib/generated/api-schema.ts"
+    "openapi": "curl localhost:3000/doc > schema.json && pnpm exec openapi-typescript schema.json -o src/lib/generated/api-schema.ts"
   },
   "dependencies": {
     "@ai-sdk/react": "^3.0.21",
