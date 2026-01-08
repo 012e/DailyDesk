@@ -22,13 +22,6 @@ export default function createSSERoutes() {
       const { receiver, unsubscribe } = eventService.subscribe(boardId);
 
       try {
-        console.log("started");
-        console.log("started");
-        console.log("started");
-        console.log("started");
-        console.log("started");
-        console.log("started");
-        console.log("started");
         for await (const event of receiver) {
           if (isStreamClosed) break;
           try {
@@ -53,12 +46,10 @@ export default function createSSERoutes() {
         if (!isStreamClosed) {
           console.error(`Event receiver error for board ${boardId}:`, err);
         }
-        console.log("ended");
       }
 
       // Clean up on stream close
       stream.onAbort(() => {
-        console.log(`SSE connection closed for board ${boardId}`);
         isStreamClosed = true;
         unsubscribe();
       });
