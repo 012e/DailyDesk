@@ -113,6 +113,38 @@ export const cardMembersTable = sqliteTable("card_members", {
     .references(() => boardMembersTable.id, { onDelete: "cascade" }),
 });
 
+// Comments table - stores user comments on cards
+export const commentsTable = sqliteTable("comments", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  cardId: text("card_id")
+    .notNull()
+    .references(() => cardsTable.id, { onDelete: "cascade" }),
+  userId: text("user_id").notNull(), // Clerk user ID
+  content: text("content").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
+// Activities table - stores activity log for cards (auto-generated, cannot be edited/deleted)
+export const activitiesTable = sqliteTable("activities", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  cardId: text("card_id")
+    .notNull()
+    .references(() => cardsTable.id, { onDelete: "cascade" }),
+  userId: text("user_id").notNull(), // Clerk user ID of the person who performed the action
+  actionType: text("action_type").notNull(), // e.g., "card.created", "card.renamed", "card.moved", "member.added"
+  description: text("description").notNull(), // Human-readable description: "moved card from Todo to Done"
+  metadata: text("metadata"), // JSON string for additional data (e.g., {"from": "listId1", "to": "listId2"})
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
 // Relations - Board to Lists (one-to-many), Labels (one-to-many), and Members (one-to-many)
 export const boardRelations = relations(boardsTable, ({ many }) => ({
   lists: many(listsTable),
@@ -138,6 +170,8 @@ export const cardRelations = relations(cardsTable, ({ one, many }) => ({
   checklistItems: many(checklistItemsTable),
   cardLabels: many(cardLabelsTable),
   cardMembers: many(cardMembersTable),
+  comments: many(commentsTable),
+  activities: many(activitiesTable),
 }));
 
 // Relations - Checklist Item to Card (many-to-one)
@@ -187,5 +221,21 @@ export const cardMemberRelations = relations(cardMembersTable, ({ one }) => ({
   member: one(boardMembersTable, {
     fields: [cardMembersTable.memberId],
     references: [boardMembersTable.id],
+  }),
+}));
+
+// Relations - Comment to Card (many-to-one)
+export const commentRelations = relations(commentsTable, ({ one }) => ({
+  card: one(cardsTable, {
+    fields: [commentsTable.cardId],
+    references: [cardsTable.id],
+  }),
+}));
+
+// Relations - Activity to Card (many-to-one)
+export const activityRelations = relations(activitiesTable, ({ one }) => ({
+  card: one(cardsTable, {
+    fields: [activitiesTable.cardId],
+    references: [cardsTable.id],
   }),
 }));
