@@ -3,5 +3,5 @@
     "src"
   ],
   "ext": "ts,js",
-  "exec": "tsx src/index.ts"
+  "exec": "tsx --trace-warnings src/index.ts "
 }

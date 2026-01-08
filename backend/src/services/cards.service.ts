@@ -12,6 +12,7 @@ import { eq, and, gte, gt, lt, lte, sql } from "drizzle-orm";
 import { ContentfulStatusCode } from "hono/utils/http-status";
 import { randomUUID } from "crypto";
 import { logActivity } from "./activities.service";
+import { publishBoardChanged } from "./events.service";
 
 export class ServiceError extends Error {
   status: ContentfulStatusCode;
@@ -217,6 +218,9 @@ export async function createCard(userSub: string, boardId: string, req: any) {
     console.error("Failed to log activity for card creation:", error);
     // Don't fail the main operation if activity logging fails
   }
+
+  // Publish card created event
+  publishBoardChanged(boardId, 'card', createdCard.id, 'created', userSub);
 
   // Return card with labels and members as JSON for compatibility
   return {
@@ -607,6 +611,10 @@ export async function updateCard(userSub: string, boardId: string, id: string, r
     // Don't fail the main operation if activity logging fails
   }
 
+  // Publish card updated event (or moved if list changed)
+  const action = (req.listId && req.listId !== existingCard[0].listId) ? 'moved' : 'updated';
+  publishBoardChanged(boardId, 'card', id, action, userSub);
+
   // Return card with labels and members as JSON for compatibility
   return {
     ...updatedCard,
@@ -666,6 +674,9 @@ export async function deleteCard(userSub: string, boardId: string, id: string) {
         gt(cardsTable.order, deletedCardOrder)
       )
     );
+
+  // Publish card deleted event
+  publishBoardChanged(boardId, 'card', id, 'deleted', userSub);
 
   return { message: "Xóa Card thành công" };
 }

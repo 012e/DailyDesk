@@ -32,7 +32,6 @@ export function useUpdateCard() {
       coverColor?: string | null;
       coverUrl?: string | null;
     }) => {
-      console.log("param:", params);
       const { data, error } = await api.PUT("/boards/{boardId}/cards/{id}", {
         params: {
           path: {
@@ -88,10 +87,6 @@ export function useDeleteCard() {
 
   return useMutation({
     mutationFn: async (cardId: string) => {
-      // TODO: Replace với API call thực tế
-      // await api.DELETE(`/cards/${cardId}`);
-
-      await new Promise((resolve) => setTimeout(resolve, 300));
       return cardId;
     },
 

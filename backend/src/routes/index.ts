@@ -8,8 +8,10 @@ import createLabelRoutes from "./labels";
 import createMemberRoutes from "./members";
 import createChatRoutes from "./chat";
 import createCommentRoutes from "./comments";
+import createSSERoutes from "./sse";
 
 export default function setupRoutes(app: OpenAPIHono) {
+  app.route("/boards", createSSERoutes());
   app.route("/boards", createBoardRoutes());
   app.route("/boards", createListRoutes());
   app.route("/boards", createCardRoutes());

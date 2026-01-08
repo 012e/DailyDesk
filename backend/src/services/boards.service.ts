@@ -2,6 +2,7 @@ import db from "@/lib/db";
 import { boardsTable, listsTable, cardsTable, cardLabelsTable, cardMembersTable, labelsTable, boardMembersTable } from "@/lib/db/schema";
 import { eq, asc, sql } from "drizzle-orm";
 import { ContentfulStatusCode } from "hono/utils/http-status";
+import { publishBoardChanged } from "./events.service";
 
 export class ServiceError extends Error {
   status: ContentfulStatusCode;
@@ -116,6 +117,9 @@ export async function createBoard(userSub: string, req: any) {
       backgroundColor: req.backgroundColor ?? null,
     })
     .returning();
+
+  // Publish board created event
+  publishBoardChanged(board[0].id, 'board', board[0].id, 'created', userSub);
 
   return board[0];
 }
@@ -245,6 +249,9 @@ export async function updateBoard(userSub: string, id: string, req: any) {
     .where(eq(boardsTable.id, id))
     .returning();
 
+  // Publish board updated event
+  publishBoardChanged(id, 'board', id, 'updated', userSub);
+
   return updatedBoard[0];
 }
 
@@ -265,6 +272,9 @@ export async function deleteBoard(userSub: string, id: string) {
   }
 
   await db.delete(boardsTable).where(eq(boardsTable.id, id));
+
+  // Publish board deleted event
+  publishBoardChanged(id, 'board', id, 'deleted', userSub);
 
   return { message: "Xóa Board thành công" };
 }
