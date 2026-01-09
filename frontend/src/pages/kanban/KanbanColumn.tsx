@@ -41,6 +41,7 @@ export function KanbanColumn({
   onDeleteColumn,
   onDeleteCard,
 }: KanbanColumnProps) {
+  
   return (
     <KanbanBoardColumn
       key={column.id}

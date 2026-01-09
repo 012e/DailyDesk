@@ -6,7 +6,7 @@ import {
   type KanbanBoardDropDirection,
 } from "@/components/kanban";
 import { useBoard } from "@/hooks/use-board";
-import { useUpdateCard } from "@/hooks/use-card";
+import { useUpdateCard, useDeleteCard } from "@/hooks/use-card";
 import { useListActions } from "@/hooks/use-list";
 import type { Card as CardType } from "@/types/card";
 import { useAtom, useSetAtom } from "jotai";
@@ -47,6 +47,7 @@ export function Kanban({ boardId }: KanbanProps) {
   const [isMembersSheetOpen, setIsMembersSheetOpen] = useState(false);
 
   const { mutate: updateCard } = useUpdateCard();
+  const { mutate: deleteCard } = useDeleteCard();
 
   // Auth0 user has 'sub' field for user ID
   const isOwner = currentUser?.sub === board?.userId;
@@ -141,10 +142,15 @@ export function Kanban({ boardId }: KanbanProps) {
     setSelectedCard(updatedCard);
   };
 
-  const handleDeleteCard = () => {
-    // TODO: Connect this to a backend mutation/hook.
-    setIsCardDialogOpen(false);
-    setSelectedCard(null);
+  const handleDeleteCard = (cardId: string) => {
+    if (!boardId) return;
+    
+    deleteCard({ boardId, cardId }, {
+      onSuccess: () => {
+        setIsCardDialogOpen(false);
+        setSelectedCard(null);
+      },
+    });
   };
 
   return (

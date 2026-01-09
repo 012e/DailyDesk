@@ -86,35 +86,29 @@ export function useDeleteCard() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (cardId: string) => {
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      return cardId;
-    },
+    mutationFn: async (params: { boardId: string; cardId: string }) => {
+      const { data, error } = await api.DELETE("/boards/{boardId}/cards/{id}", {
+        params: {
+          path: {
+            boardId: params.boardId,
+            id: params.cardId,
+          },
+        },
+      });
 
-    onMutate: async (cardId) => {
-      await queryClient.cancelQueries({ queryKey: ["cards"] });
-
-      const previousCards = queryClient.getQueryData<Card[]>(["cards"]);
-
-      if (previousCards) {
-        queryClient.setQueryData<Card[]>(
-          ["cards"],
-          previousCards.filter((card) => card.id !== cardId),
-        );
+      if (error) {
+        throw new Error("Failed to delete card");
       }
 
-      return { previousCards };
+      return data;
     },
 
-    onError: (err, _variables, context) => {
-      if (context?.previousCards) {
-        queryClient.setQueryData(["cards"], context.previousCards);
-      }
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["board", variables.boardId] });
+    },
+
+    onError: (err) => {
       console.error("Failed to delete card:", err);
-    },
-
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["cards"] });
     },
   });
 }

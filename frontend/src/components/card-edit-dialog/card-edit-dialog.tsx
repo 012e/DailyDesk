@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import type { Card } from "@/types/card";
 import { CardCoverModeValue } from "@/types/card";
-import { X, Tag, CheckSquare, UserPlus, Paperclip, Clock, Wallpaper, Loader2, Link2, FileIcon, ExternalLink, Download } from "lucide-react";
+import { X, Tag, CheckSquare, UserPlus, Paperclip, Clock, Wallpaper, Loader2, Link2, FileIcon, ExternalLink, Download, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CardHeader } from "./card-header";
 import { CardDescription } from "./card-description";
@@ -42,6 +42,7 @@ export function CardEditDialog({
   isOpen,
   onClose,
   onUpdate,
+  onDelete,
 }: CardEditDialogProps) {
   const [showDetails, setShowDetails] = useState(true);
   const { uploadImage } = useUploadImage();
@@ -72,6 +73,7 @@ export function CardEditDialog({
         isOpen={isOpen}
         onClose={onClose}
         onUpdate={onUpdate}
+        onDelete={onDelete}
         uploadImage={handleUploadImage}
         showDetails={showDetails}
         setShowDetails={setShowDetails}
@@ -87,6 +89,7 @@ interface InnerDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onUpdate: (card: Card) => void;
+  onDelete?: (cardId: string) => void;
   uploadImage: (options: {
     file: File;
     type: "card" | "board";
@@ -102,6 +105,7 @@ function InnerDialog({
   isOpen,
   onClose,
   onUpdate,
+  onDelete,
   uploadImage,
   showDetails,
   setShowDetails,
@@ -165,10 +169,17 @@ function InnerDialog({
 
       // Sync with backend if boardId is available
       if (boardId) {
+        // Map frontend fields to backend fields
+        const backendUpdates: any = { ...updates };
+        if (updates.title !== undefined) {
+          backendUpdates.name = updates.title;
+          delete backendUpdates.title;
+        }
+        
         updateCard({
           boardId,
           cardId: card.id,
-          ...updates,
+          ...backendUpdates,
         });
       }
     },
@@ -542,6 +553,21 @@ function InnerDialog({
                   </div>
                 </PopoverContent>
               </Popover>
+              {onDelete && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="h-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                  onClick={() => {
+                    if (confirm("Are you sure you want to delete this card? This action cannot be undone.")) {
+                      onDelete(card.id);
+                    }
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Delete Card
+                </Button>
+              )}
             </div>
 
             {/* Labels display - only show if has labels */}
