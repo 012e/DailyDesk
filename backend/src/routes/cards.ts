@@ -2,11 +2,7 @@ import { ensureUserAuthenticated } from "@/lib/utils";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { authMiddleware } from "@/lib/auth";
 import { defaultSecurityScheme, jsonBody, successJson } from "@/types/openapi";
-import {
-  CardSchema,
-  CreateCardSchema,
-  UpdateCardSchema,
-} from "@/types/cards";
+import { CardSchema, CreateCardSchema, UpdateCardSchema } from "@/types/cards";
 import * as cardService from "@/services/cards.service";
 
 const TAGS = ["Cards"];
@@ -79,7 +75,7 @@ export default function createCardRoutes() {
         body: jsonBody(
           CreateCardSchema.extend({
             listId: z.uuid(),
-          })
+          }),
         ),
       },
       responses: {
@@ -108,7 +104,7 @@ export default function createCardRoutes() {
           ...card,
           labels: card.labels ? JSON.parse(card.labels) : null,
           members: card.members ? JSON.parse(card.members) : null,
-          attachments: card.attachments ? JSON.parse(card.attachments) : null,
+          // attachments: card.attachments ? JSON.parse(card.attachments) : null,
         };
 
         return c.json(parsedCard);
@@ -187,7 +183,7 @@ export default function createCardRoutes() {
         body: jsonBody(
           UpdateCardSchema.extend({
             listId: z.uuid().optional(),
-          })
+          }),
         ),
       },
       responses: {
@@ -209,14 +205,21 @@ export default function createCardRoutes() {
       const req = c.req.valid("json");
 
       try {
-        const updated = await cardService.updateCard(user.sub, boardId, id, req);
+        const updated = await cardService.updateCard(
+          user.sub,
+          boardId,
+          id,
+          req,
+        );
 
         // Parse JSON fields for response
         const parsedCard = {
           ...updated,
           labels: updated.labels ? JSON.parse(updated.labels) : null,
           members: updated.members ? JSON.parse(updated.members) : null,
-          attachments: updated.attachments ? JSON.parse(updated.attachments) : null,
+          attachments: updated.attachments
+            ? JSON.parse(updated.attachments)
+            : null,
         };
 
         return c.json(parsedCard);

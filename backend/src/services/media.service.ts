@@ -29,15 +29,21 @@ const entityConfig = {
   },
 } as const;
 
-export async function saveImage(userSub: string, type: "board" | "card", id: string, secure_url: string, public_id: string) {
+export async function saveImage(
+  userSub: string,
+  type: "board" | "card",
+  id: string,
+  secure_url: string,
+  public_id: string,
+) {
   const config = entityConfig[type];
   if (!config) throw new ServiceError("Invalid type", 400);
 
-  const entity = await db
+  const entity = (await db
     .select()
     .from(config.table)
     .where(eq(config.table.id, id))
-    .then((r) => r[0]);
+    .then((r) => r[0])) as any;
 
   if (!entity) {
     await deleteFromCloudinary(public_id);
@@ -50,7 +56,9 @@ export async function saveImage(userSub: string, type: "board" | "card", id: str
   }
 
   if (entity[config.publicIdField as keyof typeof entity])
-    await deleteFromCloudinary(entity[config.publicIdField as keyof typeof entity] as string);
+    await deleteFromCloudinary(
+      entity[config.publicIdField as keyof typeof entity] as string,
+    );
 
   const updated = await db
     .update(config.table)
@@ -60,28 +68,38 @@ export async function saveImage(userSub: string, type: "board" | "card", id: str
     } as any)
     .where(eq(config.table.id, id))
     .returning({
+      // @ts-ignore
       [config.urlField]: config.table[config.urlField as keyof typeof entity],
-      [config.publicIdField]: config.table[config.publicIdField as keyof typeof entity],
+      [config.publicIdField]:
+        // @ts-ignore
+        config.table[config.publicIdField as keyof typeof entity],
     })
     .then((r) => r[0]);
 
   return updated;
 }
 
-export async function deleteImage(userSub: string, type: "board" | "card", id: string) {
+export async function deleteImage(
+  userSub: string,
+  type: "board" | "card",
+  id: string,
+) {
   const config = entityConfig[type];
   if (!config) throw new ServiceError("Invalid type", 400);
 
-  const entity = await db
+  const entity = (await db
     .select()
     .from(config.table)
     .where(eq(config.table.id, id))
-    .then((r) => r[0]);
+    .then((r) => r[0])) as any;
   if (!entity) throw new ServiceError(`Không tìm thấy ${type}`, 404);
-  if (config.authorization && entity.userId !== userSub) throw new ServiceError(`Không có quyền xóa ảnh của ${type} này`, 403);
+  if (config.authorization && entity.userId !== userSub)
+    throw new ServiceError(`Không có quyền xóa ảnh của ${type} này`, 403);
 
   if (entity[config.publicIdField as keyof typeof entity])
-    await deleteFromCloudinary(entity[config.publicIdField as keyof typeof entity] as string);
+    await deleteFromCloudinary(
+      entity[config.publicIdField as keyof typeof entity] as string,
+    );
 
   await db
     .update(config.table)

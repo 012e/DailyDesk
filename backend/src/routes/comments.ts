@@ -67,7 +67,7 @@ export default function createCommentRoutes() {
         }
         throw err;
       }
-    }
+    },
   );
 
   // PUT /boards/{boardId}/cards/{cardId}/comments/{commentId} - Update a comment
@@ -107,7 +107,7 @@ export default function createCommentRoutes() {
         const comment = await commentService.updateComment(
           user.sub,
           commentId,
-          req.content
+          req.content,
         );
 
         return c.json(comment);
@@ -117,7 +117,7 @@ export default function createCommentRoutes() {
         }
         throw err;
       }
-    }
+    },
   );
 
   // DELETE /boards/{boardId}/cards/{cardId}/comments/{commentId} - Delete a comment
@@ -170,7 +170,10 @@ export default function createCommentRoutes() {
             description: `deleted a comment`,
           });
         } catch (activityError) {
-          console.error("Failed to log comment deletion activity:", activityError);
+          console.error(
+            "Failed to log comment deletion activity:",
+            activityError,
+          );
         }
 
         return c.json(result);
@@ -180,7 +183,7 @@ export default function createCommentRoutes() {
         }
         throw err;
       }
-    }
+    },
   );
 
   // GET /boards/{boardId}/cards/{cardId}/comments - Get all comments for a card
@@ -216,7 +219,7 @@ export default function createCommentRoutes() {
       try {
         const comments = await commentService.getCommentsForCard(
           user.sub,
-          cardId
+          cardId,
         );
         return c.json(comments);
       } catch (err: any) {
@@ -225,7 +228,7 @@ export default function createCommentRoutes() {
         }
         throw err;
       }
-    }
+    },
   );
 
   // GET /boards/{boardId}/cards/{cardId}/activities - Get all activities for a card
@@ -261,7 +264,7 @@ export default function createCommentRoutes() {
       try {
         const activities = await activityService.getActivitiesForCard(
           user.sub,
-          cardId
+          cardId,
         );
         return c.json(activities);
       } catch (err: any) {
@@ -270,7 +273,7 @@ export default function createCommentRoutes() {
         }
         throw err;
       }
-    }
+    },
   );
 
   // GET /boards/{boardId}/cards/{cardId}/timeline - Get timeline (comments + activities merged)
@@ -295,7 +298,7 @@ export default function createCommentRoutes() {
                 z.union([
                   CommentSchema.extend({ type: z.literal("comment") }),
                   ActivitySchema.extend({ type: z.literal("activity") }),
-                ])
+                ]),
               ),
             },
           },
@@ -316,7 +319,7 @@ export default function createCommentRoutes() {
       try {
         const timeline = await activityService.getCardTimeline(
           user.sub,
-          cardId
+          cardId,
         );
         return c.json(timeline);
       } catch (err: any) {
@@ -328,7 +331,7 @@ export default function createCommentRoutes() {
         }
         throw err;
       }
-    }
+    },
   );
 
   return app;

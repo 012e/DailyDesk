@@ -30,18 +30,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Set up database
-        env:
-          DATABASE_URL: file:./tmp/test.db
-          AUTH0_DOMAIN: test.auth0.com
-          AUTH0_API_AUDIENCE: test-audience
-        run: |
-          mkdir -p backend/tmp
-          pnpm --filter backend db:push
-
       - name: Run tests
-        env:
-          DATABASE_URL: file:./tmp/test.db
-          AUTH0_DOMAIN: test.auth0.com
-          AUTH0_API_AUDIENCE: test-audience
         run: pnpm test
+
+      - name: Build code
+        run: pnpm --filter backend exec tsc --noEmit

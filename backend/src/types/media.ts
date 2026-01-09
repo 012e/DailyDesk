@@ -8,7 +8,7 @@ export const SaveImageBodySchema = z.object({
 export type SaveImageBodyType = z.infer<typeof SaveImageBodySchema>;
 
 export const SaveImageResponseSchema = z.object({
-  secure_url: z.string().url().optional(),
+  secure_url: z.url().optional(),
   public_id: z.string().optional(),
 });
 
