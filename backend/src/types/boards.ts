@@ -9,9 +9,9 @@ export const BoardSchema = z.object({
   id: z.uuid(),
   name: z.string().nonempty(),
   userId: z.string().nonempty(),
-  backgroundUrl: z.string().nullable().optional(),
-  backgroundColor: z.string().nullable().optional(),
-  backgroundPublicId: z.string().nullable().optional(),
+  backgroundUrl: z.string().optional(),
+  backgroundColor: z.string().optional(),
+  backgroundPublicId: z.string().optional(),
 });
 
 // Schema for list with nested cards
