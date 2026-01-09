@@ -8,6 +8,8 @@ import {
 import { useBoard } from "@/hooks/use-board";
 import { useUpdateCard, useDeleteCard } from "@/hooks/use-card";
 import { useListActions } from "@/hooks/use-list";
+import { useAtomValue } from "jotai";
+import { editingListTitleAtom } from "./atoms";
 import type { Card as CardType } from "@/types/card";
 import { useAtom, useSetAtom } from "jotai";
 import { useEffect, useState } from "react";
@@ -37,10 +39,11 @@ interface KanbanProps {
 
 export function Kanban({ boardId }: KanbanProps) {
   const setBoardId = useSetAtom(boardIdAtom);
-  const { createList } = useListActions();
+  const { createList, updateList, deleteList } = useListActions();
   const board = useBoard({ boardId: boardId! });
   const lists = board?.lists || [];
   const { user: currentUser } = useAuth0();
+  const editingListTitle = useAtomValue(editingListTitleAtom);
 
   const [selectedCard, setSelectedCard] = useAtom(selectedCardAtom);
   const [isCardDialogOpen, setIsCardDialogOpen] = useAtom(isCardDialogOpenAtom);
@@ -129,12 +132,22 @@ export function Kanban({ boardId }: KanbanProps) {
     }
   };
 
-  const handleSaveColumnEdit = () => {
-    // TODO: Implement updateList hook logic here
+  const handleSaveColumnEdit = async (listId: string) => {
+    if (!editingListTitle.trim()) return;
+    
+    try {
+      await updateList(listId, { name: editingListTitle });
+    } catch (error) {
+      console.error("Failed to update list:", error);
+    }
   };
 
-  const handleDeleteColumn = async () => {
-    // TODO: Implement deleteList hook logic here
+  const handleDeleteColumn = async (columnId: string) => {
+    try {
+      await deleteList(columnId);
+    } catch (error) {
+      console.error("Failed to delete list:", error);
+    }
   };
 
   const handleUpdateCard = (updatedCard: CardType) => {

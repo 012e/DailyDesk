@@ -28,7 +28,7 @@ interface KanbanColumnProps {
     data: string,
     direction: KanbanBoardDropDirection
   ) => void;
-  onSaveColumnEdit: () => void;
+  onSaveColumnEdit: (listId: string) => void;
   onDeleteColumn: (columnId: string) => void;
   onDeleteCard: (cardId: string) => void;
 }
@@ -41,7 +41,7 @@ export function KanbanColumn({
   onDeleteColumn,
   onDeleteCard,
 }: KanbanColumnProps) {
-  
+
   return (
     <KanbanBoardColumn
       key={column.id}
@@ -52,7 +52,7 @@ export function KanbanColumn({
         <ColumnHeader
           columnId={column.id}
           columnName={column.name}
-          onSave={onSaveColumnEdit}
+          onSave={() => onSaveColumnEdit(column.id)}
           onDelete={onDeleteColumn}
         />
       </KanbanBoardColumnHeader>
