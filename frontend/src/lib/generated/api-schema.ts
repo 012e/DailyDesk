@@ -31,8 +31,9 @@ export interface paths {
                             id: string;
                             name: string;
                             userId: string;
-                            backgroundUrl: string | null;
-                            backgroundColor: string | null;
+                            backgroundUrl?: string | null;
+                            backgroundColor?: string | null;
+                            backgroundPublicId?: string | null;
                             lists: {
                                 /** Format: uuid */
                                 id: string;
@@ -46,6 +47,10 @@ export interface paths {
                                     name: string;
                                     description: string | null;
                                     order: number;
+                                    /** Format: uri */
+                                    coverUrl: string | null;
+                                    coverPublicId: string | null;
+                                    coverColor: string | null;
                                     /** Format: uuid */
                                     listId: string;
                                     labels: {
@@ -60,12 +65,13 @@ export interface paths {
                                         avatar?: string;
                                         initials: string;
                                     }[] | null;
-                                    /** Format: date */
+                                    /** Format: date-time */
                                     startDate: string | null;
-                                    /** Format: date */
+                                    /** Format: date-time */
                                     deadline: string | null;
                                     latitude: number | null;
                                     longitude: number | null;
+                                    completed: boolean | null;
                                 }[];
                             }[];
                         }[];
@@ -104,8 +110,9 @@ export interface paths {
                             id: string;
                             name: string;
                             userId: string;
-                            backgroundUrl: string | null;
-                            backgroundColor: string | null;
+                            backgroundUrl?: string | null;
+                            backgroundColor?: string | null;
+                            backgroundPublicId?: string | null;
                         };
                     };
                 };
@@ -146,8 +153,9 @@ export interface paths {
                             id: string;
                             name: string;
                             userId: string;
-                            backgroundUrl: string | null;
-                            backgroundColor: string | null;
+                            backgroundUrl?: string | null;
+                            backgroundColor?: string | null;
+                            backgroundPublicId?: string | null;
                             lists: {
                                 /** Format: uuid */
                                 id: string;
@@ -161,6 +169,10 @@ export interface paths {
                                     name: string;
                                     description: string | null;
                                     order: number;
+                                    /** Format: uri */
+                                    coverUrl: string | null;
+                                    coverPublicId: string | null;
+                                    coverColor: string | null;
                                     /** Format: uuid */
                                     listId: string;
                                     labels: {
@@ -175,12 +187,13 @@ export interface paths {
                                         avatar?: string;
                                         initials: string;
                                     }[] | null;
-                                    /** Format: date */
+                                    /** Format: date-time */
                                     startDate: string | null;
-                                    /** Format: date */
+                                    /** Format: date-time */
                                     deadline: string | null;
                                     latitude: number | null;
                                     longitude: number | null;
+                                    completed: boolean | null;
                                 }[];
                             }[];
                         };
@@ -232,8 +245,9 @@ export interface paths {
                             id: string;
                             name: string;
                             userId: string;
-                            backgroundUrl: string | null;
-                            backgroundColor: string | null;
+                            backgroundUrl?: string | null;
+                            backgroundColor?: string | null;
+                            backgroundPublicId?: string | null;
                         };
                     };
                 };
@@ -385,6 +399,10 @@ export interface paths {
                             name: string;
                             description: string | null;
                             order: number;
+                            /** Format: uri */
+                            coverUrl: string | null;
+                            coverPublicId: string | null;
+                            coverColor: string | null;
                             /** Format: uuid */
                             listId: string;
                             labels: {
@@ -399,12 +417,13 @@ export interface paths {
                                 avatar?: string;
                                 initials: string;
                             }[] | null;
-                            /** Format: date */
+                            /** Format: date-time */
                             startDate: string | null;
-                            /** Format: date */
+                            /** Format: date-time */
                             deadline: string | null;
                             latitude: number | null;
                             longitude: number | null;
+                            completed: boolean | null;
                         }[];
                     };
                 };
@@ -718,6 +737,10 @@ export interface paths {
                             name: string;
                             description: string | null;
                             order: number;
+                            /** Format: uri */
+                            coverUrl: string | null;
+                            coverPublicId: string | null;
+                            coverColor: string | null;
                             /** Format: uuid */
                             listId: string;
                             labels: {
@@ -732,12 +755,13 @@ export interface paths {
                                 avatar?: string;
                                 initials: string;
                             }[] | null;
-                            /** Format: date */
+                            /** Format: date-time */
                             startDate: string | null;
-                            /** Format: date */
+                            /** Format: date-time */
                             deadline: string | null;
                             latitude: number | null;
                             longitude: number | null;
+                            completed: boolean | null;
                         }[];
                     };
                 };
@@ -787,12 +811,13 @@ export interface paths {
                             avatar?: string;
                             initials: string;
                         }[];
-                        /** Format: date */
+                        /** Format: date-time */
                         startDate?: string | null;
-                        /** Format: date */
+                        /** Format: date-time */
                         deadline?: string | null;
                         latitude?: number;
                         longitude?: number;
+                        completed?: boolean;
                         /** Format: uuid */
                         listId: string;
                     };
@@ -811,6 +836,10 @@ export interface paths {
                             name: string;
                             description: string | null;
                             order: number;
+                            /** Format: uri */
+                            coverUrl: string | null;
+                            coverPublicId: string | null;
+                            coverColor: string | null;
                             /** Format: uuid */
                             listId: string;
                             labels: {
@@ -825,12 +854,13 @@ export interface paths {
                                 avatar?: string;
                                 initials: string;
                             }[] | null;
-                            /** Format: date */
+                            /** Format: date-time */
                             startDate: string | null;
-                            /** Format: date */
+                            /** Format: date-time */
                             deadline: string | null;
                             latitude: number | null;
                             longitude: number | null;
+                            completed: boolean | null;
                         };
                     };
                 };
@@ -887,6 +917,10 @@ export interface paths {
                             name: string;
                             description: string | null;
                             order: number;
+                            /** Format: uri */
+                            coverUrl: string | null;
+                            coverPublicId: string | null;
+                            coverColor: string | null;
                             /** Format: uuid */
                             listId: string;
                             labels: {
@@ -901,12 +935,13 @@ export interface paths {
                                 avatar?: string;
                                 initials: string;
                             }[] | null;
-                            /** Format: date */
+                            /** Format: date-time */
                             startDate: string | null;
-                            /** Format: date */
+                            /** Format: date-time */
                             deadline: string | null;
                             latitude: number | null;
                             longitude: number | null;
+                            completed: boolean | null;
                         };
                     };
                 };
@@ -954,12 +989,15 @@ export interface paths {
                             avatar?: string;
                             initials: string;
                         }[] | null;
-                        /** Format: date */
+                        /** Format: date-time */
                         startDate?: string | null;
-                        /** Format: date */
+                        /** Format: date-time */
                         deadline?: string | null;
                         latitude?: number | null;
                         longitude?: number | null;
+                        coverColor?: string | null;
+                        coverUrl?: string | "" | unknown;
+                        completed?: boolean | null;
                         /** Format: uuid */
                         listId?: string;
                     };
@@ -978,6 +1016,10 @@ export interface paths {
                             name: string;
                             description: string | null;
                             order: number;
+                            /** Format: uri */
+                            coverUrl: string | null;
+                            coverPublicId: string | null;
+                            coverColor: string | null;
                             /** Format: uuid */
                             listId: string;
                             labels: {
@@ -992,12 +1034,13 @@ export interface paths {
                                 avatar?: string;
                                 initials: string;
                             }[] | null;
-                            /** Format: date */
+                            /** Format: date-time */
                             startDate: string | null;
-                            /** Format: date */
+                            /** Format: date-time */
                             deadline: string | null;
                             latitude: number | null;
                             longitude: number | null;
+                            completed: boolean | null;
                         };
                     };
                 };
@@ -1049,6 +1092,104 @@ export interface paths {
                     content?: never;
                 };
                 /** @description Card hoặc Board không tồn tại */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/media/image/{type}/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    type: "board" | "card";
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uri */
+                        secure_url: string;
+                        public_id: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Successful response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uri */
+                            secure_url?: string;
+                            public_id?: string;
+                        };
+                    };
+                };
+                /** @description Không có quyền upload ảnh */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Không tìm thấy đối tượng */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    type: "board" | "card";
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Xóa ảnh thành công */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Không có quyền xóa ảnh */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Không tìm thấy đối tượng */
                 404: {
                     headers: {
                         [name: string]: unknown;
@@ -1582,7 +1723,7 @@ export interface paths {
                              * @enum {string}
                              */
                             role: "member" | "admin" | "viewer";
-                            /** Format: date */
+                            /** Format: date-time */
                             addedAt: string | null;
                         }[];
                     };
@@ -1653,7 +1794,7 @@ export interface paths {
                              * @enum {string}
                              */
                             role: "member" | "admin" | "viewer";
-                            /** Format: date */
+                            /** Format: date-time */
                             addedAt: string | null;
                         };
                     };
@@ -1735,7 +1876,7 @@ export interface paths {
                              * @enum {string}
                              */
                             role: "member" | "admin" | "viewer";
-                            /** Format: date */
+                            /** Format: date-time */
                             addedAt: string | null;
                         };
                     };
@@ -1796,6 +1937,596 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/boards/{boardId}/cards/{cardId}/attachments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boardId: string;
+                    cardId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Lấy danh sách attachments thành công */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            name: string;
+                            /** Format: uri */
+                            url: string;
+                            publicId: string | null;
+                            type: string;
+                            size: number;
+                            /** Format: date-time */
+                            uploadedAt: string | null;
+                            uploadedBy: string;
+                            /** Format: uuid */
+                            cardId: string;
+                        }[];
+                    };
+                };
+                /** @description Không có quyền truy cập Board này */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Card hoặc Board không tồn tại */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boardId: string;
+                    cardId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        name: string;
+                        /** Format: uri */
+                        url: string;
+                        publicId?: string;
+                        type: string;
+                        size: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Tạo attachment thành công */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            name: string;
+                            /** Format: uri */
+                            url: string;
+                            publicId: string | null;
+                            type: string;
+                            size: number;
+                            /** Format: date-time */
+                            uploadedAt: string | null;
+                            uploadedBy: string;
+                            /** Format: uuid */
+                            cardId: string;
+                        };
+                    };
+                };
+                /** @description Không có quyền tạo attachment trong Board này */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Card hoặc Board không tồn tại */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/boards/{boardId}/cards/{cardId}/attachments/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boardId: string;
+                    cardId: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Xóa attachment thành công */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Không có quyền xóa attachment */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Attachment không tồn tại */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/boards/{boardId}/cards/{cardId}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boardId: string;
+                    cardId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Lấy danh sách comments thành công */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            cardId: string;
+                            userId: string;
+                            content: string;
+                            user: {
+                                id: string;
+                                name: string;
+                                /** Format: email */
+                                email: string;
+                                avatar?: string;
+                                initials: string;
+                            };
+                            /** Format: date-time */
+                            createdAt: string | null;
+                        }[];
+                    };
+                };
+                /** @description Không có quyền truy cập card này */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Card không tồn tại */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boardId: string;
+                    cardId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        content: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Thêm comment thành công */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            cardId: string;
+                            userId: string;
+                            content: string;
+                            user: {
+                                id: string;
+                                name: string;
+                                /** Format: email */
+                                email: string;
+                                avatar?: string;
+                                initials: string;
+                            };
+                            /** Format: date-time */
+                            createdAt: string | null;
+                        };
+                    };
+                };
+                /** @description Không có quyền truy cập card này */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Card không tồn tại */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/boards/{boardId}/cards/{cardId}/comments/{commentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boardId: string;
+                    cardId: string;
+                    commentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        content: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Cập nhật comment thành công */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            cardId: string;
+                            userId: string;
+                            content: string;
+                            user: {
+                                id: string;
+                                name: string;
+                                /** Format: email */
+                                email: string;
+                                avatar?: string;
+                                initials: string;
+                            };
+                            /** Format: date-time */
+                            createdAt: string | null;
+                        };
+                    };
+                };
+                /** @description Chỉ có thể chỉnh sửa comment của chính mình */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Comment không tồn tại */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boardId: string;
+                    cardId: string;
+                    commentId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Xóa comment thành công */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                        };
+                    };
+                };
+                /** @description Chỉ có thể xóa comment của chính mình */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Comment không tồn tại */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/boards/{boardId}/cards/{cardId}/activities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boardId: string;
+                    cardId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Lấy danh sách activities thành công */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            cardId: string;
+                            userId: string;
+                            /** @enum {string} */
+                            actionType: "card.created" | "card.renamed" | "card.moved" | "card.archived" | "card.description.updated" | "member.added" | "member.removed" | "label.added" | "label.removed" | "deadline.set" | "deadline.changed" | "deadline.removed" | "checklist.added" | "checklist.completed" | "checklist.uncompleted" | "comment.added" | "comment.deleted" | "attachment.added" | "attachment.removed";
+                            description: string;
+                            metadata: {
+                                [key: string]: unknown;
+                            } | null;
+                            user: {
+                                id: string;
+                                name: string;
+                                /** Format: email */
+                                email: string;
+                                avatar?: string;
+                                initials: string;
+                            };
+                            /** Format: date-time */
+                            createdAt: string | null;
+                        }[];
+                    };
+                };
+                /** @description Không có quyền truy cập card này */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Card không tồn tại */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/boards/{boardId}/cards/{cardId}/timeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boardId: string;
+                    cardId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Lấy timeline thành công */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": ({
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            cardId: string;
+                            userId: string;
+                            content: string;
+                            user: {
+                                id: string;
+                                name: string;
+                                /** Format: email */
+                                email: string;
+                                avatar?: string;
+                                initials: string;
+                            };
+                            /** Format: date-time */
+                            createdAt: string | null;
+                            /** @enum {string} */
+                            type: "comment";
+                        } | {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            cardId: string;
+                            userId: string;
+                            /** @enum {string} */
+                            actionType: "card.created" | "card.renamed" | "card.moved" | "card.archived" | "card.description.updated" | "member.added" | "member.removed" | "label.added" | "label.removed" | "deadline.set" | "deadline.changed" | "deadline.removed" | "checklist.added" | "checklist.completed" | "checklist.uncompleted" | "comment.added" | "comment.deleted" | "attachment.added" | "attachment.removed";
+                            description: string;
+                            metadata: {
+                                [key: string]: unknown;
+                            } | null;
+                            user: {
+                                id: string;
+                                name: string;
+                                /** Format: email */
+                                email: string;
+                                avatar?: string;
+                                initials: string;
+                            };
+                            /** Format: date-time */
+                            createdAt: string | null;
+                            /** @enum {string} */
+                            type: "activity";
+                        })[];
+                    };
+                };
+                /** @description Không có quyền truy cập card này */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Card không tồn tại */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;

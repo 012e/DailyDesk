@@ -49,6 +49,14 @@ export default function createBoardRoutes() {
         200: successJson(BoardSchema, {
           description: "Tạo Board thành công",
         }),
+        400: {
+          content: {
+            "application/json": {
+              schema: z.any(),
+            },
+          },
+          description: "Request failed",
+        },
       },
     }),
 
@@ -60,11 +68,11 @@ export default function createBoardRoutes() {
         return c.json(board);
       } catch (err: any) {
         if (err instanceof boardService.ServiceError) {
-          return c.json({ error: err.message }, err.status);
+          return c.json({ error: err.message }, 400);
         }
         throw err;
       }
-    }
+    },
   );
 
   app.openapi(
@@ -103,7 +111,7 @@ export default function createBoardRoutes() {
         }
         throw err;
       }
-    }
+    },
   );
 
   app.openapi(
@@ -144,7 +152,7 @@ export default function createBoardRoutes() {
         }
         throw err;
       }
-    }
+    },
   );
 
   app.openapi(
@@ -190,7 +198,7 @@ export default function createBoardRoutes() {
         }
         throw err;
       }
-    }
+    },
   );
 
   app.openapi(
@@ -229,7 +237,7 @@ export default function createBoardRoutes() {
         }
         throw err;
       }
-    }
+    },
   );
 
   app.openapi(
@@ -268,7 +276,7 @@ export default function createBoardRoutes() {
         }
         throw err;
       }
-    }
+    },
   );
 
   return app;
