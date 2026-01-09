@@ -71,6 +71,7 @@ export interface paths {
                                     deadline: string | null;
                                     latitude: number | null;
                                     longitude: number | null;
+                                    completed: boolean | null;
                                 }[];
                             }[];
                         }[];
@@ -192,6 +193,7 @@ export interface paths {
                                     deadline: string | null;
                                     latitude: number | null;
                                     longitude: number | null;
+                                    completed: boolean | null;
                                 }[];
                             }[];
                         };
@@ -421,6 +423,7 @@ export interface paths {
                             deadline: string | null;
                             latitude: number | null;
                             longitude: number | null;
+                            completed: boolean | null;
                         }[];
                     };
                 };
@@ -758,6 +761,7 @@ export interface paths {
                             deadline: string | null;
                             latitude: number | null;
                             longitude: number | null;
+                            completed: boolean | null;
                         }[];
                     };
                 };
@@ -813,6 +817,7 @@ export interface paths {
                         deadline?: string | null;
                         latitude?: number;
                         longitude?: number;
+                        completed?: boolean;
                         /** Format: uuid */
                         listId: string;
                     };
@@ -855,6 +860,7 @@ export interface paths {
                             deadline: string | null;
                             latitude: number | null;
                             longitude: number | null;
+                            completed: boolean | null;
                         };
                     };
                 };
@@ -935,6 +941,7 @@ export interface paths {
                             deadline: string | null;
                             latitude: number | null;
                             longitude: number | null;
+                            completed: boolean | null;
                         };
                     };
                 };
@@ -990,6 +997,7 @@ export interface paths {
                         longitude?: number | null;
                         coverColor?: string | null;
                         coverUrl?: string | "" | unknown;
+                        completed?: boolean | null;
                         /** Format: uuid */
                         listId?: string;
                     };
@@ -1032,6 +1040,7 @@ export interface paths {
                             deadline: string | null;
                             latitude: number | null;
                             longitude: number | null;
+                            completed: boolean | null;
                         };
                     };
                 };
@@ -1920,6 +1929,184 @@ export interface paths {
                     content?: never;
                 };
                 /** @description Member hoặc Board không tồn tại */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/boards/{boardId}/cards/{cardId}/attachments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boardId: string;
+                    cardId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Lấy danh sách attachments thành công */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            name: string;
+                            /** Format: uri */
+                            url: string;
+                            publicId: string | null;
+                            type: string;
+                            size: number;
+                            /** Format: date-time */
+                            uploadedAt: string | null;
+                            uploadedBy: string;
+                            /** Format: uuid */
+                            cardId: string;
+                        }[];
+                    };
+                };
+                /** @description Không có quyền truy cập Board này */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Card hoặc Board không tồn tại */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boardId: string;
+                    cardId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        name: string;
+                        /** Format: uri */
+                        url: string;
+                        publicId?: string;
+                        type: string;
+                        size: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Tạo attachment thành công */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            name: string;
+                            /** Format: uri */
+                            url: string;
+                            publicId: string | null;
+                            type: string;
+                            size: number;
+                            /** Format: date-time */
+                            uploadedAt: string | null;
+                            uploadedBy: string;
+                            /** Format: uuid */
+                            cardId: string;
+                        };
+                    };
+                };
+                /** @description Không có quyền tạo attachment trong Board này */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Card hoặc Board không tồn tại */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/boards/{boardId}/cards/{cardId}/attachments/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boardId: string;
+                    cardId: string;
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Xóa attachment thành công */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Không có quyền xóa attachment */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Attachment không tồn tại */
                 404: {
                     headers: {
                         [name: string]: unknown;

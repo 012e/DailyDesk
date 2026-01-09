@@ -20,6 +20,9 @@ importers:
 
   backend:
     dependencies:
+      '@ai-sdk/devtools':
+        specifier: ^0.0.4
+        version: 0.0.4
       '@ai-sdk/openai':
         specifier: ^3.0.7
         version: 3.0.7(zod@4.3.5)
@@ -27,8 +30,8 @@ importers:
         specifier: ^1.19.7
         version: 1.19.7(hono@4.11.3)
       '@hono/zod-openapi':
-        specifier: 1.1.3
-        version: 1.1.3(hono@4.11.3)(zod@4.3.5)
+        specifier: 1.2.0
+        version: 1.2.0(hono@4.11.3)(zod@4.3.5)
       '@libsql/client':
         specifier: ^0.15.15
         version: 0.15.15
@@ -63,9 +66,6 @@ importers:
         specifier: ^4.3.5
         version: 4.3.5
     devDependencies:
-      '@ai-sdk/devtools':
-        specifier: ^0.0.3
-        version: 0.0.3
       '@types/node':
         specifier: ^24.10.4
         version: 24.10.4
@@ -373,8 +373,8 @@ packages:
   '@adobe/css-tools@4.4.4':
     resolution: {integrity: sha512-Elp+iwUx5rN5+Y8xLt5/GRoG20WGoDCQ/1Fb+1LiGtvwbDavuSk0jhD/eZdckHAuzcDzccnkv+rEjyWfRx18gg==}
 
-  '@ai-sdk/devtools@0.0.3':
-    resolution: {integrity: sha512-bkkYTuEDqK70bXC30yJLmRH+9xKvo9HCneGH44MKJFssYfwXjyz64G++uEgb+bV2+E/qd/81YNHT+9gcI9q6IA==}
+  '@ai-sdk/devtools@0.0.4':
+    resolution: {integrity: sha512-/Gqe8w2/t0oAK2EYonh7gEg2QhaqWOBTecJDC0miuoVF3AqLbOZaPlM/JlP9V80Dm2DO+PNlCmYDlVYOBR1POg==}
     hasBin: true
 
   '@ai-sdk/gateway@3.0.10':
@@ -394,10 +394,6 @@ packages:
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
-
-  '@ai-sdk/provider@3.0.1':
-    resolution: {integrity: sha512-2lR4w7mr9XrydzxBSjir4N6YMGdXD+Np1Sh0RXABh7tWdNFFwIeRI1Q+SaYZMbfL8Pg8RRLcrxQm51yxTLhokg==}
-    engines: {node: '>=18'}
 
   '@ai-sdk/provider@3.0.2':
     resolution: {integrity: sha512-HrEmNt/BH/hkQ7zpi2o6N3k1ZR1QTb7z85WYhYygiTxOQuaml4CMtHCWRbric5WPU+RNsYI7r1EpyVQMKO1pYw==}
@@ -1526,8 +1522,8 @@ packages:
     peerDependencies:
       hono: ^4
 
-  '@hono/zod-openapi@1.1.3':
-    resolution: {integrity: sha512-ikA8p0Jt7yplxOqbYwdh8rCQWaGN4bu8zK1HbCWqfWT9clo87L32D0eAQ/r0tJodtZbTV5d1vPB75FCkUt1Jdg==}
+  '@hono/zod-openapi@1.2.0':
+    resolution: {integrity: sha512-KDfHqv/Wy4elVseZXgokbHxeWuqBL+AZfqsOMpEihBMUsk/fJ+bLIi3Sf70JFVpt1Ihui8RasYrInozt7ZBDIA==}
     engines: {node: '>=16.0.0'}
     peerDependencies:
       hono: '>=4.3.6'
@@ -6578,9 +6574,9 @@ snapshots:
 
   '@adobe/css-tools@4.4.4': {}
 
-  '@ai-sdk/devtools@0.0.3':
+  '@ai-sdk/devtools@0.0.4':
     dependencies:
-      '@ai-sdk/provider': 3.0.1
+      '@ai-sdk/provider': 3.0.2
       '@hono/node-server': 1.19.7(hono@4.11.3)
       hono: 4.11.3
 
@@ -6603,10 +6599,6 @@ snapshots:
       '@standard-schema/spec': 1.1.0
       eventsource-parser: 3.0.6
       zod: 4.3.5
-
-  '@ai-sdk/provider@3.0.1':
-    dependencies:
-      json-schema: 0.4.0
 
   '@ai-sdk/provider@3.0.2':
     dependencies:
@@ -7483,7 +7475,7 @@ snapshots:
     dependencies:
       hono: 4.11.3
 
-  '@hono/zod-openapi@1.1.3(hono@4.11.3)(zod@4.3.5)':
+  '@hono/zod-openapi@1.2.0(hono@4.11.3)(zod@4.3.5)':
     dependencies:
       '@asteasolutions/zod-to-openapi': 8.4.0(zod@4.3.5)
       '@hono/zod-validator': 0.7.6(hono@4.11.3)(zod@4.3.5)

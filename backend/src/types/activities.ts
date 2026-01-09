@@ -39,7 +39,7 @@ export const ActivitySchema = z.object({
   userId: z.string(), // Clerk user ID of person who performed action
   actionType: ActivityActionType,
   description: z.string().nonempty(), // Human-readable description
-  metadata: z.record(z.any()).nullable(), // Additional data as JSON
+  metadata: z.record(z.string(), z.any()).nullable(), // Additional data as JSON
   user: ActivityUserSchema, // Denormalized user info for frontend
   createdAt: z.coerce.date(),
 });
@@ -50,7 +50,7 @@ export const CreateActivitySchema = z.object({
   userId: z.string(),
   actionType: ActivityActionType,
   description: z.string().nonempty(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
 });
 
 // Type exports
