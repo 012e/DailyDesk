@@ -68,7 +68,7 @@ export default function createBoardRoutes() {
         return c.json(board);
       } catch (err: any) {
         if (err instanceof boardService.ServiceError) {
-          return c.json({ error: err.message }, err.status);
+          return c.json({ error: err.message }, 400);
         }
         throw err;
       }
