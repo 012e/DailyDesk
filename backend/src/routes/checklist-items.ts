@@ -51,7 +51,8 @@ export default function createChecklistItemRoutes() {
         if (err instanceof checklistService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in checklist-items GET route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -94,7 +95,8 @@ export default function createChecklistItemRoutes() {
         if (err instanceof checklistService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in checklist-items POST route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -136,7 +138,8 @@ export default function createChecklistItemRoutes() {
         if (err instanceof checklistService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in checklist-items GET by ID route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -180,7 +183,8 @@ export default function createChecklistItemRoutes() {
         if (err instanceof checklistService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in checklist-items PUT route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -229,7 +233,8 @@ export default function createChecklistItemRoutes() {
         if (err instanceof checklistService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in checklist-items DELETE route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );

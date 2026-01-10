@@ -50,7 +50,8 @@ export default function createListRoutes() {
         if (err instanceof listsService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in lists GET route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -92,7 +93,8 @@ export default function createListRoutes() {
         if (err instanceof listsService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in lists POST route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -133,7 +135,8 @@ export default function createListRoutes() {
         if (err instanceof listsService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in lists GET by ID route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -176,7 +179,8 @@ export default function createListRoutes() {
         if (err instanceof listsService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in lists PUT route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -224,7 +228,8 @@ export default function createListRoutes() {
         if (err instanceof listsService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in lists DELETE route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );

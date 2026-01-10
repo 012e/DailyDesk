@@ -43,7 +43,8 @@ export default function createImageRoute() {
         if (err instanceof mediaService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in media.image POST route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     }
   );
@@ -76,7 +77,8 @@ export default function createImageRoute() {
         if (err instanceof mediaService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in media.image DELETE route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     }
   );

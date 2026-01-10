@@ -70,7 +70,8 @@ export default function createBoardRoutes() {
         if (err instanceof boardService.ServiceError) {
           return c.json({ error: err.message }, 400);
         }
-        throw err;
+        console.error("Error in boards POST route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -109,7 +110,8 @@ export default function createBoardRoutes() {
         if (err instanceof boardService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in boards GET by ID route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -150,7 +152,8 @@ export default function createBoardRoutes() {
         if (err instanceof boardService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in boards PUT route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -196,7 +199,8 @@ export default function createBoardRoutes() {
         if (err instanceof boardService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in boards DELETE route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -235,7 +239,8 @@ export default function createBoardRoutes() {
         if (err instanceof boardService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in boards GET lists route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -274,7 +279,8 @@ export default function createBoardRoutes() {
         if (err instanceof boardService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in boards GET cards route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );

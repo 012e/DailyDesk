@@ -56,7 +56,8 @@ export default function createCardRoutes() {
         if (err instanceof cardService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in getCardsForBoard route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -112,7 +113,8 @@ export default function createCardRoutes() {
         if (err instanceof cardService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in createCard route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -163,7 +165,8 @@ export default function createCardRoutes() {
         if (err instanceof cardService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in getCardById route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -228,7 +231,7 @@ export default function createCardRoutes() {
         if (err instanceof cardService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -277,7 +280,8 @@ export default function createCardRoutes() {
         if (err instanceof cardService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in deleteCard route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );

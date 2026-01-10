@@ -115,7 +115,8 @@ export default function createCommentRoutes() {
         if (err instanceof commentService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in comments PUT route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -181,7 +182,8 @@ export default function createCommentRoutes() {
         if (err instanceof commentService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in comments DELETE route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -226,7 +228,8 @@ export default function createCommentRoutes() {
         if (err instanceof commentService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in comments GET route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -271,7 +274,8 @@ export default function createCommentRoutes() {
         if (err instanceof activityService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in activities GET route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -329,7 +333,8 @@ export default function createCommentRoutes() {
         ) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in timeline GET route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
