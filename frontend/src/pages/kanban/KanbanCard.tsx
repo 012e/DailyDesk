@@ -165,12 +165,6 @@ export function KanbanCard({
                     {normalizedCard.title}
                   </KanbanBoardCardTitle>
                 </div>
-                {recurrenceLabel && (
-                  <Badge variant="secondary" className="text-xs gap-1">
-                    <Repeat className="h-3 w-3" />
-                    {recurrenceLabel}
-                  </Badge>
-                )}
               </div>
             )}
           </KanbanBoardCard>

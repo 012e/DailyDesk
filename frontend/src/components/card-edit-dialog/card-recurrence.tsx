@@ -66,6 +66,15 @@ export function CardRecurrence({
     controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen;
   const setIsOpen = controlledOnOpenChange || setInternalIsOpen;
 
+  // Reset local state to card values when popover opens
+  useEffect(() => {
+    if (isOpen) {
+      setRecurrence(card.recurrence || "never");
+      setRecurrenceDay(card.recurrenceDay || 2);
+      setRecurrenceWeekday(card.recurrenceWeekday || 0);
+    }
+  }, [isOpen, card.recurrence, card.recurrenceDay, card.recurrenceWeekday]);
+
   const handleSave = () => {
     if (recurrence === "never") {
       onUpdate({
@@ -131,7 +140,7 @@ export function CardRecurrence({
             onValueChange={(value) => setRecurrence(value as RecurrenceType)}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select pattern" />
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="never">Never</SelectItem>
