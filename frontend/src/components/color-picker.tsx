@@ -28,7 +28,7 @@ export function AdvancedColorPicker({
   onChange,
   className,
   ...props
-}: ComponentProps<typeof Button> & ColorPickerProps) {
+}: Omit<ComponentProps<typeof Button>, 'onChange'> & ColorPickerProps) {
   const [currentColor, setCurrentColor] = React.useState(color);
   const [colorMode, setColorMode] = React.useState<ColorMode>("hex");
   const [copied, setCopied] = React.useState<CopyState>({

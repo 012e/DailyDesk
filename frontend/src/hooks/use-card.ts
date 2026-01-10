@@ -171,6 +171,8 @@ export function useCreateCard() {
             members: params.members,
             deadline: params.deadline?.toISOString(),
             startDate: params.startDate?.toISOString(),
+            coverColor: params.coverColor,
+            coverUrl: params.coverUrl,
           },
         },
       );

@@ -117,7 +117,7 @@ export default function Home() {
 
 
           {/* Scrollable board grid - max 2 rows visible */}
-          <div className="max-h-[310px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400/50 scrollbar-track-transparent hover:scrollbar-thumb-gray-400/70 pr-2">
+          <div className="max-h-100vh overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400/50 scrollbar-track-transparent hover:scrollbar-thumb-gray-400/70 pr-2">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {boards.map((board) => (
                 <BoardCard

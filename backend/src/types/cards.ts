@@ -51,6 +51,7 @@ export const CreateCardSchema = z.object({
   recurrenceWeekday: z.number().int().min(0).max(6).optional(),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
+  coverColor: z.string().optional(),
   completed: z.boolean().optional(),
 });
 
