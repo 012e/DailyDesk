@@ -10,7 +10,7 @@ import { editingListIdAtom, editingListTitleAtom } from "./atoms";
 interface ColumnHeaderProps {
   columnId: string;
   columnName: string;
-  onSave: () => void;
+  onSave: (columnId: string, newName: string) => void;
   onDelete: (columnId: string) => void;
 }
 
@@ -36,7 +36,9 @@ export function ColumnHeader({
   };
 
   const handleSave = () => {
-    onSave();
+    if (editingListTitle.trim()) {
+      onSave(columnId, editingListTitle.trim());
+    }
     cancelEdit();
   };
 
