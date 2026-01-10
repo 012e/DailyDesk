@@ -1,12 +1,6 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { createOpenAI } from "@ai-sdk/openai";
-import {
-  convertToModelMessages,
-  LanguageModel,
-  stepCountIs,
-  streamText,
-  UIMessage,
-} from "ai";
+import { convertToModelMessages, stepCountIs, streamText, UIMessage } from "ai";
 import { authMiddleware } from "@/lib/auth";
 import { defaultSecurityScheme } from "@/types/openapi";
 import getConfig from "@/lib/config";

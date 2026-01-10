@@ -6,11 +6,14 @@ import {
   cardLabelsTable,
   cardMembersTable,
   labelsTable,
-  boardMembersTable
+  boardMembersTable,
+  attachmentsTable
 } from "@/lib/db/schema";
 import { eq, and, gte, gt, lt, lte, sql } from "drizzle-orm";
 import { ContentfulStatusCode } from "hono/utils/http-status";
 import { randomUUID } from "crypto";
+import { logActivity } from "./activities.service";
+import { publishBoardChanged } from "./events.service";
 
 export class ServiceError extends Error {
   status: ContentfulStatusCode;
@@ -38,21 +41,18 @@ export async function getCardsForBoard(userSub: string, boardId: string) {
     throw new ServiceError("Không có quyền truy cập Board này", 403);
   }
 
-  // Get all cards for the board
   const cards = await db
     .select()
     .from(cardsTable)
     .innerJoin(listsTable, eq(cardsTable.listId, listsTable.id))
     .where(eq(listsTable.boardId, boardId));
 
-  // Get card IDs
   const cardIds = cards.map(c => c.cards.id);
 
   if (cardIds.length === 0) {
     return [];
   }
 
-  // Get labels for all cards using inArray
   const cardLabelsData = await db
     .select({
       cardId: cardLabelsTable.cardId,
@@ -64,7 +64,6 @@ export async function getCardsForBoard(userSub: string, boardId: string) {
     .innerJoin(labelsTable, eq(cardLabelsTable.labelId, labelsTable.id))
     .where(sql`${cardLabelsTable.cardId} IN (${sql.join(cardIds.map(id => sql`${id}`), sql`, `)})`);
 
-  // Get members for all cards using inArray
   const cardMembersData = await db
     .select({
       cardId: cardMembersTable.cardId,
@@ -77,7 +76,13 @@ export async function getCardsForBoard(userSub: string, boardId: string) {
     .innerJoin(boardMembersTable, eq(cardMembersTable.memberId, boardMembersTable.id))
     .where(sql`${cardMembersTable.cardId} IN (${sql.join(cardIds.map(id => sql`${id}`), sql`, `)})`);
 
-  // Group labels and members by card ID
+  const cardAttachmentsData = await db
+    .select()
+    .from(attachmentsTable)
+    .where(sql`${attachmentsTable.cardId} IN (${sql.join(cardIds.map(id => sql`${id}`), sql`, `)})`);
+
+  console.log("[GET CARDS] Found attachments:", cardAttachmentsData.length);
+
   const labelsByCard = new Map<string, Array<{ id: string; name: string; color: string }>>();
   for (const cl of cardLabelsData) {
     if (!labelsByCard.has(cl.cardId)) {
@@ -95,7 +100,6 @@ export async function getCardsForBoard(userSub: string, boardId: string) {
     if (!membersByCard.has(cm.cardId)) {
       membersByCard.set(cm.cardId, []);
     }
-    // Generate initials from name
     const initials = cm.memberName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
     membersByCard.get(cm.cardId)!.push({
       id: cm.memberId,
@@ -106,7 +110,14 @@ export async function getCardsForBoard(userSub: string, boardId: string) {
     });
   }
 
-  // Combine cards with their labels and members
+  const attachmentsByCard = new Map<string, Array<any>>();
+  for (const attachment of cardAttachmentsData) {
+    if (!attachmentsByCard.has(attachment.cardId)) {
+      attachmentsByCard.set(attachment.cardId, []);
+    }
+    attachmentsByCard.get(attachment.cardId)!.push(attachment);
+  }
+
   return cards.map(c => ({
     id: c.cards.id,
     name: c.cards.name,
@@ -115,12 +126,17 @@ export async function getCardsForBoard(userSub: string, boardId: string) {
     listId: c.cards.listId,
     labels: JSON.stringify(labelsByCard.get(c.cards.id) || []),
     members: JSON.stringify(membersByCard.get(c.cards.id) || []),
+    attachments: JSON.stringify(attachmentsByCard.get(c.cards.id) || []),
     startDate: c.cards.startDate,
     deadline: c.cards.deadline,
+    recurrence: c.cards.recurrence,
+    recurrenceDay: c.cards.recurrenceDay,
+    recurrenceWeekday: c.cards.recurrenceWeekday,
     latitude: c.cards.latitude,
     longitude: c.cards.longitude,
     coverColor: c.cards.coverColor,
     coverUrl: c.cards.coverUrl,
+    completed: c.cards.completed,
   }));
 }
 
@@ -164,7 +180,6 @@ export async function createCard(userSub: string, boardId: string, req: any) {
     throw new ServiceError(`Order must be between 0 and ${listSize} for this list`, 400);
   }
 
-  // Create the card
   const card = await db
     .insert(cardsTable)
     .values({
@@ -175,16 +190,19 @@ export async function createCard(userSub: string, boardId: string, req: any) {
       listId: req.listId,
       startDate: req.startDate,
       deadline: req.deadline,
+      recurrence: req.recurrence,
+      recurrenceDay: req.recurrenceDay,
+      recurrenceWeekday: req.recurrenceWeekday,
       latitude: req.latitude,
       longitude: req.longitude,
       coverColor: req.coverColor,
       coverUrl: req.coverUrl,
+      completed: req.completed,
     })
     .returning();
 
   const createdCard = card[0];
 
-  // Insert labels if provided
   if (req.labels && req.labels.length > 0) {
     const labelInserts = req.labels.map((label: any) => ({
       id: randomUUID(),
@@ -194,7 +212,6 @@ export async function createCard(userSub: string, boardId: string, req: any) {
     await db.insert(cardLabelsTable).values(labelInserts);
   }
 
-  // Insert members if provided
   if (req.members && req.members.length > 0) {
     const memberInserts = req.members.map((member: any) => ({
       id: randomUUID(),
@@ -203,6 +220,22 @@ export async function createCard(userSub: string, boardId: string, req: any) {
     }));
     await db.insert(cardMembersTable).values(memberInserts);
   }
+
+  // Log activity for card creation (non-blocking)
+  try {
+    await logActivity({
+      cardId: createdCard.id,
+      userId: userSub,
+      actionType: "card.created",
+      description: `created this card`,
+    });
+  } catch (error) {
+    console.error("Failed to log activity for card creation:", error);
+    // Don't fail the main operation if activity logging fails
+  }
+
+  // Publish card created event
+  publishBoardChanged(boardId, 'card', createdCard.id, 'created', userSub);
 
   // Return card with labels and members as JSON for compatibility
   return {
@@ -248,7 +281,6 @@ export async function getCardById(userSub: string, boardId: string, id: string) 
     throw new ServiceError("Card không thuộc Board này", 403);
   }
 
-  // Get labels for this card
   const cardLabelsData = await db
     .select({
       labelId: labelsTable.id,
@@ -259,7 +291,6 @@ export async function getCardById(userSub: string, boardId: string, id: string) 
     .innerJoin(labelsTable, eq(cardLabelsTable.labelId, labelsTable.id))
     .where(eq(cardLabelsTable.cardId, id));
 
-  // Get members for this card
   const cardMembersData = await db
     .select({
       memberId: boardMembersTable.id,
@@ -270,6 +301,11 @@ export async function getCardById(userSub: string, boardId: string, id: string) 
     .from(cardMembersTable)
     .innerJoin(boardMembersTable, eq(cardMembersTable.memberId, boardMembersTable.id))
     .where(eq(cardMembersTable.cardId, id));
+
+  const cardAttachments = await db
+    .select()
+    .from(attachmentsTable)
+    .where(eq(attachmentsTable.cardId, id));
 
   const labels = cardLabelsData.map(cl => ({
     id: cl.labelId,
@@ -296,12 +332,14 @@ export async function getCardById(userSub: string, boardId: string, id: string) 
     listId: card[0].cards.listId,
     labels: JSON.stringify(labels),
     members: JSON.stringify(members),
+    attachments: JSON.stringify(cardAttachments),
     startDate: card[0].cards.startDate,
     deadline: card[0].cards.deadline,
     latitude: card[0].cards.latitude,
     longitude: card[0].cards.longitude,
     coverColor: card[0].cards.coverColor,
     coverUrl: card[0].cards.coverUrl,
+    completed: card[0].cards.completed,
   };
 }
 
@@ -443,19 +481,22 @@ export async function updateCard(userSub: string, boardId: string, id: string, r
     }
   }
 
-  // Build update object, filtering out undefined values (excluding labels/members)
   const updateData: any = {};
   if (req.name !== undefined) updateData.name = req.name;
+  if (req.description !== undefined) updateData.description = req.description;
   if (req.order !== undefined) updateData.order = req.order;
   if (req.listId !== undefined) updateData.listId = req.listId;
   if (req.startDate !== undefined) updateData.startDate = req.startDate;
   if (req.deadline !== undefined) updateData.deadline = req.deadline;
+  if (req.recurrence !== undefined) updateData.recurrence = req.recurrence;
+  if (req.recurrenceDay !== undefined) updateData.recurrenceDay = req.recurrenceDay;
+  if (req.recurrenceWeekday !== undefined) updateData.recurrenceWeekday = req.recurrenceWeekday;
   if (req.latitude !== undefined) updateData.latitude = req.latitude;
   if (req.longitude !== undefined) updateData.longitude = req.longitude;
   if (req.coverColor !== undefined) updateData.coverColor = req.coverColor;
   if (req.coverUrl !== undefined) updateData.coverUrl = req.coverUrl;
+  if (req.completed !== undefined) updateData.completed = req.completed;
 
-  // Only update card fields if there are changes
   let updatedCard;
   if (Object.keys(updateData).length > 0) {
     const result = await db
@@ -465,7 +506,6 @@ export async function updateCard(userSub: string, boardId: string, id: string, r
       .returning();
     updatedCard = result[0];
   } else {
-    // No card fields to update, just fetch the current card
     const current = await db
       .select()
       .from(cardsTable)
@@ -474,13 +514,10 @@ export async function updateCard(userSub: string, boardId: string, id: string, r
     updatedCard = current[0];
   }
 
-  // Update labels if provided
   if (req.labels !== undefined) {
     try {
-      // Delete existing labels
       await db.delete(cardLabelsTable).where(eq(cardLabelsTable.cardId, id));
 
-      // Insert new labels
       if (req.labels && req.labels.length > 0) {
         const labelInserts = req.labels.map((label: any) => ({
           id: randomUUID(),
@@ -495,12 +532,9 @@ export async function updateCard(userSub: string, boardId: string, id: string, r
     }
   }
 
-  // Update members if provided
   if (req.members !== undefined) {
-    // Delete existing members
     await db.delete(cardMembersTable).where(eq(cardMembersTable.cardId, id));
 
-    // Insert new members
     if (req.members && req.members.length > 0) {
       const memberInserts = req.members.map((member: any) => ({
         id: randomUUID(),
@@ -511,11 +545,103 @@ export async function updateCard(userSub: string, boardId: string, id: string, r
     }
   }
 
+  // Always fetch and return attachments
+  const cardAttachments = await db
+    .select()
+    .from(attachmentsTable)
+    .where(eq(attachmentsTable.cardId, id));
+
+  // Log activities for detected changes (non-blocking)
+  try {
+    // Name changed
+    if (req.name && req.name !== existingCard[0].name) {
+      await logActivity({
+        cardId: id,
+        userId: userSub,
+        actionType: "card.renamed",
+        description: `renamed this card from "${existingCard[0].name}" to "${req.name}"`,
+        metadata: { oldName: existingCard[0].name, newName: req.name },
+      });
+    }
+
+    // Description updated
+    if (req.description !== undefined && req.description !== existingCard[0].description) {
+      await logActivity({
+        cardId: id,
+        userId: userSub,
+        actionType: "card.description.updated",
+        description: req.description ? `updated the description` : `removed the description`,
+      });
+    }
+
+    // Card moved to different list
+    if (req.listId && req.listId !== existingCard[0].listId) {
+      // Get list names for better description
+      const [oldListResult, newListResult] = await Promise.all([
+        db.select({ name: listsTable.name }).from(listsTable).where(eq(listsTable.id, existingCard[0].listId)).limit(1),
+        db.select({ name: listsTable.name }).from(listsTable).where(eq(listsTable.id, req.listId)).limit(1),
+      ]);
+
+      const oldListName = oldListResult[0]?.name || "Unknown";
+      const newListName = newListResult[0]?.name || "Unknown";
+
+      await logActivity({
+        cardId: id,
+        userId: userSub,
+        actionType: "card.moved",
+        description: `moved this card from "${oldListName}" to "${newListName}"`,
+        metadata: {
+          oldListId: existingCard[0].listId,
+          newListId: req.listId,
+          oldListName,
+          newListName,
+        },
+      });
+    }
+
+    // Deadline changed
+    if (req.deadline !== undefined) {
+      const oldDeadline = existingCard[0].deadline;
+      if (!oldDeadline && req.deadline) {
+        await logActivity({
+          cardId: id,
+          userId: userSub,
+          actionType: "deadline.set",
+          description: `set the deadline to ${new Date(req.deadline).toLocaleDateString()}`,
+          metadata: { deadline: req.deadline },
+        });
+      } else if (oldDeadline && !req.deadline) {
+        await logActivity({
+          cardId: id,
+          userId: userSub,
+          actionType: "deadline.removed",
+          description: `removed the deadline`,
+        });
+      } else if (oldDeadline && req.deadline && oldDeadline.getTime() !== new Date(req.deadline).getTime()) {
+        await logActivity({
+          cardId: id,
+          userId: userSub,
+          actionType: "deadline.changed",
+          description: `changed the deadline from ${oldDeadline.toLocaleDateString()} to ${new Date(req.deadline).toLocaleDateString()}`,
+          metadata: { oldDeadline, newDeadline: req.deadline },
+        });
+      }
+    }
+  } catch (error) {
+    console.error("Failed to log activity for card update:", error);
+    // Don't fail the main operation if activity logging fails
+  }
+
+  // Publish card updated event (or moved if list changed)
+  const action = (req.listId && req.listId !== existingCard[0].listId) ? 'moved' : 'updated';
+  publishBoardChanged(boardId, 'card', id, action, userSub);
+
   // Return card with labels and members as JSON for compatibility
   return {
     ...updatedCard,
     labels: req.labels !== undefined ? JSON.stringify(req.labels) : undefined,
     members: req.members !== undefined ? JSON.stringify(req.members) : undefined,
+    attachments: JSON.stringify(cardAttachments),
   };
 }
 
@@ -570,6 +696,9 @@ export async function deleteCard(userSub: string, boardId: string, id: string) {
         gt(cardsTable.order, deletedCardOrder)
       )
     );
+
+  // Publish card deleted event
+  publishBoardChanged(boardId, 'card', id, 'deleted', userSub);
 
   return { message: "Xóa Card thành công" };
 }

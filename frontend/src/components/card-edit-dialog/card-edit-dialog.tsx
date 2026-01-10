@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import type { Card } from "@/types/card";
 import { CardCoverModeValue } from "@/types/card";
-import { X, Tag, CheckSquare, UserPlus, Paperclip, Clock, Wallpaper, Loader2 } from "lucide-react";
+import { X, Tag, CheckSquare, UserPlus, Paperclip, Clock, Wallpaper, Loader2, Link2, FileIcon, ExternalLink, Download, Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CardHeader } from "./card-header";
 import { CardDescription } from "./card-description";
@@ -10,6 +10,7 @@ import { CardMembers } from "./card-members";
 import { CardComments } from "./card-comments";
 import { CardLabels } from "./card-labels";
 import { CardDates } from "./card-dates";
+import { CardRecurrence } from "./card-recurrence";
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useUpdateCard } from "@/hooks/use-card";
 import { BackgroundPickerProvider } from "@/components/background-picker-provider";
@@ -23,7 +24,9 @@ import {
 } from "@/components/ui/popover";
 import { queryClient } from "@/lib/query-client";
 import CheckList from "../check-list";
-import AttachmentArea from "./card-attachment";
+import { useUploadAttachment, useCreateAttachmentLink, useDeleteAttachment } from "@/hooks/use-attachment";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface CardEditDialogProps {
   card: Card | null;
@@ -109,9 +112,17 @@ function InnerDialog({
   const [isLabelPopoverOpen, setIsLabelPopoverOpen] = useState(false);
   const [isMemberPopoverOpen, setIsMemberPopoverOpen] = useState(false);
   const [isDatePopoverOpen, setIsDatePopoverOpen] = useState(false);
+  const [isAttachmentPopoverOpen, setIsAttachmentPopoverOpen] = useState(false);
+  const [linkUrl, setLinkUrl] = useState("");
+  const [linkName, setLinkName] = useState("");
+  const attachmentFileInputRef = useRef<HTMLInputElement | null>(null);
+  const [showActivities, setShowActivities] = useState(true); // For comments/activities toggle
 
   const { mutate: updateCard } = useUpdateCard();
   const { deleteImage } = useDeleteImage();
+  const uploadAttachmentMutation = useUploadAttachment();
+  const createLinkMutation = useCreateAttachmentLink();
+  const deleteAttachmentMutation = useDeleteAttachment();
   const { getBackgroundData, selectedColor, selectedFile, croppedFile, reset: resetBackground } = useBackgroundPickerContext();
 
   // Get the effective image file (cropped or original)
@@ -223,37 +234,91 @@ function InnerDialog({
     }
   };
 
-  const handleAddAttachment = (file: File) => {
-    const newAttachment = {
-      id: crypto.randomUUID(),
-      name: file.name,
-      url: URL.createObjectURL(file),
-      type: file.type,
-      size: file.size,
-      uploadedAt: new Date(),
-      uploadedBy: "current-user",
-    };
-    handleUpdate({ attachments: [...(card.attachments || []), newAttachment] });
+  const handleAddAttachment = async (file: File) => {
+    if (boardId) {
+      const newAttachment = await uploadAttachmentMutation.mutateAsync({
+        file,
+        boardId,
+        cardId: card.id,
+      });
+
+      // Update local card state with new attachment
+      if (newAttachment) {
+        const updatedAttachments = [...(card.attachments || []), newAttachment];
+        onUpdate({ ...card, attachments: updatedAttachments });
+      }
+    }
   };
 
-  const handleAddLink = (url: string, name?: string) => {
-    const newAttachment = {
-      id: crypto.randomUUID(),
-      name: name || url,
-      url: url,
-      type: "link",
-      size: 0,
-      uploadedAt: new Date(),
-      uploadedBy: "current-user",
-    };
-    handleUpdate({ attachments: [...(card.attachments || []), newAttachment] });
+  const handleAddLink = async () => {
+    if (linkUrl.trim() && boardId) {
+      const newAttachment = await createLinkMutation.mutateAsync({
+        boardId,
+        cardId: card.id,
+        name: linkName.trim() || linkUrl.trim(),
+        url: linkUrl.trim(),
+        type: "link",
+        size: 0,
+      });
+
+      // Update local card state with new attachment
+      if (newAttachment) {
+        const updatedAttachments = [...(card.attachments || []), newAttachment];
+        onUpdate({ ...card, attachments: updatedAttachments });
+      }
+
+      setLinkUrl("");
+      setLinkName("");
+      setIsAttachmentPopoverOpen(false);
+    }
   };
 
-  const handleRemoveAttachment = (attachmentId: string) => {
-    const updatedAttachments = (card.attachments || []).filter(
-      (a) => a.id !== attachmentId
-    );
-    handleUpdate({ attachments: updatedAttachments });
+  const handleAttachmentFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      await handleAddAttachment(file);
+      event.target.value = "";
+      setIsAttachmentPopoverOpen(false);
+    }
+  };
+
+  const handleRemoveAttachment = async (attachmentId: string) => {
+    if (boardId) {
+      await deleteAttachmentMutation.mutateAsync({
+        boardId,
+        cardId: card.id,
+        attachmentId,
+      });
+
+      // Update local card state by removing the attachment
+      const updatedAttachments = (card.attachments || []).filter(
+        (att) => att.id !== attachmentId
+      );
+      onUpdate({ ...card, attachments: updatedAttachments });
+    }
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
+  };
+
+  const isImageFile = (url: string, type?: string): boolean => {
+    if (type?.startsWith("image/")) return true;
+    return /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(url);
+  };
+
+  const getFileName = (url: string): string => {
+    try {
+      const urlObj = new URL(url);
+      const pathname = urlObj.pathname;
+      return pathname.split("/").pop() || url;
+    } catch {
+      return url;
+    }
   };
 
   const handleClose = async () => {
@@ -382,14 +447,112 @@ function InnerDialog({
                   </Button>
                 }
               />
+              <CardRecurrence
+                card={card}
+                onUpdate={handleUpdate}
+                triggerButton={
+                  <Button variant="outline" size="sm" className="h-8">
+                    <Repeat className="h-4 w-4 mr-1" />
+                    Recurrence
+                  </Button>
+                }
+              />
               <Button variant="outline" size="sm" className="h-8">
                 <CheckSquare className="h-4 w-4 mr-1" />
                 Checklist
               </Button>
-              <Button variant="outline" size="sm" className="h-8">
-                <Paperclip className="h-4 w-4 mr-1" />
-                Attachment
-              </Button>
+              <Popover open={isAttachmentPopoverOpen} onOpenChange={setIsAttachmentPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8">
+                    <Paperclip className="h-4 w-4 mr-1" />
+                    Attachment
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-sm">Attach</h4>
+                      <div className="space-y-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full justify-start"
+                          onClick={() => attachmentFileInputRef.current?.click()}
+                          disabled={uploadAttachmentMutation.isPending}
+                        >
+                          {uploadAttachmentMutation.isPending ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Uploading...
+                            </>
+                          ) : (
+                            <>
+                              <Paperclip className="h-4 w-4 mr-2" />
+                              Computer
+                            </>
+                          )}
+                        </Button>
+                        <input
+                          ref={attachmentFileInputRef}
+                          type="file"
+                          className="hidden"
+                          onChange={handleAttachmentFileChange}
+                          accept="image/*,.pdf,.doc,.docx,.txt"
+                        />
+                      </div>
+                      <div className="space-y-2 pt-2 border-t">
+                        <Label htmlFor="attach-link-url" className="text-xs">
+                          Or attach a link
+                        </Label>
+                        <Input
+                          id="attach-link-url"
+                          placeholder="Paste a link..."
+                          value={linkUrl}
+                          onChange={(e) => setLinkUrl(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") handleAddLink();
+                          }}
+                        />
+                        <Input
+                          placeholder="Link name (optional)"
+                          value={linkName}
+                          onChange={(e) => setLinkName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") handleAddLink();
+                          }}
+                        />
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setIsAttachmentPopoverOpen(false);
+                              setLinkUrl("");
+                              setLinkName("");
+                            }}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={handleAddLink}
+                            disabled={!linkUrl.trim() || createLinkMutation.isPending}
+                          >
+                            {createLinkMutation.isPending ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                Attaching...
+                              </>
+                            ) : (
+                              "Attach"
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
 
             {/* Labels display - only show if has labels */}
@@ -408,8 +571,84 @@ function InnerDialog({
             {/* CheckList */}
             <CheckList card={card} boardId={boardId} onUpdate={handleUpdate} />
 
-            {/* Attachment */}
-            <AttachmentArea card={card} onUpdate={handleUpdate} />
+            {/* Attachments */}
+            {card.attachments && card.attachments.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold flex items-center gap-2">
+                  <Paperclip className="h-4 w-4" />
+                  Attachments
+                </h3>
+                <div className="space-y-3">
+                  {card.attachments.map((attachment) => {
+                    const isImage = isImageFile(attachment.url, attachment.type);
+                    const displayName = attachment.name || getFileName(attachment.url);
+
+                    return (
+                      <div key={attachment.id} className="flex gap-3 group">
+                        {/* Thumbnail */}
+                        <div className="flex-shrink-0">
+                          {isImage ? (
+                            <div className="w-28 h-20 rounded border overflow-hidden bg-muted">
+                              <img
+                                src={attachment.url}
+                                alt={displayName}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-28 h-20 rounded border flex items-center justify-center bg-muted">
+                              <FileIcon className="h-8 w-8 text-muted-foreground" />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Details */}
+                        <div className="flex-1 min-w-0">
+                          <a
+                            href={attachment.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm font-medium hover:underline flex items-center gap-1 truncate"
+                          >
+                            {displayName}
+                            <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                          </a>
+                          <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                            {attachment.uploadedAt && (
+                              <span>
+                                Added {new Date(attachment.uploadedAt).toLocaleDateString()}
+                              </span>
+                            )}
+                            {attachment.size > 0 && (
+                              <>
+                                <span>•</span>
+                                <span>{formatFileSize(attachment.size)}</span>
+                              </>
+                            )}
+                          </div>
+                          <div className="flex gap-2 mt-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 text-xs"
+                              onClick={() => handleRemoveAttachment(attachment.id)}
+                            >
+                              Delete
+                            </Button>
+                            <a href={attachment.url} download={displayName}>
+                              <Button variant="ghost" size="sm" className="h-7 text-xs">
+                                <Download className="h-3 w-3 mr-1" />
+                                Download
+                              </Button>
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right column - Comments and activity */}
@@ -420,17 +659,15 @@ function InnerDialog({
                 <span className="text-sm font-semibold">
                   Comments and Activity
                 </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowDetails(!showDetails)}
-                >
-                  Show Details
-                </Button>
               </div>
 
               {/* Comments section */}
-              {showDetails && <CardComments card={card} onUpdate={handleUpdate} />}
+              <CardComments
+                card={card}
+                boardId={boardId}
+                showActivities={showActivities}
+                onToggleActivities={() => setShowActivities(!showActivities)}
+              />
             </div>
           </div>
         </div>

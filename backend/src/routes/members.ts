@@ -39,6 +39,16 @@ export default function createMemberRoutes() {
         403: {
           description: "Không có quyền truy cập Board này",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -80,7 +90,7 @@ export default function createMemberRoutes() {
         .from(boardMembersTable)
         .where(eq(boardMembersTable.boardId, boardId));
 
-      return c.json(members);
+      return c.json(members, 200);
     }
   );
 
@@ -109,6 +119,16 @@ export default function createMemberRoutes() {
         },
         409: {
           description: "Member đã tồn tại trong Board",
+        },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
         },
       },
     }),
@@ -164,7 +184,7 @@ export default function createMemberRoutes() {
         })
         .returning();
 
-      return c.json(member[0]);
+      return c.json(member[0], 200);
     }
   );
 
@@ -191,6 +211,16 @@ export default function createMemberRoutes() {
         },
         403: {
           description: "Không có quyền cập nhật Member này",
+        },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
         },
       },
     }),
@@ -241,7 +271,7 @@ export default function createMemberRoutes() {
         .where(eq(boardMembersTable.id, id))
         .returning();
 
-      return c.json(updatedMember[0]);
+      return c.json(updatedMember[0], 200);
     }
   );
 
@@ -274,6 +304,16 @@ export default function createMemberRoutes() {
         },
         403: {
           description: "Không có quyền xóa Member này",
+        },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
         },
       },
     }),
@@ -322,7 +362,7 @@ export default function createMemberRoutes() {
         .delete(boardMembersTable)
         .where(eq(boardMembersTable.id, id));
 
-      return c.json({ message: "Xóa Member thành công" });
+      return c.json({ message: "Xóa Member thành công" }, 200);
     }
   );
 

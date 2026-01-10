@@ -4,6 +4,7 @@ import type { DraggableAttributes } from "@dnd-kit/core";
 import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import { differenceInMinutes, format, getMinutes, isPast } from "date-fns";
 import { useMemo } from "react";
+import { Repeat } from "lucide-react";
 
 import {
   type CalendarEvent,
@@ -168,6 +169,9 @@ export function EventItem({
       >
         {children || (
           <div className="flex items-center gap-1 truncate w-full">
+            {event.isRecurring && (
+              <Repeat className="w-3 h-3 flex-shrink-0 opacity-70" />
+            )}
             <span className="truncate flex-1">
               {!event.allDay && (
                 <span className="font-normal opacity-70 truncate sm:text-[11px]">
