@@ -3,8 +3,9 @@
 import { RiCalendarLine, RiDeleteBinLine } from "@remixicon/react";
 import { format, isBefore } from "date-fns";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Tag, UserPlus } from "lucide-react";
 
-import type { CalendarEvent, EventColor } from "@/components/event-calendar";
+import type { CalendarEvent, EventColor, Label as EventLabel, Member as EventMember } from "@/components/event-calendar";
 import {
   DefaultEndHour,
   DefaultStartHour,
@@ -39,6 +40,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { CardLabels } from "@/components/card-edit-dialog/card-labels";
+import { CardMembers } from "@/components/card-edit-dialog/card-members";
+import type { Card } from "@/types/card";
 
 interface EventDialogProps {
   event: CalendarEvent | null;
@@ -46,6 +50,8 @@ interface EventDialogProps {
   onClose: () => void;
   onSave: (event: CalendarEvent) => void;
   onDelete: (eventId: string) => void;
+  boardId?: string;
+  lists?: Array<{ id: string; title: string }>;
 }
 
 export function EventDialog({
@@ -54,6 +60,8 @@ export function EventDialog({
   onClose,
   onSave,
   onDelete,
+  boardId,
+  lists,
 }: EventDialogProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -63,10 +71,15 @@ export function EventDialog({
   const [endTime, setEndTime] = useState(`${DefaultEndHour}:00`);
   const [allDay, setAllDay] = useState(false);
   const [location, setLocation] = useState("");
+  const [listId, setListId] = useState<string>("");
+  const [labels, setLabels] = useState<EventLabel[]>([]);
+  const [members, setMembers] = useState<EventMember[]>([]);
   const [color, setColor] = useState<EventColor>("sky");
   const [error, setError] = useState<string | null>(null);
   const [startDateOpen, setStartDateOpen] = useState(false);
   const [endDateOpen, setEndDateOpen] = useState(false);
+  const [isLabelPopoverOpen, setIsLabelPopoverOpen] = useState(false);
+  const [isMemberPopoverOpen, setIsMemberPopoverOpen] = useState(false);
 
   // Debug log to check what event is being passed
   useEffect(() => {
@@ -82,9 +95,12 @@ export function EventDialog({
     setEndTime(`${DefaultEndHour}:00`);
     setAllDay(false);
     setLocation("");
+    setListId(lists?.[0]?.id || "");
+    setLabels([]);
+    setMembers([]);
     setColor("sky");
     setError(null);
-  }, []);
+  }, [lists]);
 
   const formatTimeForInput = useCallback((date: Date) => {
     const hours = date.getHours().toString().padStart(2, "0");
@@ -96,6 +112,9 @@ export function EventDialog({
     if (event) {
       setTitle(event.title || "");
       setDescription(event.description || "");
+      setListId(event.listId || lists?.[0]?.id || "");
+      setLabels(event.labels || []);
+      setMembers(event.members || []);
 
       const start = new Date(event.start);
       const end = new Date(event.end);
@@ -111,7 +130,7 @@ export function EventDialog({
     } else {
       resetForm();
     }
-  }, [event, formatTimeForInput, resetForm]);
+  }, [event, formatTimeForInput, resetForm, lists]);
 
   // Memoize time options so they're only calculated once
   const timeOptions = useMemo(() => {
@@ -174,6 +193,9 @@ export function EventDialog({
       description,
       end,
       id: event?.id || "",
+      listId,
+      labels,
+      members,
       location,
       start,
       title: eventTitle,
@@ -231,9 +253,29 @@ export function EventDialog({
     },
   ];
 
+  // Create a temporary card object for CardLabels and CardMembers components
+  const tempCard: Partial<Card> = useMemo(() => ({
+    id: event?.id || "",
+    title: title,
+    description: description || undefined,
+    listId: listId || "",
+    labels: labels as any,
+    members: members as any,
+    dueDate: endDate,
+  }), [event?.id, title, description, listId, labels, members, endDate]);
+
+  const handleCardUpdate = useCallback((updates: Partial<Card>) => {
+    if (updates.labels !== undefined) {
+      setLabels(updates.labels as EventLabel[] || []);
+    }
+    if (updates.members !== undefined) {
+      setMembers(updates.members as EventMember[] || []);
+    }
+  }, []);
+
   return (
     <Dialog onOpenChange={(open) => !open && onClose()} open={isOpen}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{event?.id ? "Edit Event" : "Create Event"}</DialogTitle>
           <DialogDescription className="sr-only">
@@ -256,6 +298,56 @@ export function EventDialog({
               value={title}
             />
           </div>
+
+          {lists && lists.length > 0 && (
+            <div className="*:not-first:mt-1.5">
+              <Label htmlFor="list">List</Label>
+              <Select onValueChange={setListId} value={listId}>
+                <SelectTrigger id="list">
+                  <SelectValue placeholder="Select a list" />
+                </SelectTrigger>
+                <SelectContent>
+                  {lists.map((list) => (
+                    <SelectItem key={list.id} value={list.id}>
+                      {list.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* Labels and Members buttons */}
+          {boardId && (
+            <div className="flex flex-wrap gap-2">
+              <CardLabels
+                card={tempCard as Card}
+                onUpdate={handleCardUpdate}
+                boardId={boardId}
+                isOpen={isLabelPopoverOpen}
+                onOpenChange={setIsLabelPopoverOpen}
+                triggerButton={
+                  <Button variant="outline" size="sm" className="h-8">
+                    <Tag className="h-4 w-4 mr-1" />
+                    Labels {labels.length > 0 && `(${labels.length})`}
+                  </Button>
+                }
+              />
+              <CardMembers
+                card={tempCard as Card}
+                onUpdate={handleCardUpdate}
+                boardId={boardId}
+                isOpen={isMemberPopoverOpen}
+                onOpenChange={setIsMemberPopoverOpen}
+                triggerButton={
+                  <Button variant="outline" size="sm" className="h-8">
+                    <UserPlus className="h-4 w-4 mr-1" />
+                    Members {members.length > 0 && `(${members.length})`}
+                  </Button>
+                }
+              />
+            </div>
+          )}
 
           <div className="*:not-first:mt-1.5">
             <Label htmlFor="description">Description</Label>
@@ -409,14 +501,6 @@ export function EventDialog({
             <Label htmlFor="all-day">All day</Label>
           </div>
 
-          <div className="*:not-first:mt-1.5">
-            <Label htmlFor="location">Location</Label>
-            <Input
-              id="location"
-              onChange={(e) => setLocation(e.target.value)}
-              value={location}
-            />
-          </div>
           <fieldset className="space-y-4">
             <legend className="text-sm font-medium leading-none text-foreground">
               Etiquette

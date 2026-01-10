@@ -44,6 +44,7 @@ export const CreateCardSchema = z.object({
   deadline: z.coerce.date().optional(),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
+  coverColor: z.string().optional(),
 });
 
 export const UpdateCardSchema = z.object({

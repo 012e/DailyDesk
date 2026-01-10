@@ -116,6 +116,9 @@ function InnerCardCreateDialog({
     setIsCreating(true);
 
     try {
+      // Get background data first
+      const { color: coverColor, imageFile: currentImageFile } = getBackgroundData();
+      
       // Create the card first
       createCard(
         {
@@ -127,12 +130,12 @@ function InnerCardCreateDialog({
           labels: labels.length > 0 ? labels : undefined,
           members: members.length > 0 ? members : undefined,
           deadline: deadline,
+          // Set cover color if provided (image covers are uploaded separately)
+          coverColor: (!currentImageFile && coverColor) ? coverColor : undefined,
         },
         {
           onSuccess: async (newCard) => {
             // If there's a cover image, upload it
-            const { imageFile: currentImageFile } = getBackgroundData();
-            
             if (currentImageFile && newCard?.id) {
               try {
                 await uploadImage({
@@ -140,12 +143,13 @@ function InnerCardCreateDialog({
                   type: "card",
                   id: newCard.id,
                 });
-                // Invalidate to refetch with the new cover
-                queryClient.invalidateQueries({ queryKey: ["board", boardId] });
               } catch (error) {
                 console.error("Error uploading card cover:", error);
               }
             }
+
+            // Invalidate to refetch with the new cover (for both color and image covers)
+            queryClient.invalidateQueries({ queryKey: ["board", boardId] });
 
             // Reset form
             resetForm();
