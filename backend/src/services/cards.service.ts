@@ -129,6 +129,9 @@ export async function getCardsForBoard(userSub: string, boardId: string) {
     attachments: JSON.stringify(attachmentsByCard.get(c.cards.id) || []),
     startDate: c.cards.startDate,
     deadline: c.cards.deadline,
+    recurrence: c.cards.recurrence,
+    recurrenceDay: c.cards.recurrenceDay,
+    recurrenceWeekday: c.cards.recurrenceWeekday,
     latitude: c.cards.latitude,
     longitude: c.cards.longitude,
     coverColor: c.cards.coverColor,
@@ -187,6 +190,9 @@ export async function createCard(userSub: string, boardId: string, req: any) {
       listId: req.listId,
       startDate: req.startDate,
       deadline: req.deadline,
+      recurrence: req.recurrence,
+      recurrenceDay: req.recurrenceDay,
+      recurrenceWeekday: req.recurrenceWeekday,
       latitude: req.latitude,
       longitude: req.longitude,
       coverColor: req.coverColor,
@@ -482,6 +488,9 @@ export async function updateCard(userSub: string, boardId: string, id: string, r
   if (req.listId !== undefined) updateData.listId = req.listId;
   if (req.startDate !== undefined) updateData.startDate = req.startDate;
   if (req.deadline !== undefined) updateData.deadline = req.deadline;
+  if (req.recurrence !== undefined) updateData.recurrence = req.recurrence;
+  if (req.recurrenceDay !== undefined) updateData.recurrenceDay = req.recurrenceDay;
+  if (req.recurrenceWeekday !== undefined) updateData.recurrenceWeekday = req.recurrenceWeekday;
   if (req.latitude !== undefined) updateData.latitude = req.latitude;
   if (req.longitude !== undefined) updateData.longitude = req.longitude;
   if (req.coverColor !== undefined) updateData.coverColor = req.coverColor;

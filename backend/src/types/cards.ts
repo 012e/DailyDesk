@@ -29,6 +29,9 @@ export const CardSchema = z.object({
   members: CardMemberSchema.array().nullable(),
   startDate: z.coerce.date().nullable(),
   deadline: z.coerce.date().nullable(),
+  recurrence: z.enum(["never", "daily_weekdays", "weekly", "monthly_date", "monthly_day"]).nullable(),
+  recurrenceDay: z.number().int().min(1).max(5).nullable(), // 1st, 2nd, 3rd, 4th, 5th
+  recurrenceWeekday: z.number().int().min(0).max(6).nullable(), // 0=Sunday, 6=Saturday
   latitude: z.number().nullable(),
   longitude: z.number().nullable(),
   completed: z.boolean().nullable(),
@@ -43,6 +46,9 @@ export const CreateCardSchema = z.object({
   members: CardMemberSchema.array().optional(),
   startDate: z.coerce.date().optional(),
   deadline: z.coerce.date().optional(),
+  recurrence: z.enum(["never", "daily_weekdays", "weekly", "monthly_date", "monthly_day"]).optional(),
+  recurrenceDay: z.number().int().min(1).max(5).optional(),
+  recurrenceWeekday: z.number().int().min(0).max(6).optional(),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
   completed: z.boolean().optional(),

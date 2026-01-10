@@ -11,15 +11,20 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import type { Card as CardType, Label, Member, Attachment, Comment, ActivityLog, CardCoverMode } from "@/types/card";
+import type { Card as CardType, Label, Member, Attachment, Comment, ActivityLog, CardCoverMode, RecurrenceType } from "@/types/card";
 import { useAtom } from "jotai";
 import { isCardDialogOpenAtom, selectedCardAtom } from "./atoms";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Repeat } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { getRecurrenceShortLabel } from "@/lib/recurrence-utils";
 
 type NormalizedCard = CardType & {
   title: string;
   description?: string;
   color?: KanbanBoardCircleColor;
+  recurrence?: RecurrenceType;
+  recurrenceDay?: number;
+  recurrenceWeekday?: number;
 };
 
 interface KanbanCardProps {
@@ -34,6 +39,9 @@ interface KanbanCardProps {
     labels?: Label[];
     members?: Member[];
     dueDate?: Date;
+    recurrence?: RecurrenceType;
+    recurrenceDay?: number;
+    recurrenceWeekday?: number;
     coverUrl?: string;
     coverColor?: string;
     coverMode?: CardCoverMode;
@@ -72,6 +80,9 @@ export function KanbanCard({
     labels: card.labels || [],
     members: card.members || [],
     dueDate: card.dueDate,
+    recurrence: card.recurrence,
+    recurrenceDay: card.recurrenceDay,
+    recurrenceWeekday: card.recurrenceWeekday,
     coverUrl: card.coverUrl || "",
     coverColor: card.coverColor || "",
     coverMode: card.coverMode,
@@ -83,6 +94,8 @@ export function KanbanCard({
     color: card.color,
     completed: card.completed,
   };
+
+  const recurrenceLabel = getRecurrenceShortLabel(normalizedCard.recurrence);
 
   const openCardDialog = () => {
     setSelectedCard(normalizedCard);
@@ -143,13 +156,21 @@ export function KanbanCard({
                 </div>
               </div>
             ) : (
-              <div className="flex items-center gap-2">
-                {normalizedCard.completed && (
-                  <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  {normalizedCard.completed && (
+                    <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  )}
+                  <KanbanBoardCardTitle className={`line-clamp-2 ${normalizedCard.completed ? "line-through text-muted-foreground" : ""}`}>
+                    {normalizedCard.title}
+                  </KanbanBoardCardTitle>
+                </div>
+                {recurrenceLabel && (
+                  <Badge variant="secondary" className="text-xs gap-1">
+                    <Repeat className="h-3 w-3" />
+                    {recurrenceLabel}
+                  </Badge>
                 )}
-                <KanbanBoardCardTitle className={`line-clamp-2 ${normalizedCard.completed ? "line-through text-muted-foreground" : ""}`}>
-                  {normalizedCard.title}
-                </KanbanBoardCardTitle>
               </div>
             )}
           </KanbanBoardCard>

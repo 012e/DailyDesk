@@ -42,6 +42,9 @@ export const cardsTable = sqliteTable("cards", {
     .references(() => listsTable.id, { onDelete: "cascade" }),
   startDate: integer("start_date", { mode: "timestamp" }),
   deadline: integer("deadline", { mode: "timestamp" }),
+  recurrence: text("recurrence"), // never, daily_weekdays, weekly, monthly_date, monthly_day
+  recurrenceDay: integer("recurrence_day"), // for monthly_day (e.g., 2 for 2nd Sunday)
+  recurrenceWeekday: integer("recurrence_weekday"), // for monthly_day (0=Sunday, 6=Saturday)
   latitude: integer("latitude"),
   longitude: integer("longitude"),
   completed: integer("completed", { mode: "boolean" }).default(false),

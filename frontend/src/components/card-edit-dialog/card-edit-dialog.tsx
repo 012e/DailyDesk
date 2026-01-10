@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import type { Card } from "@/types/card";
 import { CardCoverModeValue } from "@/types/card";
-import { X, Tag, CheckSquare, UserPlus, Paperclip, Clock, Wallpaper, Loader2, Link2, FileIcon, ExternalLink, Download } from "lucide-react";
+import { X, Tag, CheckSquare, UserPlus, Paperclip, Clock, Wallpaper, Loader2, Link2, FileIcon, ExternalLink, Download, Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CardHeader } from "./card-header";
 import { CardDescription } from "./card-description";
@@ -10,6 +10,7 @@ import { CardMembers } from "./card-members";
 import { CardComments } from "./card-comments";
 import { CardLabels } from "./card-labels";
 import { CardDates } from "./card-dates";
+import { CardRecurrence } from "./card-recurrence";
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useUpdateCard } from "@/hooks/use-card";
 import { BackgroundPickerProvider } from "@/components/background-picker-provider";
@@ -443,6 +444,16 @@ function InnerDialog({
                   <Button variant="outline" size="sm" className="h-8">
                     <Clock className="h-4 w-4 mr-1" />
                     Due Date
+                  </Button>
+                }
+              />
+              <CardRecurrence
+                card={card}
+                onUpdate={handleUpdate}
+                triggerButton={
+                  <Button variant="outline" size="sm" className="h-8">
+                    <Repeat className="h-4 w-4 mr-1" />
+                    Recurrence
                   </Button>
                 }
               />
