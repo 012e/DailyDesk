@@ -37,6 +37,16 @@ export default function createCommentRoutes() {
         403: {
           description: "Không có quyền truy cập card này",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -95,6 +105,16 @@ export default function createCommentRoutes() {
         403: {
           description: "Chỉ có thể chỉnh sửa comment của chính mình",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -151,6 +171,16 @@ export default function createCommentRoutes() {
         },
         403: {
           description: "Chỉ có thể xóa comment của chính mình",
+        },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
         },
       },
     }),
@@ -211,6 +241,16 @@ export default function createCommentRoutes() {
         403: {
           description: "Không có quyền truy cập card này",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -256,6 +296,16 @@ export default function createCommentRoutes() {
         },
         403: {
           description: "Không có quyền truy cập card này",
+        },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
         },
       },
     }),
@@ -312,6 +362,16 @@ export default function createCommentRoutes() {
         },
         403: {
           description: "Không có quyền truy cập card này",
+        },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
         },
       },
     }),

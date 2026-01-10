@@ -33,6 +33,16 @@ export default function createCardRoutes() {
         403: {
           description: "Không có quyền truy cập Board này",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -89,6 +99,16 @@ export default function createCardRoutes() {
         403: {
           description: "Không có quyền tạo Card trong Board này",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -141,6 +161,16 @@ export default function createCardRoutes() {
         },
         403: {
           description: "Không có quyền truy cập Card này",
+        },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
         },
       },
     }),
@@ -198,6 +228,16 @@ export default function createCardRoutes() {
         },
         403: {
           description: "Không có quyền cập nhật Card này",
+        },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
         },
       },
     }),
@@ -265,6 +305,16 @@ export default function createCardRoutes() {
         },
         403: {
           description: "Không có quyền xóa Card này",
+        },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
         },
       },
     }),

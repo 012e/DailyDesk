@@ -30,6 +30,16 @@ export default function createImageRoute() {
         200: successJson(SaveImageResponseSchema),
         403: { description: "Không có quyền upload ảnh" },
         404: { description: "Không tìm thấy đối tượng" },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
     async (c) => {
@@ -65,6 +75,16 @@ export default function createImageRoute() {
         200: { description: "Xóa ảnh thành công" },
         403: { description: "Không có quyền xóa ảnh" },
         404: { description: "Không tìm thấy đối tượng" },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
     async (c) => {

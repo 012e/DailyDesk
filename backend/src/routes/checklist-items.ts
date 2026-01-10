@@ -38,6 +38,16 @@ export default function createChecklistItemRoutes() {
         403: {
           description: "Không có quyền truy cập Board này",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -80,6 +90,16 @@ export default function createChecklistItemRoutes() {
         },
         403: {
           description: "Không có quyền tạo Checklist Item trong Card này",
+        },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
         },
       },
     }),
@@ -125,6 +145,16 @@ export default function createChecklistItemRoutes() {
         403: {
           description: "Không có quyền truy cập Checklist Item này",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -168,6 +198,16 @@ export default function createChecklistItemRoutes() {
         },
         403: {
           description: "Không có quyền cập nhật Checklist Item này",
+        },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
         },
       },
     }),
@@ -219,6 +259,16 @@ export default function createChecklistItemRoutes() {
         },
         403: {
           description: "Không có quyền xóa Checklist Item này",
+        },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
         },
       },
     }),

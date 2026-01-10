@@ -39,6 +39,16 @@ export default function createLabelRoutes() {
         403: {
           description: "Không có quyền truy cập Board này",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -93,6 +103,16 @@ export default function createLabelRoutes() {
         },
         403: {
           description: "Không có quyền tạo Label trong Board này",
+        },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
         },
       },
     }),
@@ -154,6 +174,16 @@ export default function createLabelRoutes() {
         },
         403: {
           description: "Không có quyền cập nhật Label này",
+        },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
         },
       },
     }),
@@ -235,6 +265,16 @@ export default function createLabelRoutes() {
         },
         403: {
           description: "Không có quyền xóa Label này",
+        },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
         },
       },
     }),

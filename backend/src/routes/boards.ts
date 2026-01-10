@@ -26,6 +26,16 @@ export default function createBoardRoutes() {
         200: successJson(BoardWithListsAndCardsSchema.array(), {
           description: "Lấy Board thành công",
         }),
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -56,6 +66,16 @@ export default function createBoardRoutes() {
             },
           },
           description: "Request failed",
+        },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
         },
       },
     }),
@@ -97,6 +117,16 @@ export default function createBoardRoutes() {
         403: {
           description: "Không có quyền truy cập Board này",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -137,6 +167,16 @@ export default function createBoardRoutes() {
         },
         403: {
           description: "Không có quyền cập nhật Board này",
+        },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
         },
       },
     }),
@@ -186,6 +226,16 @@ export default function createBoardRoutes() {
         403: {
           description: "Không có quyền xóa Board này",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -226,6 +276,16 @@ export default function createBoardRoutes() {
         403: {
           description: "Không có quyền truy cập Board này",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -265,6 +325,16 @@ export default function createBoardRoutes() {
         },
         403: {
           description: "Không có quyền truy cập Board này",
+        },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
         },
       },
     }),
