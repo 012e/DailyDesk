@@ -62,7 +62,9 @@ export default function createBoardRoutes() {
         400: {
           content: {
             "application/json": {
-              schema: z.any(),
+              schema: z.object({
+                error: z.string(),
+              }),
             },
           },
           description: "Request failed",
@@ -112,9 +114,23 @@ export default function createBoardRoutes() {
           description: "Lấy Board thành công",
         }),
         404: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
           description: "Board không tồn tại",
         },
         403: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
           description: "Không có quyền truy cập Board này",
         },
         500: {
@@ -163,9 +179,23 @@ export default function createBoardRoutes() {
           description: "Cập nhật Board thành công",
         }),
         404: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
           description: "Board không tồn tại",
         },
         403: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
           description: "Không có quyền cập nhật Board này",
         },
         500: {
@@ -221,9 +251,23 @@ export default function createBoardRoutes() {
           },
         },
         404: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
           description: "Board không tồn tại",
         },
         403: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
           description: "Không có quyền xóa Board này",
         },
         500: {
@@ -271,9 +315,23 @@ export default function createBoardRoutes() {
           description: "Lấy danh sách Lists thành công",
         }),
         404: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
           description: "Board không tồn tại",
         },
         403: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
           description: "Không có quyền truy cập Board này",
         },
         500: {
@@ -321,9 +379,23 @@ export default function createBoardRoutes() {
           description: "Lấy danh sách Cards thành công",
         }),
         404: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
           description: "Board không tồn tại",
         },
         403: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
           description: "Không có quyền truy cập Board này",
         },
         500: {

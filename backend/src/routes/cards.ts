@@ -28,9 +28,23 @@ export default function createCardRoutes() {
           description: "Lấy danh sách Cards thành công",
         }),
         404: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
           description: "Board không tồn tại",
         },
         403: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
           description: "Không có quyền truy cập Board này",
         },
         500: {
@@ -94,9 +108,23 @@ export default function createCardRoutes() {
           description: "Tạo Card thành công",
         }),
         404: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
           description: "Board hoặc List không tồn tại",
         },
         403: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
           description: "Không có quyền tạo Card trong Board này",
         },
         500: {
@@ -157,9 +185,23 @@ export default function createCardRoutes() {
           description: "Lấy Card thành công",
         }),
         404: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
           description: "Card hoặc Board không tồn tại",
         },
         403: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
           description: "Không có quyền truy cập Card này",
         },
         500: {
@@ -224,9 +266,23 @@ export default function createCardRoutes() {
           description: "Cập nhật Card thành công",
         }),
         404: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
           description: "Card hoặc Board không tồn tại",
         },
         403: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
           description: "Không có quyền cập nhật Card này",
         },
         500: {
@@ -301,9 +357,23 @@ export default function createCardRoutes() {
           },
         },
         404: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
           description: "Card hoặc Board không tồn tại",
         },
         403: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
           description: "Không có quyền xóa Card này",
         },
         500: {

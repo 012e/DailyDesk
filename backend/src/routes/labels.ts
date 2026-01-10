@@ -34,9 +34,23 @@ export default function createLabelRoutes() {
           description: "Lấy danh sách Labels thành công",
         }),
         404: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
           description: "Board không tồn tại",
         },
         403: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
           description: "Không có quyền truy cập Board này",
         },
         500: {
@@ -99,9 +113,23 @@ export default function createLabelRoutes() {
           description: "Tạo Label thành công",
         }),
         404: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
           description: "Board không tồn tại",
         },
         403: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
           description: "Không có quyền tạo Label trong Board này",
         },
         500: {
@@ -170,9 +198,23 @@ export default function createLabelRoutes() {
           description: "Cập nhật Label thành công",
         }),
         404: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
           description: "Label hoặc Board không tồn tại",
         },
         403: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
           description: "Không có quyền cập nhật Label này",
         },
         500: {
@@ -261,9 +303,23 @@ export default function createLabelRoutes() {
           },
         },
         404: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
           description: "Label hoặc Board không tồn tại",
         },
         403: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
           description: "Không có quyền xóa Label này",
         },
         500: {
