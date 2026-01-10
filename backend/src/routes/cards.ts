@@ -33,6 +33,16 @@ export default function createCardRoutes() {
         403: {
           description: "Không có quyền truy cập Board này",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -51,12 +61,13 @@ export default function createCardRoutes() {
           attachments: card.attachments ? JSON.parse(card.attachments) : null,
         }));
 
-        return c.json(parsedCards);
+        return c.json(parsedCards, 200);
       } catch (err: any) {
         if (err instanceof cardService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in getCardsForBoard route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -88,6 +99,16 @@ export default function createCardRoutes() {
         403: {
           description: "Không có quyền tạo Card trong Board này",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -107,12 +128,13 @@ export default function createCardRoutes() {
           // attachments: card.attachments ? JSON.parse(card.attachments) : null,
         };
 
-        return c.json(parsedCard);
+        return c.json(parsedCard, 200);
       } catch (err: any) {
         if (err instanceof cardService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in createCard route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -140,6 +162,16 @@ export default function createCardRoutes() {
         403: {
           description: "Không có quyền truy cập Card này",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -158,12 +190,13 @@ export default function createCardRoutes() {
           attachments: card.attachments ? JSON.parse(card.attachments) : null,
         };
 
-        return c.json(parsedCard);
+        return c.json(parsedCard, 200);
       } catch (err: any) {
         if (err instanceof cardService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in getCardById route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -196,6 +229,16 @@ export default function createCardRoutes() {
         403: {
           description: "Không có quyền cập nhật Card này",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -222,13 +265,13 @@ export default function createCardRoutes() {
             : null,
         };
 
-        return c.json(parsedCard);
+        return c.json(parsedCard, 200);
       } catch (err: any) {
         console.error("Error in updateCard route:", err);
         if (err instanceof cardService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -263,6 +306,16 @@ export default function createCardRoutes() {
         403: {
           description: "Không có quyền xóa Card này",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -272,12 +325,13 @@ export default function createCardRoutes() {
 
       try {
         const result = await cardService.deleteCard(user.sub, boardId, id);
-        return c.json(result);
+        return c.json(result, 200);
       } catch (err: any) {
         if (err instanceof cardService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in deleteCard route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );

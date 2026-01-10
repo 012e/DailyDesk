@@ -38,6 +38,16 @@ export default function createChecklistItemRoutes() {
         403: {
           description: "Không có quyền truy cập Board này",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -46,12 +56,13 @@ export default function createChecklistItemRoutes() {
       const { boardId, cardId } = c.req.valid("param");
       try {
         const items = await checklistService.getChecklistItemsForCard(user.sub, boardId, cardId);
-        return c.json(items);
+        return c.json(items, 200);
       } catch (err: any) {
         if (err instanceof checklistService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in checklist-items GET route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -80,6 +91,16 @@ export default function createChecklistItemRoutes() {
         403: {
           description: "Không có quyền tạo Checklist Item trong Card này",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -89,12 +110,13 @@ export default function createChecklistItemRoutes() {
       const req = c.req.valid("json");
       try {
         const item = await checklistService.createChecklistItem(user.sub, boardId, cardId, req);
-        return c.json(item);
+        return c.json(item, 200);
       } catch (err: any) {
         if (err instanceof checklistService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in checklist-items POST route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -123,6 +145,16 @@ export default function createChecklistItemRoutes() {
         403: {
           description: "Không có quyền truy cập Checklist Item này",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -131,12 +163,13 @@ export default function createChecklistItemRoutes() {
       const { boardId, cardId, id } = c.req.valid("param");
       try {
         const item = await checklistService.getChecklistItemById(user.sub, boardId, cardId, id);
-        return c.json(item);
+        return c.json(item, 200);
       } catch (err: any) {
         if (err instanceof checklistService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in checklist-items GET by ID route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -166,6 +199,16 @@ export default function createChecklistItemRoutes() {
         403: {
           description: "Không có quyền cập nhật Checklist Item này",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -175,12 +218,13 @@ export default function createChecklistItemRoutes() {
       const req = c.req.valid("json");
       try {
         const updated = await checklistService.updateChecklistItem(user.sub, boardId, cardId, id, req);
-        return c.json(updated);
+        return c.json(updated, 200);
       } catch (err: any) {
         if (err instanceof checklistService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in checklist-items PUT route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -216,6 +260,16 @@ export default function createChecklistItemRoutes() {
         403: {
           description: "Không có quyền xóa Checklist Item này",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -224,12 +278,13 @@ export default function createChecklistItemRoutes() {
       const { boardId, cardId, id } = c.req.valid("param");
       try {
         const result = await checklistService.deleteChecklistItem(user.sub, boardId, cardId, id);
-        return c.json(result);
+        return c.json(result, 200);
       } catch (err: any) {
         if (err instanceof checklistService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in checklist-items DELETE route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );

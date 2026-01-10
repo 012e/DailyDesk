@@ -30,6 +30,16 @@ export default function createImageRoute() {
         200: successJson(SaveImageResponseSchema),
         403: { description: "Không có quyền upload ảnh" },
         404: { description: "Không tìm thấy đối tượng" },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
     async (c) => {
@@ -38,12 +48,13 @@ export default function createImageRoute() {
       const { secure_url, public_id } = c.req.valid("json");
       try {
         const updated = await mediaService.saveImage(user.sub, type, id, secure_url, public_id);
-        return c.json(updated);
+        return c.json(updated, 200);
       } catch (err: any) {
         if (err instanceof mediaService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in media.image POST route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     }
   );
@@ -64,6 +75,16 @@ export default function createImageRoute() {
         200: { description: "Xóa ảnh thành công" },
         403: { description: "Không có quyền xóa ảnh" },
         404: { description: "Không tìm thấy đối tượng" },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
     async (c) => {
@@ -71,12 +92,13 @@ export default function createImageRoute() {
       const { type, id } = c.req.valid("param");
       try {
         const result = await mediaService.deleteImage(user.sub, type, id);
-        return c.json(result);
+        return c.json(result, 200);
       } catch (err: any) {
         if (err instanceof mediaService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in media.image DELETE route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     }
   );

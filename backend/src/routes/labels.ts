@@ -39,6 +39,16 @@ export default function createLabelRoutes() {
         403: {
           description: "Không có quyền truy cập Board này",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -67,7 +77,7 @@ export default function createLabelRoutes() {
         .from(labelsTable)
         .where(eq(labelsTable.boardId, boardId));
 
-      return c.json(labels);
+      return c.json(labels, 200);
     },
   );
 
@@ -93,6 +103,16 @@ export default function createLabelRoutes() {
         },
         403: {
           description: "Không có quyền tạo Label trong Board này",
+        },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
         },
       },
     }),
@@ -127,7 +147,7 @@ export default function createLabelRoutes() {
         })
         .returning();
 
-      return c.json(label[0]);
+      return c.json(label[0], 200);
     },
   );
 
@@ -154,6 +174,16 @@ export default function createLabelRoutes() {
         },
         403: {
           description: "Không có quyền cập nhật Label này",
+        },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
         },
       },
     }),
@@ -202,7 +232,7 @@ export default function createLabelRoutes() {
         .where(eq(labelsTable.id, id))
         .returning();
 
-      return c.json(updatedLabel[0]);
+      return c.json(updatedLabel[0], 200);
     },
   );
 
@@ -235,6 +265,16 @@ export default function createLabelRoutes() {
         },
         403: {
           description: "Không có quyền xóa Label này",
+        },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
         },
       },
     }),
@@ -275,7 +315,7 @@ export default function createLabelRoutes() {
 
       await db.delete(labelsTable).where(eq(labelsTable.id, id));
 
-      return c.json({ message: "Xóa Label thành công" });
+      return c.json({ message: "Xóa Label thành công" }, 200);
     },
   );
 
