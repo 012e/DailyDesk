@@ -104,7 +104,7 @@ export default function createMemberRoutes() {
         .from(boardMembersTable)
         .where(eq(boardMembersTable.boardId, boardId));
 
-      return c.json(members);
+      return c.json(members, 200);
     }
   );
 
@@ -219,7 +219,7 @@ export default function createMemberRoutes() {
         })
         .returning();
 
-      return c.json(member[0]);
+      return c.json(member[0], 200);
     }
   );
 
@@ -320,7 +320,7 @@ export default function createMemberRoutes() {
         .where(eq(boardMembersTable.id, id))
         .returning();
 
-      return c.json(updatedMember[0]);
+      return c.json(updatedMember[0], 200);
     }
   );
 
@@ -425,7 +425,7 @@ export default function createMemberRoutes() {
         .delete(boardMembersTable)
         .where(eq(boardMembersTable.id, id));
 
-      return c.json({ message: "Xóa Member thành công" });
+      return c.json({ message: "Xóa Member thành công" }, 200);
     }
   );
 

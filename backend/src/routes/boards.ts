@@ -42,7 +42,7 @@ export default function createBoardRoutes() {
     async (c) => {
       const user = ensureUserAuthenticated(c);
       const boards = await boardService.getBoardsForUser(user.sub);
-      return c.json(boards);
+      return c.json(boards, 200);
     },
   );
 
@@ -87,7 +87,7 @@ export default function createBoardRoutes() {
       const req = c.req.valid("json");
       try {
         const board = await boardService.createBoard(user.sub, req);
-        return c.json(board);
+        return c.json(board, 200);
       } catch (err: any) {
         if (err instanceof boardService.ServiceError) {
           return c.json({ error: err.message }, 400);
@@ -151,7 +151,7 @@ export default function createBoardRoutes() {
       const { id } = c.req.valid("param");
       try {
         const board = await boardService.getBoardById(user.sub, id);
-        return c.json(board);
+        return c.json(board, 200);
       } catch (err: any) {
         if (err instanceof boardService.ServiceError) {
           return c.json({ error: err.message }, err.status);
@@ -217,7 +217,7 @@ export default function createBoardRoutes() {
       const req = c.req.valid("json");
       try {
         const updated = await boardService.updateBoard(user.sub, id, req);
-        return c.json(updated);
+        return c.json(updated, 200);
       } catch (err: any) {
         if (err instanceof boardService.ServiceError) {
           return c.json({ error: err.message }, err.status);
@@ -288,7 +288,7 @@ export default function createBoardRoutes() {
       const { id } = c.req.valid("param");
       try {
         const result = await boardService.deleteBoard(user.sub, id);
-        return c.json(result);
+        return c.json(result, 200);
       } catch (err: any) {
         if (err instanceof boardService.ServiceError) {
           return c.json({ error: err.message }, err.status);
@@ -352,7 +352,7 @@ export default function createBoardRoutes() {
       const { id } = c.req.valid("param");
       try {
         const lists = await boardService.getListsForBoard(user.sub, id);
-        return c.json(lists);
+        return c.json(lists, 200);
       } catch (err: any) {
         if (err instanceof boardService.ServiceError) {
           return c.json({ error: err.message }, err.status);
@@ -416,7 +416,7 @@ export default function createBoardRoutes() {
       const { id } = c.req.valid("param");
       try {
         const cards = await boardService.getCardsForBoard(user.sub, id);
-        return c.json(cards);
+        return c.json(cards, 200);
       } catch (err: any) {
         if (err instanceof boardService.ServiceError) {
           return c.json({ error: err.message }, err.status);

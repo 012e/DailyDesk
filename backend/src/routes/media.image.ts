@@ -66,7 +66,7 @@ export default function createImageRoute() {
       const { secure_url, public_id } = c.req.valid("json");
       try {
         const updated = await mediaService.saveImage(user.sub, type, id, secure_url, public_id);
-        return c.json(updated);
+        return c.json(updated, 200);
       } catch (err: any) {
         if (err instanceof mediaService.ServiceError) {
           return c.json({ error: err.message }, err.status);
@@ -128,7 +128,7 @@ export default function createImageRoute() {
       const { type, id } = c.req.valid("param");
       try {
         const result = await mediaService.deleteImage(user.sub, type, id);
-        return c.json(result);
+        return c.json(result, 200);
       } catch (err: any) {
         if (err instanceof mediaService.ServiceError) {
           return c.json({ error: err.message }, err.status);

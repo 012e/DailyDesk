@@ -70,7 +70,7 @@ export default function createChecklistItemRoutes() {
       const { boardId, cardId } = c.req.valid("param");
       try {
         const items = await checklistService.getChecklistItemsForCard(user.sub, boardId, cardId);
-        return c.json(items);
+        return c.json(items, 200);
       } catch (err: any) {
         if (err instanceof checklistService.ServiceError) {
           return c.json({ error: err.message }, err.status);
@@ -138,7 +138,7 @@ export default function createChecklistItemRoutes() {
       const req = c.req.valid("json");
       try {
         const item = await checklistService.createChecklistItem(user.sub, boardId, cardId, req);
-        return c.json(item);
+        return c.json(item, 200);
       } catch (err: any) {
         if (err instanceof checklistService.ServiceError) {
           return c.json({ error: err.message }, err.status);
@@ -205,7 +205,7 @@ export default function createChecklistItemRoutes() {
       const { boardId, cardId, id } = c.req.valid("param");
       try {
         const item = await checklistService.getChecklistItemById(user.sub, boardId, cardId, id);
-        return c.json(item);
+        return c.json(item, 200);
       } catch (err: any) {
         if (err instanceof checklistService.ServiceError) {
           return c.json({ error: err.message }, err.status);
@@ -274,7 +274,7 @@ export default function createChecklistItemRoutes() {
       const req = c.req.valid("json");
       try {
         const updated = await checklistService.updateChecklistItem(user.sub, boardId, cardId, id, req);
-        return c.json(updated);
+        return c.json(updated, 200);
       } catch (err: any) {
         if (err instanceof checklistService.ServiceError) {
           return c.json({ error: err.message }, err.status);
@@ -348,7 +348,7 @@ export default function createChecklistItemRoutes() {
       const { boardId, cardId, id } = c.req.valid("param");
       try {
         const result = await checklistService.deleteChecklistItem(user.sub, boardId, cardId, id);
-        return c.json(result);
+        return c.json(result, 200);
       } catch (err: any) {
         if (err instanceof checklistService.ServiceError) {
           return c.json({ error: err.message }, err.status);

@@ -75,7 +75,7 @@ export default function createCardRoutes() {
           attachments: card.attachments ? JSON.parse(card.attachments) : null,
         }));
 
-        return c.json(parsedCards);
+        return c.json(parsedCards, 200);
       } catch (err: any) {
         if (err instanceof cardService.ServiceError) {
           return c.json({ error: err.message }, err.status);
@@ -156,7 +156,7 @@ export default function createCardRoutes() {
           // attachments: card.attachments ? JSON.parse(card.attachments) : null,
         };
 
-        return c.json(parsedCard);
+        return c.json(parsedCard, 200);
       } catch (err: any) {
         if (err instanceof cardService.ServiceError) {
           return c.json({ error: err.message }, err.status);
@@ -232,7 +232,7 @@ export default function createCardRoutes() {
           attachments: card.attachments ? JSON.parse(card.attachments) : null,
         };
 
-        return c.json(parsedCard);
+        return c.json(parsedCard, 200);
       } catch (err: any) {
         if (err instanceof cardService.ServiceError) {
           return c.json({ error: err.message }, err.status);
@@ -321,7 +321,7 @@ export default function createCardRoutes() {
             : null,
         };
 
-        return c.json(parsedCard);
+        return c.json(parsedCard, 200);
       } catch (err: any) {
         console.error("Error in updateCard route:", err);
         if (err instanceof cardService.ServiceError) {
@@ -395,7 +395,7 @@ export default function createCardRoutes() {
 
       try {
         const result = await cardService.deleteCard(user.sub, boardId, id);
-        return c.json(result);
+        return c.json(result, 200);
       } catch (err: any) {
         if (err instanceof cardService.ServiceError) {
           return c.json({ error: err.message }, err.status);

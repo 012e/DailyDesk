@@ -84,7 +84,7 @@ export default function createCommentRoutes() {
           console.error("Failed to log comment activity:", activityError);
         }
 
-        return c.json(comment);
+        return c.json(comment, 200);
       } catch (err: any) {
         if (err instanceof commentService.ServiceError) {
           return c.json({ error: err.message }, err.status);
@@ -158,7 +158,7 @@ export default function createCommentRoutes() {
           req.content,
         );
 
-        return c.json(comment);
+        return c.json(comment, 200);
       } catch (err: any) {
         if (err instanceof commentService.ServiceError) {
           return c.json({ error: err.message }, err.status);
@@ -249,7 +249,7 @@ export default function createCommentRoutes() {
           );
         }
 
-        return c.json(result);
+        return c.json(result, 200);
       } catch (err: any) {
         if (err instanceof commentService.ServiceError) {
           return c.json({ error: err.message }, err.status);
@@ -319,7 +319,7 @@ export default function createCommentRoutes() {
           user.sub,
           cardId,
         );
-        return c.json(comments);
+        return c.json(comments, 200);
       } catch (err: any) {
         if (err instanceof commentService.ServiceError) {
           return c.json({ error: err.message }, err.status);
@@ -389,7 +389,7 @@ export default function createCommentRoutes() {
           user.sub,
           cardId,
         );
-        return c.json(activities);
+        return c.json(activities, 200);
       } catch (err: any) {
         if (err instanceof activityService.ServiceError) {
           return c.json({ error: err.message }, err.status);
@@ -469,7 +469,7 @@ export default function createCommentRoutes() {
           user.sub,
           cardId,
         );
-        return c.json(timeline);
+        return c.json(timeline, 200);
       } catch (err: any) {
         if (
           err instanceof commentService.ServiceError ||

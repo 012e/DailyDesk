@@ -69,7 +69,7 @@ export default function createListRoutes() {
       const { boardId } = c.req.valid("param");
       try {
         const lists = await listsService.getListsForBoard(user.sub, boardId);
-        return c.json(lists);
+        return c.json(lists, 200);
       } catch (err: any) {
         if (err instanceof listsService.ServiceError) {
           return c.json({ error: err.message }, err.status);
@@ -136,7 +136,7 @@ export default function createListRoutes() {
       const req = c.req.valid("json");
       try {
         const list = await listsService.createList(user.sub, boardId, req);
-        return c.json(list);
+        return c.json(list, 200);
       } catch (err: any) {
         if (err instanceof listsService.ServiceError) {
           return c.json({ error: err.message }, err.status);
@@ -202,7 +202,7 @@ export default function createListRoutes() {
       const { boardId, id } = c.req.valid("param");
       try {
         const list = await listsService.getListById(user.sub, boardId, id);
-        return c.json(list);
+        return c.json(list, 200);
       } catch (err: any) {
         if (err instanceof listsService.ServiceError) {
           return c.json({ error: err.message }, err.status);
@@ -270,7 +270,7 @@ export default function createListRoutes() {
       const req = c.req.valid("json");
       try {
         const updated = await listsService.updateList(user.sub, boardId, id, req);
-        return c.json(updated);
+        return c.json(updated, 200);
       } catch (err: any) {
         if (err instanceof listsService.ServiceError) {
           return c.json({ error: err.message }, err.status);
@@ -343,7 +343,7 @@ export default function createListRoutes() {
       const { boardId, id } = c.req.valid("param");
       try {
         const result = await listsService.deleteList(user.sub, boardId, id);
-        return c.json(result);
+        return c.json(result, 200);
       } catch (err: any) {
         if (err instanceof listsService.ServiceError) {
           return c.json({ error: err.message }, err.status);

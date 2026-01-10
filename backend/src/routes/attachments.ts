@@ -132,7 +132,7 @@ export default function createAttachmentRoutes() {
         .returning();
 
       console.log("[ATTACHMENT] Created attachment:", result[0]);
-      return c.json(result[0]);
+      return c.json(result[0], 200);
     }
   );
 
@@ -222,7 +222,7 @@ export default function createAttachmentRoutes() {
         .from(attachmentsTable)
         .where(eq(attachmentsTable.cardId, cardId));
 
-      return c.json(attachments);
+      return c.json(attachments, 200);
     }
   );
 
@@ -320,7 +320,7 @@ export default function createAttachmentRoutes() {
 
       await db.delete(attachmentsTable).where(eq(attachmentsTable.id, id));
 
-      return c.json({ message: "Xóa attachment thành công" });
+      return c.json({ message: "Xóa attachment thành công" }, 200);
     }
   );
 
