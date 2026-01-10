@@ -22,19 +22,21 @@ interface KanbanColumnProps {
     name: string;
     cards: BackendCard[];
   };
+  boardId: string;
   onDropOverColumn: (data: string) => void;
   onDropOverListItem: (
     targetCardId: string,
     data: string,
     direction: KanbanBoardDropDirection
   ) => void;
-  onSaveColumnEdit: () => void;
+  onSaveColumnEdit: (columnId: string, newName: string) => void;
   onDeleteColumn: (columnId: string) => void;
   onDeleteCard: (cardId: string) => void;
 }
 
 export function KanbanColumn({
   column,
+  boardId,
   onDropOverColumn,
   onDropOverListItem,
   onSaveColumnEdit,
@@ -62,6 +64,7 @@ export function KanbanColumn({
             key={card.id}
             card={card}
             columnId={column.id}
+            boardId={boardId}
             onDropOverListItem={(data, direction) =>
               onDropOverListItem(card.id, data, direction)
             }
@@ -74,4 +77,3 @@ export function KanbanColumn({
     </KanbanBoardColumn>
   );
 }
-

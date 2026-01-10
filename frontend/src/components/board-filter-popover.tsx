@@ -278,16 +278,6 @@ export function BoardFilterPopover({
                 />
                 <span className="text-sm text-green-500">Not overdue</span>
               </div>
-              <div
-                className="flex items-center gap-2 cursor-pointer hover:bg-accent rounded-md p-1 -m-1"
-                onClick={() => toggleDueDate("noDueDate")}
-              >
-                <Checkbox
-                  checked={filters.dueDate.includes("noDueDate")}
-                  className="pointer-events-none"
-                />
-                <span className="text-sm">No due date</span>
-              </div>
             </div>
           </div>
         </div>

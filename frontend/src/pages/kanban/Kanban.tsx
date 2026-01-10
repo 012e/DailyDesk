@@ -32,7 +32,7 @@ interface KanbanProps {
 
 export function Kanban({ boardId }: KanbanProps) {
   const setBoardId = useSetAtom(boardIdAtom);
-  const { createList } = useListActions();
+  const { createList, updateList, deleteList } = useListActions();
   const board = useBoard({ boardId: boardId! });
   const lists = board?.lists || [];
   const { user: currentUser } = useAuth0();
@@ -201,12 +201,24 @@ export function Kanban({ boardId }: KanbanProps) {
     }
   };
 
-  const handleSaveColumnEdit = () => {
-    // TODO: Implement updateList hook logic here
+  const handleSaveColumnEdit = async (columnId: string, newName: string) => {
+    try {
+      await updateList(columnId, newName);
+      toast.success("List updated!", { position: "bottom-left" });
+    } catch (error) {
+      console.error("Failed to update list:", error);
+      toast.error("Failed to update list", { position: "bottom-left" });
+    }
   };
 
-  const handleDeleteColumn = async () => {
-    // TODO: Implement deleteList hook logic here
+  const handleDeleteColumn = async (columnId: string) => {
+    try {
+      await deleteList(columnId);
+      toast.success("List deleted!", { position: "bottom-left" });
+    } catch (error) {
+      console.error("Failed to delete list:", error);
+      toast.error("Failed to delete list", { position: "bottom-left" });
+    }
   };
 
   const handleUpdateCard = (updatedCard: CardType) => {
@@ -238,6 +250,7 @@ export function Kanban({ boardId }: KanbanProps) {
             <KanbanColumn
               key={column.id}
               column={column}
+              boardId={boardId || ""}
               onDropOverColumn={(data) => handleDropOverColumn(column.id, data)}
               onDropOverListItem={(targetCardId, data, direction) =>
                 handleDropOverListItem(column.id, targetCardId, data, direction)

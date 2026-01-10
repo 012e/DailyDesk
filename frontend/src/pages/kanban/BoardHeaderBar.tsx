@@ -142,7 +142,7 @@ export function BoardHeaderBar({
 
   return (
     <>
-      <div className="flex items-center justify-between mb-4 bg-card/80 dark:bg-black/30 backdrop-blur-sm rounded-lg px-4 py-2 border border-border/50">
+      <div className="sticky top-1 z-10 flex items-center justify-between mb-4 bg-card/80 dark:bg-black/30 backdrop-blur-sm rounded-lg px-4 py-2 mr-4  border border-border/50">
         {/* Left Section - Board Name */}
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-semibold tracking-tight text-foreground">{boardName}</h2>
