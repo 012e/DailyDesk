@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "pnpm --filter backend test",
-    "dev": "pnpm exec tsx cleanup.ts; concurrently --prefix-colors red,blue,yellow --names backend,frontend,ai-devtool \"pnpm --filter backend dev\" \"pnpm --filter frontend dev\" \"pnpm --filter backend ai-devtool\"",
+    "dev": "pnpm exec tsx cleanup.ts && concurrently --prefix-colors red,blue,yellow --names backend,frontend,ai-devtool \"pnpm --filter backend dev\" \"pnpm --filter frontend dev\" \"pnpm --filter backend ai-devtool\"",
     "update-db": "pnpm --filter backend db:push"
   },
   "keywords": [],

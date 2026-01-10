@@ -1,14 +1,16 @@
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import type { Card, Label, Member } from "@/types/card";
-import { X, Tag, UserPlus, Clock, Save, Wallpaper } from "lucide-react";
+import { X, Tag, UserPlus, Clock, Wallpaper, CheckSquare, Paperclip, FileIcon, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label as UILabel } from "@/components/ui/label";
 import { CardLabels } from "./card-labels";
 import { CardMembers } from "./card-members";
 import { CardDates } from "./card-dates";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useCreateCard } from "@/hooks/use-card";
 import { BackgroundPickerProvider, useBackgroundPickerContext } from "@/components/background-picker-provider";
 import { BackgroundPicker } from "@/components/background-picker";
@@ -17,8 +19,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useUploadImage } from "@/hooks/use-image";
+import { useUploadImage, useUploadConfig } from "@/hooks/use-image";
 import { queryClient } from "@/lib/query-client";
+import { toast } from "react-hot-toast";
+import api from "@/lib/api";
+import { v7 as uuidv7 } from "uuid";
 
 interface CardCreateDialogProps {
   boardId: string;
@@ -56,14 +61,48 @@ function InnerCardCreateDialog({
   const [isCoverPopoverOpen, setIsCoverPopoverOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
+  // Temporary CheckList state
+  interface TempChecklistItem {
+    tempId: string;
+    name: string;
+    completed: boolean;
+    order: number;
+  }
+  const [tempChecklistItems, setTempChecklistItems] = useState<TempChecklistItem[]>([]);
+  const [isChecklistPopoverOpen, setIsChecklistPopoverOpen] = useState(false);
+  const [newChecklistItemName, setNewChecklistItemName] = useState("");
+
+  // Temporary Attachment state
+  interface TempAttachment {
+    tempId: string;
+    file?: File;
+    name: string;
+    url?: string;
+    type: string;
+    size: number;
+    preview?: string;
+  }
+  const [tempAttachments, setTempAttachments] = useState<TempAttachment[]>([]);
+  const [isAttachmentPopoverOpen, setIsAttachmentPopoverOpen] = useState(false);
+  const [linkUrl, setLinkUrl] = useState("");
+  const [linkName, setLinkName] = useState("");
+  const attachmentFileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Batch upload progress
+  const [isBatchUploading, setIsBatchUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{
+    current: number;
+    total: number;
+    step: string;
+  }>({ current: 0, total: 0, step: "" });
+
   const { mutate: createCard, isPending } = useCreateCard();
   const { uploadImage } = useUploadImage();
+  const { cloudName, uploadPreset } = useUploadConfig();
   const { selectedColor, selectedFile, croppedFile, reset: resetBackground, getBackgroundData } = useBackgroundPickerContext();
 
-  // Get the effective image file (cropped or original)
   const imageFile = croppedFile || selectedFile;
 
-  // Preview for cover
   const previewImageUrl = useMemo(() => {
     if (selectedColor) return null;
     if (imageFile) return URL.createObjectURL(imageFile);
@@ -78,7 +117,6 @@ function InnerCardCreateDialog({
 
   const hasCover = previewColor || previewImageUrl;
 
-  // Create a temporary card object for the sub-components
   const tempCard: Card = {
     id: "",
     title: title,
@@ -110,13 +148,90 @@ function InnerCardCreateDialog({
     }
   }, []);
 
+  // CheckList Management Functions
+  const handleAddTempChecklistItem = (name: string) => {
+    if (!name.trim()) return;
+    const newItem: TempChecklistItem = {
+      tempId: crypto.randomUUID(),
+      name: name.trim(),
+      completed: false,
+      order: tempChecklistItems.length,
+    };
+    setTempChecklistItems(prev => [...prev, newItem]);
+  };
+
+  const handleToggleTempChecklistItem = (tempId: string) => {
+    setTempChecklistItems(prev =>
+      prev.map(item => item.tempId === tempId ? { ...item, completed: !item.completed } : item)
+    );
+  };
+
+  const handleRemoveTempChecklistItem = (tempId: string) => {
+    setTempChecklistItems(prev => prev.filter(item => item.tempId !== tempId));
+  };
+
+  // Attachment Management Functions
+  const handleAddTempAttachmentFile = (file: File) => {
+    let preview: string | undefined;
+    if (file.type.startsWith("image/")) {
+      preview = URL.createObjectURL(file);
+    }
+    const newAttachment: TempAttachment = {
+      tempId: crypto.randomUUID(),
+      file,
+      name: file.name,
+      type: file.type || "application/octet-stream",
+      size: file.size,
+      preview,
+    };
+    setTempAttachments(prev => [...prev, newAttachment]);
+    setIsAttachmentPopoverOpen(false);
+  };
+
+  const handleAddTempAttachmentLink = () => {
+    if (!linkUrl.trim()) return;
+    const newAttachment: TempAttachment = {
+      tempId: crypto.randomUUID(),
+      url: linkUrl.trim(),
+      name: linkName.trim() || linkUrl.trim(),
+      type: "link",
+      size: 0,
+    };
+    setTempAttachments(prev => [...prev, newAttachment]);
+    setIsAttachmentPopoverOpen(false);
+    setLinkUrl("");
+    setLinkName("");
+  };
+
+  const handleRemoveTempAttachment = (tempId: string) => {
+    setTempAttachments(prev => {
+      const attachment = prev.find(a => a.tempId === tempId);
+      if (attachment?.preview) URL.revokeObjectURL(attachment.preview);
+      return prev.filter(a => a.tempId !== tempId);
+    });
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
+  };
+
+  useEffect(() => {
+    return () => {
+      tempAttachments.forEach(attachment => {
+        if (attachment.preview) URL.revokeObjectURL(attachment.preview);
+      });
+    };
+  }, [tempAttachments]);
+
   const handleCreate = async () => {
     if (!title.trim()) return;
-
     setIsCreating(true);
 
     try {
-      // Create the card first
       createCard(
         {
           boardId,
@@ -130,27 +245,143 @@ function InnerCardCreateDialog({
         },
         {
           onSuccess: async (newCard) => {
-            // If there's a cover image, upload it
-            const { imageFile: currentImageFile } = getBackgroundData();
-            
-            if (currentImageFile && newCard?.id) {
-              try {
-                await uploadImage({
-                  file: currentImageFile,
-                  type: "card",
-                  id: newCard.id,
-                });
-                // Invalidate to refetch with the new cover
-                queryClient.invalidateQueries({ queryKey: ["board", boardId] });
-              } catch (error) {
-                console.error("Error uploading card cover:", error);
-              }
+            if (!newCard?.id) {
+              setIsCreating(false);
+              return;
             }
 
-            // Reset form
-            resetForm();
-            onCreated?.();
-            onClose();
+            const { imageFile: currentImageFile } = getBackgroundData();
+            const totalSteps =
+              (currentImageFile ? 1 : 0) +
+              tempChecklistItems.length +
+              tempAttachments.length;
+
+            if (totalSteps === 0) {
+              resetForm();
+              onCreated?.();
+              onClose();
+              return;
+            }
+
+            setIsBatchUploading(true);
+            let currentStep = 0;
+            const errors: Array<{ type: string; item: string; error: string }> = [];
+
+            try {
+              if (currentImageFile) {
+                try {
+                  setUploadProgress({ current: ++currentStep, total: totalSteps, step: "Uploading cover..." });
+                  await uploadImage({ file: currentImageFile, type: "card", id: newCard.id });
+                } catch (error: any) {
+                  console.error("Error uploading cover:", error);
+                  errors.push({ type: "cover", item: "Cover image", error: error.message || "Unknown error" });
+                }
+              }
+
+              for (let i = 0; i < tempChecklistItems.length; i++) {
+                const item = tempChecklistItems[i];
+                try {
+                  setUploadProgress({
+                    current: ++currentStep,
+                    total: totalSteps,
+                    step: `Adding checklist item ${i + 1}/${tempChecklistItems.length}...`,
+                  });
+
+                  const { error } = await api.POST("/boards/{boardId}/cards/{cardId}/checklist-items", {
+                    params: { path: { boardId, cardId: newCard.id } },
+                    body: {
+                      id: uuidv7(),
+                      name: item.name,
+                      completed: item.completed,
+                      order: item.order,
+                      cardId: newCard.id,
+                    },
+                  });
+
+                  if (error) throw new Error("Failed to create checklist item");
+                } catch (error: any) {
+                  console.error(`Error uploading checklist item "${item.name}":`, error);
+                  errors.push({ type: "checklist", item: item.name, error: error.message || "Unknown error" });
+                }
+              }
+
+              for (let i = 0; i < tempAttachments.length; i++) {
+                const attachment = tempAttachments[i];
+                try {
+                  setUploadProgress({
+                    current: ++currentStep,
+                    total: totalSteps,
+                    step: `Uploading attachment ${i + 1}/${tempAttachments.length}...`,
+                  });
+
+                  if (attachment.file) {
+                    if (!cloudName || !uploadPreset) throw new Error("Cloudinary config not loaded");
+
+                    const form = new FormData();
+                    form.append("upload_preset", uploadPreset);
+                    form.append("folder", "schedule_management/attachments");
+                    form.append("file", attachment.file);
+
+                    const uploadRes = await fetch(
+                      `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
+                      { method: "POST", body: form }
+                    );
+
+                    if (!uploadRes.ok) throw new Error("Failed to upload to Cloudinary");
+                    const uploadData = await uploadRes.json();
+
+                    const { error } = await api.POST("/boards/{boardId}/cards/{cardId}/attachments", {
+                      params: { path: { boardId, cardId: newCard.id } },
+                      body: {
+                        name: attachment.name,
+                        url: uploadData.secure_url,
+                        publicId: uploadData.public_id,
+                        type: attachment.type,
+                        size: attachment.size,
+                      },
+                    });
+
+                    if (error) throw new Error("Failed to create attachment");
+                  } else if (attachment.url) {
+                    const { error } = await api.POST("/boards/{boardId}/cards/{cardId}/attachments", {
+                      params: { path: { boardId, cardId: newCard.id } },
+                      body: {
+                        name: attachment.name,
+                        url: attachment.url,
+                        type: attachment.type,
+                        size: attachment.size,
+                      },
+                    });
+
+                    if (error) throw new Error("Failed to create attachment");
+                  }
+                } catch (error: any) {
+                  console.error(`Error uploading attachment "${attachment.name}":`, error);
+                  errors.push({ type: "attachment", item: attachment.name, error: error.message || "Unknown error" });
+                }
+              }
+
+              queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+
+              if (errors.length > 0) {
+                toast.error(`Card created, but ${errors.length} item(s) failed to upload`, { duration: 8000 });
+              } else {
+                toast.success("Card created successfully!");
+              }
+
+              resetForm();
+              onCreated?.();
+              onClose();
+            } catch (error) {
+              console.error("Error during batch upload:", error);
+              toast.error("Card created, but some items failed. Please edit the card to add them manually.");
+              resetForm();
+              onCreated?.();
+              onClose();
+            } finally {
+              setIsBatchUploading(false);
+              setIsCreating(false);
+            }
           },
           onError: () => {
             setIsCreating(false);
@@ -170,9 +401,28 @@ function InnerCardCreateDialog({
     setDeadline(undefined);
     setIsCreating(false);
     resetBackground();
+
+    setTempChecklistItems([]);
+    tempAttachments.forEach(attachment => {
+      if (attachment.preview) URL.revokeObjectURL(attachment.preview);
+    });
+    setTempAttachments([]);
+
+    setIsChecklistPopoverOpen(false);
+    setIsAttachmentPopoverOpen(false);
+    setNewChecklistItemName("");
+    setLinkUrl("");
+    setLinkName("");
+
+    setIsBatchUploading(false);
+    setUploadProgress({ current: 0, total: 0, step: "" });
   };
 
   const handleClose = () => {
+    if (isBatchUploading) {
+      toast.error("Please wait for uploads to complete");
+      return;
+    }
     resetForm();
     onClose();
   };
@@ -184,10 +434,10 @@ function InnerCardCreateDialog({
       <DialogContent
         className="!flex !flex-col !p-0 !gap-0"
         style={{
-          maxWidth: '900px',
-          width: '80vw',
-          height: hasCover ? '600px' : '500px',
-          minHeight: '400px'
+          maxWidth: '1200px',
+          width: '90vw',
+          height: hasCover ? '650px' : '550px',
+          minHeight: '500px'
         }}
         showCloseButton={false}
       >
@@ -204,6 +454,33 @@ function InnerCardCreateDialog({
             <X className="h-4 w-4" />
           </Button>
         </div>
+
+        {/* Loading overlay with progress */}
+        {(isCreating || isBatchUploading) && (
+          <div className="absolute inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center">
+            <div className="flex flex-col items-center gap-4 bg-background p-6 rounded-lg shadow-lg border">
+              <Loader2 className="h-10 w-10 animate-spin text-primary" />
+              {isBatchUploading ? (
+                <>
+                  <p className="text-sm font-medium">{uploadProgress.step}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Step {uploadProgress.current} of {uploadProgress.total}
+                  </p>
+                  <div className="w-64 h-2 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-primary transition-all duration-300"
+                      style={{
+                        width: `${(uploadProgress.current / uploadProgress.total) * 100}%`,
+                      }}
+                    />
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">Creating card...</p>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Cover preview */}
         {hasCover && (
@@ -301,6 +578,97 @@ function InnerCardCreateDialog({
                 </div>
               </PopoverContent>
             </Popover>
+            <Popover open={isChecklistPopoverOpen} onOpenChange={setIsChecklistPopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8">
+                  <CheckSquare className="h-4 w-4 mr-1" />
+                  Checklist {tempChecklistItems.length > 0 && `(${tempChecklistItems.length})`}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                <div className="space-y-4">
+                  <h4 className="font-medium text-sm">Add Checklist Item</h4>
+                  <Input
+                    placeholder="Enter item name..."
+                    value={newChecklistItemName}
+                    onChange={(e) => setNewChecklistItemName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && newChecklistItemName.trim()) {
+                        handleAddTempChecklistItem(newChecklistItemName);
+                        setNewChecklistItemName("");
+                        setIsChecklistPopoverOpen(false);
+                      }
+                    }}
+                  />
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" size="sm" onClick={() => {
+                      setIsChecklistPopoverOpen(false);
+                      setNewChecklistItemName("");
+                    }}>
+                      Cancel
+                    </Button>
+                    <Button size="sm" onClick={() => {
+                      handleAddTempChecklistItem(newChecklistItemName);
+                      setNewChecklistItemName("");
+                      setIsChecklistPopoverOpen(false);
+                    }} disabled={!newChecklistItemName.trim()}>
+                      Add
+                    </Button>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+            <Popover open={isAttachmentPopoverOpen} onOpenChange={setIsAttachmentPopoverOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8">
+                  <Paperclip className="h-4 w-4 mr-1" />
+                  Attachment {tempAttachments.length > 0 && `(${tempAttachments.length})`}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-sm">Attach</h4>
+                    <Button variant="outline" size="sm" className="w-full justify-start"
+                      onClick={() => attachmentFileInputRef.current?.click()}>
+                      <Paperclip className="h-4 w-4 mr-2" />
+                      Computer
+                    </Button>
+                    <input ref={attachmentFileInputRef} type="file" className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          handleAddTempAttachmentFile(file);
+                          e.target.value = "";
+                        }
+                      }}
+                      accept="image/*,.pdf,.doc,.docx,.txt"
+                    />
+                  </div>
+                  <div className="space-y-2 pt-2 border-t">
+                    <UILabel htmlFor="attach-link-url" className="text-xs">Or attach a link</UILabel>
+                    <Input id="attach-link-url" placeholder="Paste a link..."
+                      value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleAddTempAttachmentLink()}
+                    />
+                    <Input placeholder="Link name (optional)"
+                      value={linkName} onChange={(e) => setLinkName(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleAddTempAttachmentLink()}
+                    />
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" size="sm" onClick={() => {
+                        setIsAttachmentPopoverOpen(false);
+                        setLinkUrl("");
+                        setLinkName("");
+                      }}>Cancel</Button>
+                      <Button size="sm" onClick={handleAddTempAttachmentLink} disabled={!linkUrl.trim()}>
+                        Attach
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* Labels display */}
@@ -336,6 +704,73 @@ function InnerCardCreateDialog({
                   {member.name}
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Temporary CheckList Display */}
+          {tempChecklistItems.length > 0 && (
+            <div className="space-y-3 p-4 rounded-md bg-muted/30">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold">Checklist Preview</h3>
+                <span className="text-xs text-muted-foreground">
+                  {tempChecklistItems.filter(i => i.completed).length}/{tempChecklistItems.length} completed
+                </span>
+              </div>
+              <div className="space-y-2">
+                {tempChecklistItems.map((item) => (
+                  <div key={item.tempId} className="flex items-center gap-3 py-1">
+                    <Checkbox checked={item.completed}
+                      onCheckedChange={() => handleToggleTempChecklistItem(item.tempId)}
+                    />
+                    <span className={item.completed ? "line-through text-muted-foreground flex-1" : "flex-1"}>
+                      {item.name}
+                    </span>
+                    <Button variant="ghost" size="sm"
+                      onClick={() => handleRemoveTempChecklistItem(item.tempId)}
+                      className="h-6 w-6 p-0">×</Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Temporary Attachments Display */}
+          {tempAttachments.length > 0 && (
+            <div className="space-y-3 p-4 rounded-md bg-muted/30">
+              <h3 className="text-sm font-semibold flex items-center gap-2">
+                <Paperclip className="h-4 w-4" />
+                Attachments Preview
+              </h3>
+              <div className="space-y-3">
+                {tempAttachments.map((attachment) => {
+                  const isImage = attachment.type.startsWith("image/");
+                  return (
+                    <div key={attachment.tempId} className="flex gap-3 group">
+                      <div className="flex-shrink-0">
+                        {isImage && attachment.preview ? (
+                          <div className="w-20 h-14 rounded border overflow-hidden bg-muted">
+                            <img src={attachment.preview} alt={attachment.name}
+                              className="w-full h-full object-cover" />
+                          </div>
+                        ) : (
+                          <div className="w-20 h-14 rounded border flex items-center justify-center bg-muted">
+                            <FileIcon className="h-6 w-6 text-muted-foreground" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium truncate">{attachment.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {attachment.type === "link" ? "Link" : formatFileSize(attachment.size)}
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm"
+                        onClick={() => handleRemoveTempAttachment(attachment.tempId)}
+                        className="h-6 w-6 p-0">×</Button>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 
