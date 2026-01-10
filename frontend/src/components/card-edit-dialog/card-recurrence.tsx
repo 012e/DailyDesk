@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -53,6 +53,13 @@ export function CardRecurrence({
   const [recurrenceWeekday, setRecurrenceWeekday] = useState<number>(
     card.recurrenceWeekday || 0
   ); // Default to Sunday
+
+  // Sync local state with card prop changes
+  useEffect(() => {
+    setRecurrence(card.recurrence || "never");
+    setRecurrenceDay(card.recurrenceDay || 2);
+    setRecurrenceWeekday(card.recurrenceWeekday || 0);
+  }, [card.recurrence, card.recurrenceDay, card.recurrenceWeekday]);
 
   // Use controlled state if provided, otherwise use internal state
   const isOpen =
