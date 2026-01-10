@@ -33,23 +33,9 @@ export default function createChecklistItemRoutes() {
           description: "Lấy danh sách Checklist Items thành công",
         }),
         404: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Board hoặc Card không tồn tại",
         },
         403: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Không có quyền truy cập Board này",
         },
         500: {
@@ -100,23 +86,9 @@ export default function createChecklistItemRoutes() {
           description: "Tạo Checklist Item thành công",
         }),
         404: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Board hoặc Card không tồn tại",
         },
         403: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Không có quyền tạo Checklist Item trong Card này",
         },
         500: {
@@ -168,23 +140,9 @@ export default function createChecklistItemRoutes() {
           description: "Lấy Checklist Item thành công",
         }),
         404: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Checklist Item, Card hoặc Board không tồn tại",
         },
         403: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Không có quyền truy cập Checklist Item này",
         },
         500: {
@@ -236,23 +194,9 @@ export default function createChecklistItemRoutes() {
           description: "Cập nhật Checklist Item thành công",
         }),
         404: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Checklist Item, Card hoặc Board không tồn tại",
         },
         403: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Không có quyền cập nhật Checklist Item này",
         },
         500: {
@@ -311,23 +255,9 @@ export default function createChecklistItemRoutes() {
           },
         },
         404: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Checklist Item, Card hoặc Board không tồn tại",
         },
         403: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Không có quyền xóa Checklist Item này",
         },
         500: {

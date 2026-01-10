@@ -32,23 +32,9 @@ export default function createListRoutes() {
           description: "Lấy danh sách Lists thành công",
         }),
         404: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Board không tồn tại",
         },
         403: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Không có quyền truy cập Board này",
         },
         500: {
@@ -98,23 +84,9 @@ export default function createListRoutes() {
           description: "Tạo List thành công",
         }),
         404: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Board không tồn tại",
         },
         403: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Không có quyền tạo List trong Board này",
         },
         500: {
@@ -165,23 +137,9 @@ export default function createListRoutes() {
           description: "Lấy List thành công",
         }),
         404: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "List hoặc Board không tồn tại",
         },
         403: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Không có quyền truy cập List này",
         },
         500: {
@@ -232,23 +190,9 @@ export default function createListRoutes() {
           description: "Cập nhật List thành công",
         }),
         404: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "List hoặc Board không tồn tại",
         },
         403: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Không có quyền cập nhật List này",
         },
         500: {
@@ -306,23 +250,9 @@ export default function createListRoutes() {
           },
         },
         404: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "List hoặc Board không tồn tại",
         },
         403: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Không có quyền xóa List này",
         },
         500: {

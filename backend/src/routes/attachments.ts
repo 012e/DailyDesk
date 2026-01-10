@@ -51,23 +51,9 @@ export default function createAttachmentRoutes() {
           description: "Tạo attachment thành công",
         }),
         404: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Card hoặc Board không tồn tại",
         },
         403: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Không có quyền tạo attachment trong Board này",
         },
         500: {
@@ -153,23 +139,9 @@ export default function createAttachmentRoutes() {
           description: "Lấy danh sách attachments thành công",
         }),
         404: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Card hoặc Board không tồn tại",
         },
         403: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Không có quyền truy cập Board này",
         },
         500: {
@@ -244,23 +216,9 @@ export default function createAttachmentRoutes() {
           description: "Xóa attachment thành công",
         },
         404: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Attachment không tồn tại",
         },
         403: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Không có quyền xóa attachment",
         },
         500: {

@@ -34,23 +34,9 @@ export default function createMemberRoutes() {
           description: "Lấy danh sách Members thành công",
         }),
         404: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Board không tồn tại",
         },
         403: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Không có quyền truy cập Board này",
         },
         500: {
@@ -126,33 +112,12 @@ export default function createMemberRoutes() {
           description: "Thêm Member thành công",
         }),
         404: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Board không tồn tại",
         },
         403: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Không có quyền thêm Member vào Board này",
         },
         409: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Member đã tồn tại trong Board",
         },
         500: {
@@ -242,23 +207,9 @@ export default function createMemberRoutes() {
           description: "Cập nhật Member thành công",
         }),
         404: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Member hoặc Board không tồn tại",
         },
         403: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Không có quyền cập nhật Member này",
         },
         500: {
@@ -349,23 +300,9 @@ export default function createMemberRoutes() {
           },
         },
         404: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Member hoặc Board không tồn tại",
         },
         403: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Không có quyền xóa Member này",
         },
         500: {

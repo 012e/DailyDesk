@@ -32,23 +32,9 @@ export default function createCommentRoutes() {
           description: "Thêm comment thành công",
         }),
         404: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Card không tồn tại",
         },
         403: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Không có quyền truy cập card này",
         },
         500: {
@@ -114,23 +100,9 @@ export default function createCommentRoutes() {
           description: "Cập nhật comment thành công",
         }),
         404: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Comment không tồn tại",
         },
         403: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Chỉ có thể chỉnh sửa comment của chính mình",
         },
         500: {
@@ -195,23 +167,9 @@ export default function createCommentRoutes() {
           },
         },
         404: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Comment không tồn tại",
         },
         403: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Chỉ có thể xóa comment của chính mình",
         },
         500: {
@@ -278,23 +236,9 @@ export default function createCommentRoutes() {
           description: "Lấy danh sách comments thành công",
         }),
         404: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Card không tồn tại",
         },
         403: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Không có quyền truy cập card này",
         },
         500: {
@@ -348,23 +292,9 @@ export default function createCommentRoutes() {
           description: "Lấy danh sách activities thành công",
         }),
         404: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Card không tồn tại",
         },
         403: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Không có quyền truy cập card này",
         },
         500: {
@@ -428,23 +358,9 @@ export default function createCommentRoutes() {
           },
         },
         404: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Card không tồn tại",
         },
         403: {
-          content: {
-            "application/json": {
-              schema: z.object({
-                error: z.string(),
-              }),
-            },
-          },
           description: "Không có quyền truy cập card này",
         },
         500: {
