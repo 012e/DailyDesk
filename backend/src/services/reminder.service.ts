@@ -61,7 +61,13 @@ export async function checkAndSendReminders() {
     }
 
     try {
-      await sendReminder(card);
+      await sendReminder({
+        cardId: card.cardId,
+        cardName: card.cardName,
+        dueAt: card.dueAt as Date,
+        reminderMinutes: card.reminderMinutes as number,
+        boardUserId: card.boardUserId,
+      });
 
       await db.insert(dueReminderLogTable).values({
         id: randomUUID(),
