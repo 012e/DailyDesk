@@ -11,22 +11,15 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { Checkbox } from "@/components/ui/checkbox";
-import type { Card as CardType, Label, Member, Attachment, Comment, ActivityLog, CardCoverMode, RecurrenceType } from "@/types/card";
+import type { Card as CardType, Label, Member, Attachment, Comment, ActivityLog, CardCoverMode } from "@/types/card";
 import { useAtom } from "jotai";
 import { isCardDialogOpenAtom, selectedCardAtom } from "./atoms";
-import { Repeat } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { getRecurrenceShortLabel } from "@/lib/recurrence-utils";
-import { useUpdateCard } from "@/hooks/use-card";
+import { CheckCircle2 } from "lucide-react";
 
 type NormalizedCard = CardType & {
   title: string;
   description?: string;
   color?: KanbanBoardCircleColor;
-  recurrence?: RecurrenceType;
-  recurrenceDay?: number;
-  recurrenceWeekday?: number;
 };
 
 interface KanbanCardProps {
@@ -41,9 +34,10 @@ interface KanbanCardProps {
     labels?: Label[];
     members?: Member[];
     dueDate?: Date;
-    recurrence?: RecurrenceType;
-    recurrenceDay?: number;
-    recurrenceWeekday?: number;
+    startDate?: Date | string | null;
+    dueAt?: Date | string | null;
+    dueComplete?: boolean;
+    reminderMinutes?: number | null;
     coverUrl?: string;
     coverColor?: string;
     coverMode?: CardCoverMode;
@@ -56,7 +50,6 @@ interface KanbanCardProps {
     completed?: boolean;
   };
   columnId: string;
-  boardId: string;
   onDropOverListItem: (
     data: string,
     direction: KanbanBoardDropDirection
@@ -67,13 +60,11 @@ interface KanbanCardProps {
 export function KanbanCard({
   card,
   columnId,
-  boardId,
   onDropOverListItem,
   onDelete,
 }: KanbanCardProps) {
   const [, setSelectedCard] = useAtom(selectedCardAtom);
   const [, setIsCardDialogOpen] = useAtom(isCardDialogOpenAtom);
-  const { mutate: updateCard } = useUpdateCard();
 
   const normalizedCard: NormalizedCard = {
     id: card.id,
@@ -85,9 +76,10 @@ export function KanbanCard({
     labels: card.labels || [],
     members: card.members || [],
     dueDate: card.dueDate,
-    recurrence: card.recurrence,
-    recurrenceDay: card.recurrenceDay,
-    recurrenceWeekday: card.recurrenceWeekday,
+    startDate: card.startDate,
+    dueAt: card.dueAt,
+    dueComplete: card.dueComplete,
+    reminderMinutes: card.reminderMinutes,
     coverUrl: card.coverUrl || "",
     coverColor: card.coverColor || "",
     coverMode: card.coverMode,
@@ -100,8 +92,6 @@ export function KanbanCard({
     completed: card.completed,
   };
 
-  const recurrenceLabel = getRecurrenceShortLabel(normalizedCard.recurrence);
-
   const openCardDialog = () => {
     setSelectedCard(normalizedCard);
     setIsCardDialogOpen(true);
@@ -111,15 +101,6 @@ export function KanbanCard({
     if (confirm("Delete this card?")) {
       onDelete(normalizedCard.id);
     }
-  };
-
-  const handleToggleComplete = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent opening the card dialog
-    updateCard({
-      boardId,
-      cardId: normalizedCard.id,
-      completed: !normalizedCard.completed,
-    });
   };
 
   return (
@@ -144,12 +125,9 @@ export function KanbanCard({
                 />
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 pt-8">
                   <div className="flex items-center gap-2">
-                    <div onClick={handleToggleComplete} className="flex-shrink-0">
-                      <Checkbox 
-                        checked={normalizedCard.completed} 
-                        className="border-white/70 data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
-                      />
-                    </div>
+                    {normalizedCard.completed && (
+                      <CheckCircle2 className="h-4 w-4 text-green-400 flex-shrink-0" />
+                    )}
                     <KanbanBoardCardTitle className={`text-white drop-shadow-md line-clamp-2 ${normalizedCard.completed ? "line-through opacity-75" : ""}`}>
                       {normalizedCard.title}
                     </KanbanBoardCardTitle>
@@ -163,12 +141,9 @@ export function KanbanCard({
               >
                 <div className="w-full bg-gradient-to-t from-black/70 to-transparent p-3 pt-8">
                   <div className="flex items-center gap-2">
-                    <div onClick={handleToggleComplete} className="flex-shrink-0">
-                      <Checkbox 
-                        checked={normalizedCard.completed} 
-                        className="border-white/70 data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
-                      />
-                    </div>
+                    {normalizedCard.completed && (
+                      <CheckCircle2 className="h-4 w-4 text-green-400 flex-shrink-0" />
+                    )}
                     <KanbanBoardCardTitle className={`text-white drop-shadow-sm line-clamp-2 ${normalizedCard.completed ? "line-through opacity-75" : ""}`}>
                       {normalizedCard.title}
                     </KanbanBoardCardTitle>
@@ -176,18 +151,13 @@ export function KanbanCard({
                 </div>
               </div>
             ) : (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <div onClick={handleToggleComplete} className="flex-shrink-0">
-                    <Checkbox 
-                      checked={normalizedCard.completed} 
-                      className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
-                    />
-                  </div>
-                  <KanbanBoardCardTitle className={`line-clamp-2 ${normalizedCard.completed ? "line-through text-muted-foreground" : ""}`}>
-                    {normalizedCard.title}
-                  </KanbanBoardCardTitle>
-                </div>
+              <div className="flex items-center gap-2">
+                {normalizedCard.completed && (
+                  <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+                )}
+                <KanbanBoardCardTitle className={`line-clamp-2 ${normalizedCard.completed ? "line-through text-muted-foreground" : ""}`}>
+                  {normalizedCard.title}
+                </KanbanBoardCardTitle>
               </div>
             )}
           </KanbanBoardCard>

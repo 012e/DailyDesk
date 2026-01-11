@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { Card, RecurrenceType } from "@/types/card";
+import type { Card } from "@/types/card";
 import { uuidv7 } from "uuidv7";
 import api from "@/lib/api";
 import { useDeleteImage } from "@/hooks/use-image";
@@ -29,9 +29,6 @@ export function useUpdateCard() {
         initials: string;
       }> | null;
       deadline?: Date | null;
-      recurrence?: RecurrenceType | null;
-      recurrenceDay?: number | null;
-      recurrenceWeekday?: number | null;
       coverColor?: string | null;
       coverUrl?: string | null;
       completed?: boolean | null;
@@ -51,9 +48,6 @@ export function useUpdateCard() {
           labels: params.labels,
           members: params.members,
           deadline: params.deadline?.toISOString(),
-          recurrence: params.recurrence,
-          recurrenceDay: params.recurrenceDay,
-          recurrenceWeekday: params.recurrenceWeekday,
           coverColor: params.coverColor,
           coverUrl: params.coverUrl,
           completed: params.completed,
@@ -147,7 +141,10 @@ export function useCreateCard() {
         initials: string;
       }>;
       deadline?: Date;
-      startDate?: Date;
+      startDate?: string;
+      dueAt?: string;
+      dueComplete?: boolean;
+      reminderMinutes?: number | null;
       coverColor?: string;
       coverUrl?: string;
     }) => {
@@ -170,9 +167,10 @@ export function useCreateCard() {
             labels: params.labels,
             members: params.members,
             deadline: params.deadline?.toISOString(),
-            startDate: params.startDate?.toISOString(),
-            coverColor: params.coverColor,
-            coverUrl: params.coverUrl,
+            startDate: params.startDate,
+            dueAt: params.dueAt,
+            dueComplete: params.dueComplete,
+            reminderMinutes: params.reminderMinutes ?? undefined,
           },
         },
       );

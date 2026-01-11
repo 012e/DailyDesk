@@ -37,17 +37,23 @@ export const cardsTable = sqliteTable("cards", {
   coverUrl: text("cover_url"),
   coverPublicId: text("cover_public_id"),
   coverColor: text("cover_color"),
+  coverMode: text("cover_mode"),
   listId: text("list_id")
     .notNull()
     .references(() => listsTable.id, { onDelete: "cascade" }),
   startDate: integer("start_date", { mode: "timestamp" }),
   deadline: integer("deadline", { mode: "timestamp" }),
+  dueAt: integer("due_at", { mode: "timestamp" }),
+  dueComplete: integer("due_complete", { mode: "boolean" }).default(false),
+  reminderMinutes: integer("reminder_minutes"),
   recurrence: text("recurrence"), // never, daily_weekdays, weekly, monthly_date, monthly_day
   recurrenceDay: integer("recurrence_day"), // for monthly_day (e.g., 2 for 2nd Sunday)
   recurrenceWeekday: integer("recurrence_weekday"), // for monthly_day (0=Sunday, 6=Saturday)
   latitude: integer("latitude"),
   longitude: integer("longitude"),
   completed: integer("completed", { mode: "boolean" }).default(false),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
 });
 
 // Checklist items table with foreign key to cards
@@ -269,3 +275,19 @@ export const activityRelations = relations(activitiesTable, ({ one }) => ({
     references: [cardsTable.id],
   }),
 }));
+
+// Due Reminder Log table - tracks sent reminders to avoid duplicates
+export const dueReminderLogTable = sqliteTable("due_reminder_log", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  cardId: text("card_id")
+    .notNull()
+    .references(() => cardsTable.id, { onDelete: "cascade" }),
+  userId: text("user_id").notNull(),
+  dueAtSnapshot: integer("due_at_snapshot", { mode: "timestamp" }).notNull(),
+  reminderMinutes: integer("reminder_minutes").notNull(),
+  sentAt: integer("sent_at", { mode: "timestamp" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});

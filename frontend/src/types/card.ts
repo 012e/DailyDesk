@@ -27,6 +27,7 @@ export interface Attachment {
 export interface Comment {
   id: string;
   text: string;
+  content: string;
   userId: string;
   user: Member;
   createdAt: Date;
@@ -35,7 +36,7 @@ export interface Comment {
 
 export interface ActivityLog {
   id: string;
-  type:
+  activityType:
     | "comment"
     | "label"
     | "member"
@@ -47,9 +48,15 @@ export interface ActivityLog {
   userId: string;
   user: Member;
   action: string;
+  description: string;
   createdAt: Date;
   metadata?: Record<string, unknown>;
 }
+
+// Timeline item types (discriminated union)
+export type TimelineComment = Comment & { type: "comment" };
+export type TimelineActivity = ActivityLog & { type: "activity" };
+export type TimelineItem = TimelineComment | TimelineActivity;
 
 export const CardCoverModeValue = {
   TOP: "top",
@@ -71,6 +78,10 @@ export interface Card {
   labels?: Label[];
   members?: Member[];
   dueDate?: Date;
+  startDate?: Date | string | null;
+  dueAt?: Date | string | null;
+  dueComplete?: boolean;
+  reminderMinutes?: number | null;
   recurrence?: RecurrenceType;
   recurrenceDay?: number; // 1st, 2nd, 3rd, 4th, 5th
   recurrenceWeekday?: number; // 0=Sunday, 6=Saturday
@@ -84,6 +95,14 @@ export interface Card {
   updatedAt: Date;
   order: number;
   completed?: boolean;
+}
+
+export type DueStatus = "none" | "complete" | "overdue" | "dueSoon" | "dueLater";
+
+export interface DueStatusResult {
+  status: DueStatus;
+  label: string;
+  color: "default" | "success" | "destructive" | "warning" | "secondary";
 }
 
 export interface List {

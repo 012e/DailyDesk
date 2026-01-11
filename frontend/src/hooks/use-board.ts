@@ -149,21 +149,6 @@ export function useBoard({ boardId }: { boardId: string }) {
         throw new Error(result.error);
       }
 
-      console.log("[USE BOARD] Board data fetched:", result.data);
-
-      // Log cards with attachments
-      if (result.data?.lists) {
-        result.data.lists.forEach((list: any) => {
-          if (list.cards) {
-            list.cards.forEach((card: any) => {
-              if (card.attachments && card.attachments.length > 0) {
-                console.log(`[USE BOARD] Card ${card.id} has ${card.attachments.length} attachments:`, card.attachments);
-              }
-            });
-          }
-        });
-      }
-
       return result.data!;
     },
   });
