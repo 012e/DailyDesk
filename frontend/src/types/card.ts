@@ -27,6 +27,7 @@ export interface Attachment {
 export interface Comment {
   id: string;
   text: string;
+  content: string;
   userId: string;
   user: Member;
   createdAt: Date;
@@ -35,7 +36,7 @@ export interface Comment {
 
 export interface ActivityLog {
   id: string;
-  type:
+  activityType:
     | "comment"
     | "label"
     | "member"
@@ -47,9 +48,15 @@ export interface ActivityLog {
   userId: string;
   user: Member;
   action: string;
+  description: string;
   createdAt: Date;
   metadata?: Record<string, unknown>;
 }
+
+// Timeline item types (discriminated union)
+export type TimelineComment = Comment & { type: "comment" };
+export type TimelineActivity = ActivityLog & { type: "activity" };
+export type TimelineItem = TimelineComment | TimelineActivity;
 
 export const CardCoverModeValue = {
   TOP: "top",
