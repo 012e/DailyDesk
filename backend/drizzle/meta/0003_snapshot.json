@@ -1,4 +1,11 @@
 {
+<<<<<<< HEAD
+  "id": "3e1f5a8c-b9d2-4f7e-a6c8-9d2e4f7a6c89",
+  "prevId": "0002_panoramic_omega_red",
+  "version": "6",
+  "dialect": "sqlite",
+  "tables": {},
+=======
   "version": "6",
   "dialect": "sqlite",
   "id": "fe9a03de-ab83-4695-a266-1011b574bc76",
@@ -776,13 +783,19 @@
     }
   },
   "views": {},
+>>>>>>> origin/main
   "enums": {},
   "_meta": {
     "schemas": {},
     "tables": {},
     "columns": {}
+<<<<<<< HEAD
+  }
+}
+=======
   },
   "internal": {
     "indexes": {}
   }
 }
+>>>>>>> origin/main

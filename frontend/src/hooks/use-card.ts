@@ -147,7 +147,10 @@ export function useCreateCard() {
         initials: string;
       }>;
       deadline?: Date;
-      startDate?: Date;
+      startDate?: string;
+      dueAt?: string;
+      dueComplete?: boolean;
+      reminderMinutes?: number | null;
       coverColor?: string;
       coverUrl?: string;
     }) => {
@@ -170,9 +173,10 @@ export function useCreateCard() {
             labels: params.labels,
             members: params.members,
             deadline: params.deadline?.toISOString(),
-            startDate: params.startDate?.toISOString(),
-            coverColor: params.coverColor,
-            coverUrl: params.coverUrl,
+            startDate: params.startDate,
+            dueAt: params.dueAt,
+            dueComplete: params.dueComplete,
+            reminderMinutes: params.reminderMinutes ?? undefined,
           },
         },
       );

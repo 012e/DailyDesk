@@ -2,7 +2,11 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import type { Card } from "@/types/card";
 import { CardCoverModeValue } from "@/types/card";
+<<<<<<< HEAD
+import { X, Tag, UserPlus, Paperclip, Clock, Wallpaper, Loader2, FileIcon, ExternalLink, Download, ChevronDown } from "lucide-react";
+=======
 import { X, Tag, CheckSquare, UserPlus, Paperclip, Clock, Wallpaper, Loader2, FileIcon, ExternalLink, Download, Repeat } from "lucide-react";
+>>>>>>> origin/main
 import { Button } from "@/components/ui/button";
 import { CardHeader } from "./card-header";
 import { CardDescription } from "./card-description";
@@ -97,10 +101,13 @@ export function CardEditDialog({
         onClose={onClose}
         onUpdate={onUpdate}
         uploadImage={handleUploadImage}
+<<<<<<< HEAD
+=======
         isCreateMode={isCreateMode}
         listId={listId}
         order={order}
         onCreated={onCreated}
+>>>>>>> origin/main
       />
     </BackgroundPickerProvider>
   );
@@ -118,11 +125,14 @@ interface InnerDialogProps {
     type: "card" | "board";
     id: string;
   }) => Promise<string>;
+<<<<<<< HEAD
+=======
   // Create mode props
   isCreateMode?: boolean;
   listId?: string;
   order?: number;
   onCreated?: () => void;
+>>>>>>> origin/main
 }
 
 function InnerDialog({
@@ -132,16 +142,20 @@ function InnerDialog({
   onClose,
   onUpdate,
   uploadImage,
+<<<<<<< HEAD
+=======
   isCreateMode,
   listId,
   order,
   onCreated,
+>>>>>>> origin/main
 }: InnerDialogProps) {
   const [isCoverPickerOpen, setIsCoverPickerOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isLabelPopoverOpen, setIsLabelPopoverOpen] = useState(false);
   const [isMemberPopoverOpen, setIsMemberPopoverOpen] = useState(false);
   const [isDatePopoverOpen, setIsDatePopoverOpen] = useState(false);
+  const [isPillButtonDateOpen, setIsPillButtonDateOpen] = useState(false);
   const [isAttachmentPopoverOpen, setIsAttachmentPopoverOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
   const [linkName, setLinkName] = useState("");
@@ -164,8 +178,17 @@ function InnerDialog({
   const deleteAttachmentMutation = useDeleteAttachment();
   const { getBackgroundData, selectedColor, selectedFile, croppedFile, reset: resetBackground } = useBackgroundPickerContext();
 
-  // Get the effective image file (cropped or original)
   const imageFile = croppedFile || selectedFile;
+
+  const formatDueDateVN = (date: Date | string): string => {
+    const d = typeof date === "string" ? new Date(date) : date;
+    const hours = d.getHours().toString().padStart(2, "0");
+    const minutes = d.getMinutes().toString().padStart(2, "0");
+    const day = d.getDate();
+    const monthNames = ["thg 1", "thg 2", "thg 3", "thg 4", "thg 5", "thg 6", "thg 7", "thg 8", "thg 9", "thg 10", "thg 11", "thg 12"];
+    const month = monthNames[d.getMonth()];
+    return `${hours}:${minutes} ${day} ${month}`;
+  };
 
   /* ---------- PREVIEW IMAGE ---------- */
   const previewImageUrl = useMemo(() => {
@@ -305,7 +328,6 @@ function InnerDialog({
   };
 
   const handleUpdateCover = async () => {
-    // Get latest values from context
     const { color: currentColor, imageFile: currentImageFile } = getBackgroundData();
 
     if (!currentColor && !currentImageFile) {
@@ -450,6 +472,8 @@ function InnerDialog({
   };
 
   const handleClose = async () => {
+<<<<<<< HEAD
+=======
     if (isCreateMode) {
       // In create mode, just reset form and close
       resetForm();
@@ -458,9 +482,9 @@ function InnerDialog({
     }
 
     // Get latest background data before closing
+>>>>>>> origin/main
     const { color: latestColor, imageFile: latestImageFile } = getBackgroundData();
 
-    // Check if there are any cover changes to save
     if (latestImageFile || latestColor) {
       setIsUploading(true);
       try {
@@ -555,7 +579,11 @@ function InnerDialog({
                 triggerButton={
                   <Button variant="outline" size="sm" className="h-8">
                     <Tag className="h-4 w-4 mr-1" />
+<<<<<<< HEAD
+                    Labels {card.labels && card.labels.length > 0 && `(${card.labels.length})`}
+=======
                     Labels {isCreateMode && labels.length > 0 && `(${labels.length})`}
+>>>>>>> origin/main
                   </Button>
                 }
               />
@@ -568,6 +596,27 @@ function InnerDialog({
                 triggerButton={
                   <Button variant="outline" size="sm" className="h-8">
                     <UserPlus className="h-4 w-4 mr-1" />
+<<<<<<< HEAD
+                    Members {card.members && card.members.length > 0 && `(${card.members.length})`}
+                  </Button>
+                }
+              />
+              {!card.startDate && !card.dueAt && (
+                <CardDates
+                  card={card}
+                  boardId={boardId}
+                  onUpdate={handleUpdate}
+                  isOpen={isDatePopoverOpen}
+                  onOpenChange={setIsDatePopoverOpen}
+                  triggerButton={
+                    <Button variant="outline" size="sm" className="h-8">
+                      <Clock className="h-4 w-4 mr-1" />
+                      Dates
+                    </Button>
+                  }
+                />
+              )}
+=======
                     Members {isCreateMode && members.length > 0 && `(${members.length})`}
                   </Button>
                 }
@@ -598,11 +647,12 @@ function InnerDialog({
                 <CheckSquare className="h-4 w-4 mr-1" />
                 Checklist
               </Button>
+>>>>>>> origin/main
               <Popover open={isAttachmentPopoverOpen} onOpenChange={setIsAttachmentPopoverOpen}>
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm" className="h-8">
                     <Paperclip className="h-4 w-4 mr-1" />
-                    Attachment
+                    Attachment {card.attachments && card.attachments.length > 0 && `(${card.attachments.length})`}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-80">
@@ -700,6 +750,38 @@ function InnerDialog({
             {/* Members display - only show if has members */}
             {localCard.members && localCard.members.length > 0 && (
               <CardMembers card={localCard} onUpdate={handleUpdate} boardId={boardId || ""} />
+            )}
+
+            {(card.startDate || card.dueAt) && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground">Dates</label>
+                <div className="flex flex-wrap gap-2">
+                  {card.startDate && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 px-3 flex items-center gap-2"
+                      onClick={() => setIsPillButtonDateOpen(true)}
+                    >
+                      <Clock className="h-3.5 w-3.5" />
+                      <span className="text-sm">Start: {formatDueDateVN(card.startDate)}</span>
+                      <ChevronDown className="h-3.5 w-3.5 ml-1" />
+                    </Button>
+                  )}
+                  {card.dueAt && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 px-3 flex items-center gap-2"
+                      onClick={() => setIsPillButtonDateOpen(true)}
+                    >
+                      <Clock className="h-3.5 w-3.5" />
+                      <span className="text-sm">Due: {formatDueDateVN(card.dueAt)}</span>
+                      <ChevronDown className="h-3.5 w-3.5 ml-1" />
+                    </Button>
+                  )}
+                </div>
+              </div>
             )}
 
             {/* Description */}
@@ -824,7 +906,6 @@ function InnerDialog({
         <Popover
           open={isCoverPickerOpen}
           onOpenChange={async (open) => {
-            // When closing the popover, save any cover changes immediately
             if (!open) {
               const { color: latestColor, imageFile: latestImageFile } = getBackgroundData();
               if (latestColor || latestImageFile) {
@@ -857,6 +938,17 @@ function InnerDialog({
             <CardCoverPicker card={localCard} onRemoveCover={handleRemoveCover} />
           </PopoverContent>
         </Popover>
+
+        {(card.startDate || card.dueAt) && (
+          <CardDates
+            card={card}
+            boardId={boardId}
+            onUpdate={handleUpdate}
+            isOpen={isPillButtonDateOpen}
+            onOpenChange={setIsPillButtonDateOpen}
+            triggerButton={null}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );
