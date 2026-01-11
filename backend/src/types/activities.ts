@@ -14,8 +14,6 @@ export const ActivityActionType = z.enum([
   "deadline.set",
   "deadline.changed",
   "deadline.removed",
-  "card.due.updated",
-  "card.due.removed",
   "checklist.added",
   "checklist.completed",
   "checklist.uncompleted",

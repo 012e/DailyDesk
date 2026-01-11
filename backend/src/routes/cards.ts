@@ -3,7 +3,6 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { authMiddleware } from "@/lib/auth";
 import { defaultSecurityScheme, jsonBody, successJson } from "@/types/openapi";
 import { CardSchema, CreateCardSchema, UpdateCardSchema } from "@/types/cards";
-import { UpdateDueSchema } from "@/types/due";
 import * as cardService from "@/services/cards.service";
 
 const TAGS = ["Cards"];
@@ -54,6 +53,7 @@ export default function createCardRoutes() {
       try {
         const cards = await cardService.getCardsForBoard(user.sub, boardId);
 
+        // Parse JSON fields
         const parsedCards = cards.map((card) => ({
           ...card,
           labels: card.labels ? JSON.parse(card.labels) : null,
@@ -61,9 +61,7 @@ export default function createCardRoutes() {
           attachments: card.attachments ? JSON.parse(card.attachments) : null,
         }));
 
-        console.log("📤 GET cards response (first card with dates):", parsedCards.find(c => c.dueAt || c.startDate));
-
-        return c.json(parsedCards);
+        return c.json(parsedCards, 200);
       } catch (err: any) {
         if (err instanceof cardService.ServiceError) {
           return c.json({ error: err.message }, err.status);
@@ -334,106 +332,6 @@ export default function createCardRoutes() {
         }
         console.error("Error in deleteCard route:", err);
         return c.json({ error: "Internal server error" }, 500);
-      }
-    },
-  );
-
-  // PATCH /boards/{boardId}/cards/{cardId}/due - Update card due date
-  app.openapi(
-    createRoute({
-      method: "patch",
-      tags: TAGS,
-      path: "/{boardId}/cards/{cardId}/due",
-      security: defaultSecurityScheme(),
-      request: {
-        params: z.object({
-          boardId: z.uuid(),
-          cardId: z.uuid(),
-        }),
-        body: jsonBody(UpdateDueSchema),
-      },
-      responses: {
-        200: successJson(CardSchema, {
-          description: "Cập nhật due date thành công",
-        }),
-        404: {
-          description: "Card hoặc Board không tồn tại",
-        },
-        403: {
-          description: "Không có quyền cập nhật Card này",
-        },
-        400: {
-          description: "Dữ liệu không hợp lệ",
-        },
-      },
-    }),
-
-    async (c) => {
-      const user = ensureUserAuthenticated(c);
-      const { boardId, cardId } = c.req.valid("param");
-      const dueData = c.req.valid("json");
-
-      console.log("📥 PATCH /due request - boardId:", boardId, "cardId:", cardId, "dueData:", dueData);
-
-      try {
-        const updatedCard = await cardService.updateCardDue(user.sub, boardId, cardId, dueData);
-        console.log("✅ Updated card due:", updatedCard.dueAt, updatedCard.dueComplete, updatedCard.reminderMinutes);
-        return c.json(updatedCard);
-      } catch (err: any) {
-        console.error("❌ Update due error:", err);
-        if (err instanceof cardService.ServiceError) {
-          return c.json({ error: err.message }, err.status);
-        }
-        throw err;
-      }
-    },
-  );
-
-  // DELETE /boards/{boardId}/cards/{cardId}/due - Remove card due date
-  app.openapi(
-    createRoute({
-      method: "delete",
-      tags: TAGS,
-      path: "/{boardId}/cards/{cardId}/due",
-      security: defaultSecurityScheme(),
-      request: {
-        params: z.object({
-          boardId: z.uuid(),
-          cardId: z.uuid(),
-        }),
-      },
-      responses: {
-        200: {
-          description: "Xóa due date thành công",
-          content: {
-            "application/json": {
-              schema: z.object({
-                message: z.string(),
-              }),
-            },
-          },
-        },
-        404: {
-          description: "Card hoặc Board không tồn tại",
-        },
-        403: {
-          description: "Không có quyền cập nhật Card này",
-        },
-      },
-    }),
-
-    async (c) => {
-      const user = ensureUserAuthenticated(c);
-      const { boardId, cardId } = c.req.valid("param");
-
-      try {
-        const result = await cardService.clearCardDue(user.sub, boardId, cardId);
-        return c.json(result);
-      } catch (err: any) {
-        if (err instanceof cardService.ServiceError) {
-          return c.json({ error: err.message }, err.status);
-        }
-        throw err;
       }
     },
   );

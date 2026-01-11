@@ -238,28 +238,17 @@ export async function getCardTimeline(userSub: string, cardId: string) {
   // Import comments service
   const { getCommentsForCard } = await import("./comments.service");
 
-  try {
-    // Get both comments and activities in parallel
-    const [comments, activities] = await Promise.all([
-      getCommentsForCard(userSub, cardId),
-      getActivitiesForCard(userSub, cardId),
-    ]);
+  // Get both comments and activities in parallel
+  const [comments, activities] = await Promise.all([
+    getCommentsForCard(userSub, cardId),
+    getActivitiesForCard(userSub, cardId),
+  ]);
 
-    // Merge and sort by createdAt
-    const timeline = [
-      ...comments.map((c) => ({ ...c, type: "comment" as const })),
-      ...activities.map((a) => ({ ...a, type: "activity" as const })),
-    ].sort((a, b) => {
-      if (!a.createdAt) return 1;
-      if (!b.createdAt) return -1;
+  // Merge and sort by createdAt
+  const timeline = [
+    ...comments.map((c) => ({ ...c, type: "comment" as const })),
+    ...activities.map((a) => ({ ...a, type: "activity" as const })),
+  ].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
 
-      const timeA = a.createdAt instanceof Date ? a.createdAt.getTime() : new Date(a.createdAt).getTime();
-      const timeB = b.createdAt instanceof Date ? b.createdAt.getTime() : new Date(b.createdAt).getTime();
-      return timeA - timeB;
-    });
-
-    return timeline;
-  } catch (error) {
-    throw error;
-  }
+  return timeline;
 }

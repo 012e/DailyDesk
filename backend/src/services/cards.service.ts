@@ -81,6 +81,8 @@ export async function getCardsForBoard(userSub: string, boardId: string) {
     .from(attachmentsTable)
     .where(sql`${attachmentsTable.cardId} IN (${sql.join(cardIds.map(id => sql`${id}`), sql`, `)})`);
 
+  console.log("[GET CARDS] Found attachments:", cardAttachmentsData.length);
+
   const labelsByCard = new Map<string, Array<{ id: string; name: string; color: string }>>();
   for (const cl of cardLabelsData) {
     if (!labelsByCard.has(cl.cardId)) {
@@ -127,9 +129,9 @@ export async function getCardsForBoard(userSub: string, boardId: string) {
     attachments: JSON.stringify(attachmentsByCard.get(c.cards.id) || []),
     startDate: c.cards.startDate,
     deadline: c.cards.deadline,
-    dueAt: c.cards.dueAt,
-    dueComplete: c.cards.dueComplete,
-    reminderMinutes: c.cards.reminderMinutes,
+    recurrence: c.cards.recurrence,
+    recurrenceDay: c.cards.recurrenceDay,
+    recurrenceWeekday: c.cards.recurrenceWeekday,
     latitude: c.cards.latitude,
     longitude: c.cards.longitude,
     coverColor: c.cards.coverColor,
@@ -178,13 +180,6 @@ export async function createCard(userSub: string, boardId: string, req: any) {
     throw new ServiceError(`Order must be between 0 and ${listSize} for this list`, 400);
   }
 
-  console.log("📝 Creating card with dates:", {
-    startDate: req.startDate,
-    dueAt: req.dueAt,
-    dueComplete: req.dueComplete,
-    reminderMinutes: req.reminderMinutes,
-  });
-
   const card = await db
     .insert(cardsTable)
     .values({
@@ -193,11 +188,11 @@ export async function createCard(userSub: string, boardId: string, req: any) {
       description: req.description,
       order: req.order,
       listId: req.listId,
-      startDate: req.startDate ? new Date(req.startDate) : null,
+      startDate: req.startDate,
       deadline: req.deadline,
-      dueAt: req.dueAt ? new Date(req.dueAt) : null,
-      dueComplete: req.dueComplete ?? false,
-      reminderMinutes: req.reminderMinutes ?? null,
+      recurrence: req.recurrence,
+      recurrenceDay: req.recurrenceDay,
+      recurrenceWeekday: req.recurrenceWeekday,
       latitude: req.latitude,
       longitude: req.longitude,
       coverColor: req.coverColor,
@@ -205,13 +200,6 @@ export async function createCard(userSub: string, boardId: string, req: any) {
       completed: req.completed,
     })
     .returning();
-
-  console.log("✅ Card created with dates:", {
-    startDate: card[0].startDate,
-    dueAt: card[0].dueAt,
-    dueComplete: card[0].dueComplete,
-    reminderMinutes: card[0].reminderMinutes,
-  });
 
   const createdCard = card[0];
 
@@ -347,9 +335,6 @@ export async function getCardById(userSub: string, boardId: string, id: string) 
     attachments: JSON.stringify(cardAttachments),
     startDate: card[0].cards.startDate,
     deadline: card[0].cards.deadline,
-    dueAt: card[0].cards.dueAt,
-    dueComplete: card[0].cards.dueComplete,
-    reminderMinutes: card[0].cards.reminderMinutes,
     latitude: card[0].cards.latitude,
     longitude: card[0].cards.longitude,
     coverColor: card[0].cards.coverColor,
@@ -501,16 +486,15 @@ export async function updateCard(userSub: string, boardId: string, id: string, r
   if (req.description !== undefined) updateData.description = req.description;
   if (req.order !== undefined) updateData.order = req.order;
   if (req.listId !== undefined) updateData.listId = req.listId;
-  if (req.startDate !== undefined) updateData.startDate = req.startDate ? new Date(req.startDate) : null;
-  if (req.deadline !== undefined) updateData.deadline = req.deadline ? new Date(req.deadline) : null;
-  if (req.dueAt !== undefined) updateData.dueAt = req.dueAt ? new Date(req.dueAt) : null;
-  if (req.dueComplete !== undefined) updateData.dueComplete = req.dueComplete;
-  if (req.reminderMinutes !== undefined) updateData.reminderMinutes = req.reminderMinutes;
+  if (req.startDate !== undefined) updateData.startDate = req.startDate;
+  if (req.deadline !== undefined) updateData.deadline = req.deadline;
+  if (req.recurrence !== undefined) updateData.recurrence = req.recurrence;
+  if (req.recurrenceDay !== undefined) updateData.recurrenceDay = req.recurrenceDay;
+  if (req.recurrenceWeekday !== undefined) updateData.recurrenceWeekday = req.recurrenceWeekday;
   if (req.latitude !== undefined) updateData.latitude = req.latitude;
   if (req.longitude !== undefined) updateData.longitude = req.longitude;
   if (req.coverColor !== undefined) updateData.coverColor = req.coverColor;
   if (req.coverUrl !== undefined) updateData.coverUrl = req.coverUrl;
-  if (req.coverMode !== undefined) updateData.coverMode = req.coverMode;
   if (req.completed !== undefined) updateData.completed = req.completed;
 
   let updatedCard;
@@ -717,138 +701,4 @@ export async function deleteCard(userSub: string, boardId: string, id: string) {
   publishBoardChanged(boardId, 'card', id, 'deleted', userSub);
 
   return { message: "Xóa Card thành công" };
-}
-
-export async function updateCardDue(
-  userSub: string,
-  boardId: string,
-  cardId: string,
-  dueData: { startDate?: string | null; dueAt?: string | null; dueComplete?: boolean; reminderMinutes?: number | null }
-) {
-  const board = await db
-    .select()
-    .from(boardsTable)
-    .where(eq(boardsTable.id, boardId))
-    .limit(1);
-
-  if (board.length === 0) {
-    throw new ServiceError("Board không tồn tại", 404);
-  }
-
-  if (board[0].userId !== userSub) {
-    throw new ServiceError("Không có quyền truy cập Board này", 403);
-  }
-
-  const card = await db
-    .select()
-    .from(cardsTable)
-    .innerJoin(listsTable, eq(cardsTable.listId, listsTable.id))
-    .where(and(eq(cardsTable.id, cardId), eq(listsTable.boardId, boardId)))
-    .limit(1);
-
-  if (card.length === 0) {
-    throw new ServiceError("Card không tồn tại", 404);
-  }
-
-  const updateData: any = { updatedAt: new Date() };
-
-  if (dueData.startDate !== undefined) {
-    updateData.startDate = dueData.startDate ? new Date(dueData.startDate) : null;
-  }
-
-  if (dueData.dueAt !== undefined) {
-    updateData.dueAt = dueData.dueAt ? new Date(dueData.dueAt) : null;
-  }
-
-  if (dueData.dueComplete !== undefined) {
-    updateData.dueComplete = dueData.dueComplete;
-  }
-
-  if (dueData.reminderMinutes !== undefined) {
-    updateData.reminderMinutes = dueData.reminderMinutes;
-  }
-
-  await db.update(cardsTable).set(updateData).where(eq(cardsTable.id, cardId));
-
-  try {
-    const actionDescription = dueData.dueComplete
-      ? "marked due date as complete"
-      : dueData.dueAt
-      ? "set due date"
-      : dueData.startDate
-      ? "set start date"
-      : "updated dates";
-
-    await logActivity({
-      cardId,
-      userId: userSub,
-      actionType: "card.due.updated",
-      description: actionDescription,
-    });
-  } catch (error) {
-    console.error("Failed to log due date activity:", error);
-  }
-
-  publishBoardChanged(boardId, "card", cardId, "updated", userSub);
-
-  const updatedCard = await db
-    .select()
-    .from(cardsTable)
-    .where(eq(cardsTable.id, cardId))
-    .limit(1);
-
-  return updatedCard[0];
-}
-
-export async function clearCardDue(userSub: string, boardId: string, cardId: string) {
-  const board = await db
-    .select()
-    .from(boardsTable)
-    .where(eq(boardsTable.id, boardId))
-    .limit(1);
-
-  if (board.length === 0) {
-    throw new ServiceError("Board không tồn tại", 404);
-  }
-
-  if (board[0].userId !== userSub) {
-    throw new ServiceError("Không có quyền truy cập Board này", 403);
-  }
-
-  const card = await db
-    .select()
-    .from(cardsTable)
-    .innerJoin(listsTable, eq(cardsTable.listId, listsTable.id))
-    .where(and(eq(cardsTable.id, cardId), eq(listsTable.boardId, boardId)))
-    .limit(1);
-
-  if (card.length === 0) {
-    throw new ServiceError("Card không tồn tại", 404);
-  }
-
-  await db
-    .update(cardsTable)
-    .set({
-      startDate: null,
-      dueAt: null,
-      dueComplete: false,
-      reminderMinutes: null,
-      updatedAt: new Date(),
-    })
-    .where(eq(cardsTable.id, cardId));
-
-  try {
-    await logActivity({
-      cardId,
-      userId: userSub,
-      actionType: "card.due.removed",
-      description: "removed dates",
-    });
-  } catch (error) {
-    console.error("Failed to log due date removal activity:", error);
-  }
-
-  publishBoardChanged(boardId, "card", cardId, "updated", userSub);
-
-  return { message: "Đã xóa dates" };
 }
