@@ -61,9 +61,8 @@ export const CreateCardSchema = z.object({
   latitude: z.number().optional(),
   longitude: z.number().optional(),
   coverColor: z.string().optional(),
-  completed: z.boolean().optional(),
-  coverColor: z.string().optional(),
   coverUrl: z.string().optional(),
+  completed: z.boolean().optional(),
 });
 
 export const UpdateCardSchema = z.object({
