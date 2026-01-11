@@ -31,8 +31,11 @@ export function CardComments({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const editTextareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Fetch timeline (comments + activities)
-  const { data: timeline = [], isLoading } = useCardTimeline(boardId, card.id);
+  // Fetch timeline (comments + activities) - only if card has an ID
+  const { data: timeline = [], isLoading } = useCardTimeline(
+    boardId, 
+    card.id || ""
+  );
   const { mutate: addComment, isPending: isAddingComment } = useAddComment();
   const { mutate: updateComment, isPending: isUpdatingComment } = useUpdateComment();
   const { mutate: deleteComment } = useDeleteComment();
