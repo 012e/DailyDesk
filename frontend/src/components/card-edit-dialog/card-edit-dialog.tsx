@@ -2,11 +2,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import type { Card } from "@/types/card";
 import { CardCoverModeValue } from "@/types/card";
-<<<<<<< HEAD
 import { X, Tag, UserPlus, Paperclip, Clock, Wallpaper, Loader2, FileIcon, ExternalLink, Download, ChevronDown } from "lucide-react";
-=======
-import { X, Tag, CheckSquare, UserPlus, Paperclip, Clock, Wallpaper, Loader2, FileIcon, ExternalLink, Download, Repeat } from "lucide-react";
->>>>>>> origin/main
 import { Button } from "@/components/ui/button";
 import { CardHeader } from "./card-header";
 import { CardDescription } from "./card-description";
@@ -14,7 +10,6 @@ import { CardMembers } from "./card-members";
 import { CardComments } from "./card-comments";
 import { CardLabels } from "./card-labels";
 import { CardDates } from "./card-dates";
-import { CardRecurrence } from "./card-recurrence";
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useUpdateCard, useCreateCard } from "@/hooks/use-card";
 import { BackgroundPickerProvider } from "@/components/background-picker-provider";
@@ -101,13 +96,11 @@ export function CardEditDialog({
         onClose={onClose}
         onUpdate={onUpdate}
         uploadImage={handleUploadImage}
-<<<<<<< HEAD
-=======
+
         isCreateMode={isCreateMode}
         listId={listId}
         order={order}
         onCreated={onCreated}
->>>>>>> origin/main
       />
     </BackgroundPickerProvider>
   );
@@ -125,14 +118,10 @@ interface InnerDialogProps {
     type: "card" | "board";
     id: string;
   }) => Promise<string>;
-<<<<<<< HEAD
-=======
-  // Create mode props
-  isCreateMode?: boolean;
+  isCreateMode: boolean;
   listId?: string;
   order?: number;
   onCreated?: () => void;
->>>>>>> origin/main
 }
 
 function InnerDialog({
@@ -142,13 +131,10 @@ function InnerDialog({
   onClose,
   onUpdate,
   uploadImage,
-<<<<<<< HEAD
-=======
   isCreateMode,
   listId,
   order,
   onCreated,
->>>>>>> origin/main
 }: InnerDialogProps) {
   const [isCoverPickerOpen, setIsCoverPickerOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -285,7 +271,7 @@ function InnerDialog({
           coverColor: (!currentImageFile && coverColor) ? coverColor : undefined,
         },
         {
-          onSuccess: async (newCard) => {
+          onSuccess: async (newCard: any) => {
             // If there's a cover image, upload it
             if (currentImageFile && newCard?.id) {
               try {
@@ -355,8 +341,8 @@ function InnerDialog({
         });
       } else if (currentColor) {
         // Update local state and sync with backend
-        // Clear coverUrl to null when setting color
-        handleUpdate({ coverColor: currentColor, coverUrl: null });
+        // Clear coverUrl to "" when setting color
+        handleUpdate({ coverColor: currentColor, coverUrl: "" });
       }
       
       // Reset background context after successful save to prevent duplicate updates
@@ -394,7 +380,7 @@ function InnerDialog({
 
       // Update local card state with new attachment
       if (newAttachment) {
-        const updatedAttachments = [...(card.attachments || []), newAttachment];
+        const updatedAttachments = [...(card.attachments || []), newAttachment] as any[];
         onUpdate?.({ ...card, attachments: updatedAttachments });
       }
     }
@@ -413,7 +399,7 @@ function InnerDialog({
 
       // Update local card state with new attachment
       if (newAttachment) {
-        const updatedAttachments = [...(card.attachments || []), newAttachment];
+        const updatedAttachments = [...(card.attachments || []), newAttachment] as any[];
         onUpdate?.({ ...card, attachments: updatedAttachments });
       }
 
@@ -472,8 +458,6 @@ function InnerDialog({
   };
 
   const handleClose = async () => {
-<<<<<<< HEAD
-=======
     if (isCreateMode) {
       // In create mode, just reset form and close
       resetForm();
@@ -482,7 +466,6 @@ function InnerDialog({
     }
 
     // Get latest background data before closing
->>>>>>> origin/main
     const { color: latestColor, imageFile: latestImageFile } = getBackgroundData();
 
     if (latestImageFile || latestColor) {
@@ -502,7 +485,7 @@ function InnerDialog({
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent
-        className="!flex !flex-col !p-0 !gap-0"
+        className="flex! flex-col! p-0! gap-0!"
         style={{
           maxWidth: '1200px',
           width: '90vw',
@@ -579,11 +562,7 @@ function InnerDialog({
                 triggerButton={
                   <Button variant="outline" size="sm" className="h-8">
                     <Tag className="h-4 w-4 mr-1" />
-<<<<<<< HEAD
                     Labels {card.labels && card.labels.length > 0 && `(${card.labels.length})`}
-=======
-                    Labels {isCreateMode && labels.length > 0 && `(${labels.length})`}
->>>>>>> origin/main
                   </Button>
                 }
               />
@@ -596,7 +575,6 @@ function InnerDialog({
                 triggerButton={
                   <Button variant="outline" size="sm" className="h-8">
                     <UserPlus className="h-4 w-4 mr-1" />
-<<<<<<< HEAD
                     Members {card.members && card.members.length > 0 && `(${card.members.length})`}
                   </Button>
                 }
@@ -608,6 +586,7 @@ function InnerDialog({
                   onUpdate={handleUpdate}
                   isOpen={isDatePopoverOpen}
                   onOpenChange={setIsDatePopoverOpen}
+                  createMode={isCreateMode}
                   triggerButton={
                     <Button variant="outline" size="sm" className="h-8">
                       <Clock className="h-4 w-4 mr-1" />
@@ -616,38 +595,6 @@ function InnerDialog({
                   }
                 />
               )}
-=======
-                    Members {isCreateMode && members.length > 0 && `(${members.length})`}
-                  </Button>
-                }
-              />
-              <CardDates
-                card={localCard}
-                onUpdate={handleUpdate}
-                isOpen={isDatePopoverOpen}
-                onOpenChange={setIsDatePopoverOpen}
-                triggerButton={
-                  <Button variant="outline" size="sm" className="h-8">
-                    <Clock className="h-4 w-4 mr-1" />
-                    Due Date 
-                  </Button>
-                }
-              />
-              <CardRecurrence
-                card={localCard}
-                onUpdate={handleUpdate}
-                triggerButton={
-                  <Button variant="outline" size="sm" className="h-8">
-                    <Repeat className="h-4 w-4 mr-1" />
-                    Recurrence
-                  </Button>
-                }
-              />
-              <Button variant="outline" size="sm" className="h-8">
-                <CheckSquare className="h-4 w-4 mr-1" />
-                Checklist
-              </Button>
->>>>>>> origin/main
               <Popover open={isAttachmentPopoverOpen} onOpenChange={setIsAttachmentPopoverOpen}>
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm" className="h-8">
@@ -695,16 +642,16 @@ function InnerDialog({
                           id="attach-link-url"
                           placeholder="Paste a link..."
                           value={linkUrl}
-                          onChange={(e) => setLinkUrl(e.target.value)}
-                          onKeyDown={(e) => {
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLinkUrl(e.target.value)}
+                          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                             if (e.key === "Enter") handleAddLink();
                           }}
                         />
                         <Input
                           placeholder="Link name (optional)"
                           value={linkName}
-                          onChange={(e) => setLinkName(e.target.value)}
-                          onKeyDown={(e) => {
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLinkName(e.target.value)}
+                          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                             if (e.key === "Enter") handleAddLink();
                           }}
                         />
@@ -787,8 +734,8 @@ function InnerDialog({
             {/* Description */}
             <CardDescription card={localCard} onUpdate={handleUpdate} />
 
-            {/* CheckList */}
-            <CheckList card={localCard} boardId={boardId} onUpdate={handleUpdate} />
+            {/* CheckList - only show if card already exists */}
+            {!isCreateMode && card.id && <CheckList card={localCard} boardId={boardId} onUpdate={handleUpdate} />}
 
             {/* Attachments */}
             {localCard.attachments && localCard.attachments.length > 0 && (
@@ -805,7 +752,7 @@ function InnerDialog({
                     return (
                       <div key={attachment.id} className="flex gap-3 group">
                         {/* Thumbnail */}
-                        <div className="flex-shrink-0">
+                        <div className="shrink-0">
                           {isImage ? (
                             <div className="w-28 h-20 rounded border overflow-hidden bg-muted">
                               <img
@@ -830,7 +777,7 @@ function InnerDialog({
                             className="text-sm font-medium hover:underline flex items-center gap-1 truncate"
                           >
                             {displayName}
-                            <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                            <ExternalLink className="h-3 w-3 shrink-0" />
                           </a>
                           <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                             {attachment.uploadedAt && (
@@ -871,7 +818,7 @@ function InnerDialog({
           </div>
 
           {/* Right column - Comments and activity */}
-          <div className="w-96 flex-shrink-0 border-l bg-muted/30 p-12 overflow-y-auto">
+          <div className="w-96 shrink-0 border-l bg-muted/30 p-12 overflow-y-auto">
             <div className="space-y-4">
               {/* Header */}
               <div className="flex items-center justify-between">
@@ -880,13 +827,15 @@ function InnerDialog({
                 </span>
               </div>
 
-              {/* Comments section */}
-              <CardComments
-                card={localCard}
-                boardId={boardId}
-                showActivities={showActivities}
-                onToggleActivities={() => setShowActivities(!showActivities)}
-              />
+              {/* Comments section - only show if card already exists */}
+              {!isCreateMode && card.id && (
+                <CardComments
+                  card={localCard}
+                  boardId={boardId}
+                  showActivities={showActivities}
+                  onToggleActivities={() => setShowActivities(!showActivities)}
+                />
+              )}
 
               {/* Footer with Create button for create mode */}
               {isCreateMode && (
@@ -946,6 +895,7 @@ function InnerDialog({
             onUpdate={handleUpdate}
             isOpen={isPillButtonDateOpen}
             onOpenChange={setIsPillButtonDateOpen}
+            createMode={isCreateMode}
             triggerButton={null}
           />
         )}

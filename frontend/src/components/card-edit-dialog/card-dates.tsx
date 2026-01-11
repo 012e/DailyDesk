@@ -146,8 +146,8 @@ export function CardDates({
       return;
     }
 
-    if (!boardId) {
-      toast.error("Board ID is required");
+    if (!boardId || !card.id) {
+      toast.error("Board ID and Card ID are required");
       return;
     }
 
@@ -197,8 +197,8 @@ export function CardDates({
       return;
     }
 
-    if (!boardId) {
-      toast.error("Board ID is required");
+    if (!boardId || !card.id) {
+      toast.error("Board ID and Card ID are required");
       return;
     }
 
