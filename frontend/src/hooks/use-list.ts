@@ -35,13 +35,44 @@ export function useListActions() {
     });
   }
 
-  // TODO: Implement deleteList function
-  // async function deleteList(listId: string) {
-  //   if (!boardId) throw new Error("board id is undefined");
-  //   // Implementation needed
-  // }
+  async function updateList(listId: string, name: string) {
+    if (!boardId) throw new Error("board id is undefined");
+    await api.PUT("/boards/{boardId}/lists/{id}", {
+      params: {
+        path: {
+          boardId: boardId,
+          id: listId,
+        },
+      },
+      body: {
+        name: name,
+      },
+    });
+
+    queryClient.invalidateQueries({
+      queryKey: ["board", boardId],
+    });
+  }
+
+  async function deleteList(listId: string) {
+    if (!boardId) throw new Error("board id is undefined");
+    await api.DELETE("/boards/{boardId}/lists/{id}", {
+      params: {
+        path: {
+          boardId: boardId,
+          id: listId,
+        },
+      },
+    });
+
+    queryClient.invalidateQueries({
+      queryKey: ["board", boardId],
+    });
+  }
 
   return {
     createList,
+    updateList,
+    deleteList,
   };
 }

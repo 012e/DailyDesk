@@ -59,6 +59,9 @@ export const CardCoverModeValue = {
 
 export type CardCoverMode =
   (typeof CardCoverModeValue)[keyof typeof CardCoverModeValue];
+
+export type RecurrenceType = "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day";
+
 export interface Card {
   id: string;
   title: string;

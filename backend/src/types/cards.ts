@@ -54,8 +54,8 @@ export const CreateCardSchema = z.object({
   reminderMinutes: z.number().optional(),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
-  completed: z.boolean().optional(),
   coverColor: z.string().optional(),
+  completed: z.boolean().optional(),
   coverUrl: z.string().optional(),
 });
 

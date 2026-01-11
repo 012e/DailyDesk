@@ -1,7 +1,8 @@
 import { isSameDay, addHours } from "date-fns";
 
 import type { CalendarEvent, EventColor, Label, Member } from "@/components/event-calendar";
-import type { Card } from "@/types/card";
+import type { Card, RecurrenceType } from "@/types/card";
+import { generateRecurringInstances, getCalendarRange } from "@/lib/recurring-calendar-utils";
 
 /**
  * API card type - what the backend actually returns
@@ -12,6 +13,9 @@ type ApiCard = {
   name: string;
   description?: string | null;
   deadline?: Date | string | null;
+  recurrence?: RecurrenceType;
+  recurrenceDay?: number;
+  recurrenceWeekday?: number;
   labels?: Array<{ color?: string }> | null;
 };
 
@@ -297,20 +301,81 @@ export function cardsToCalendarEvents(cards: CardInput[], listName?: string, lis
 /**
  * Convert all cards from multiple lists to calendar events
  * @param lists - Array of lists containing cards
- * @returns Array of calendar events with list names as locations
+ * @param viewDate - Current calendar view date (for determining range)
+ * @param viewType - Calendar view type (month/week/day/agenda)
+ * @returns Array of calendar events with list names as locations, including recurring instances
  */
-export function listsCardsToCalendarEvents(lists: Array<{ id: string; name?: string; title?: string; cards: CardInput[] }>): CalendarEvent[] {
+export function listsCardsToCalendarEvents(
+  lists: Array<{ id: string; name?: string; title?: string; cards: CardInput[] }>,
+  viewDate?: Date,
+  viewType?: "month" | "week" | "day" | "agenda"
+): CalendarEvent[] {
   const allEvents: CalendarEvent[] = [];
+  
+  // Determine the date range for generating recurring events
+  const range = viewDate && viewType 
+    ? getCalendarRange(viewDate, viewType)
+    : { start: new Date(), end: addHours(new Date(), 24 * 90) }; // Default 90 days
   
   for (const list of lists) {
     const listName = list.name || list.title || "Untitled List";
-    const events = list.cards
-      .map((card) => cardToCalendarEvent(card, listName, list.id))
-      .filter((event): event is CalendarEvent => event !== null);
     
-    allEvents.push(...events);
+    for (const card of list.cards) {
+      // Get the recurrence info from the card
+      const recurrence = 'recurrence' in card ? card.recurrence : undefined;
+      const recurrenceDay = 'recurrenceDay' in card ? card.recurrenceDay : undefined;
+      const recurrenceWeekday = 'recurrenceWeekday' in card ? card.recurrenceWeekday : undefined;
+      
+      console.log('Processing card:', {
+        id: card.id,
+        name: 'name' in card ? card.name : ('title' in card ? card.title : 'unknown'),
+        recurrence,
+        recurrenceDay,
+        recurrenceWeekday,
+        deadline: 'deadline' in card ? card.deadline : ('dueDate' in card ? card.dueDate : undefined)
+      });
+      
+      const baseEvent = cardToCalendarEvent(card, listName, list.id);
+      
+      if (!baseEvent) continue;
+      
+      // If card has recurrence, generate instances
+      if (recurrence && recurrence !== "never") {
+        console.log('Generating recurring instances for card:', baseEvent.id);
+        const instances = generateRecurringInstances(
+          baseEvent.end, // Use end date (which is the due date)
+          recurrence,
+          recurrenceDay,
+          recurrenceWeekday,
+          range.start,
+          range.end
+        );
+        
+        console.log('Generated instances:', instances.length);
+        
+        // Create an event for each instance
+        instances.forEach((instance, index) => {
+          const eventStart = addHours(instance.instanceDate, -1);
+          const eventEnd = instance.instanceDate;
+          
+          allEvents.push({
+            ...baseEvent,
+            id: instance.isOriginal ? baseEvent.id : `${baseEvent.id}-recurring-${index}`,
+            start: eventStart,
+            end: eventEnd,
+            title: instance.isOriginal ? baseEvent.title : `${baseEvent.title}`,
+            isRecurring: true,
+            isRecurringInstance: !instance.isOriginal,
+          });
+        });
+      } else {
+        // Non-recurring event, add as is
+        allEvents.push(baseEvent);
+      }
+    }
   }
   
+  console.log('Total calendar events generated:', allEvents.length);
   return allEvents;
 }
 

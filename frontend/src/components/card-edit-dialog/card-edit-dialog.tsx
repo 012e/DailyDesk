@@ -2,7 +2,11 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import type { Card } from "@/types/card";
 import { CardCoverModeValue } from "@/types/card";
+<<<<<<< HEAD
 import { X, Tag, UserPlus, Paperclip, Clock, Wallpaper, Loader2, FileIcon, ExternalLink, Download, ChevronDown } from "lucide-react";
+=======
+import { X, Tag, CheckSquare, UserPlus, Paperclip, Clock, Wallpaper, Loader2, FileIcon, ExternalLink, Download, Repeat } from "lucide-react";
+>>>>>>> origin/main
 import { Button } from "@/components/ui/button";
 import { CardHeader } from "./card-header";
 import { CardDescription } from "./card-description";
@@ -10,8 +14,9 @@ import { CardMembers } from "./card-members";
 import { CardComments } from "./card-comments";
 import { CardLabels } from "./card-labels";
 import { CardDates } from "./card-dates";
+import { CardRecurrence } from "./card-recurrence";
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
-import { useUpdateCard } from "@/hooks/use-card";
+import { useUpdateCard, useCreateCard } from "@/hooks/use-card";
 import { BackgroundPickerProvider } from "@/components/background-picker-provider";
 import { CardCoverPicker } from "@/components/card-edit-dialog/card-cover-picker";
 import { useUploadImage, useDeleteImage } from "@/hooks/use-image";
@@ -26,14 +31,19 @@ import CheckList from "../check-list";
 import { useUploadAttachment, useCreateAttachmentLink, useDeleteAttachment } from "@/hooks/use-attachment";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { Label as CardLabel, Member } from "@/types/card";
 
 interface CardEditDialogProps {
-  card: Card | null;
+  card?: Card | null;
   boardId: string;
   isOpen: boolean;
   onClose: () => void;
-  onUpdate: (card: Card) => void;
+  onUpdate?: (card: Card) => void;
   onDelete?: (cardId: string) => void;
+  // Props for create mode
+  listId?: string;
+  order?: number;
+  onCreated?: () => void;
 }
 
 export function CardEditDialog({
@@ -42,10 +52,13 @@ export function CardEditDialog({
   isOpen,
   onClose,
   onUpdate,
+  listId,
+  order,
+  onCreated,
 }: CardEditDialogProps) {
   const { uploadImage } = useUploadImage();
 
-  if (!card) return null;
+  const isCreateMode = !card;
 
   const handleUploadImage = async (options: {
     file: File;
@@ -56,21 +69,45 @@ export function CardEditDialog({
     return result.secure_url || "";
   };
 
+  // For create mode, use a temporary card object with default values
+  const tempCard: Card = card || {
+    id: "",
+    title: "",
+    description: "",
+    listId: listId || "",
+    position: order || 0,
+    order: order || 0,
+    labels: [],
+    members: [],
+    dueDate: new Date(), // Default to today's date
+    coverUrl: "",
+    coverColor: "",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
   return (
     <BackgroundPickerProvider
       initialData={{
-        color: card.coverColor,
-        imageUrl: card.coverUrl,
-        coverMode: card.coverMode,
+        color: card?.coverColor,
+        imageUrl: card?.coverUrl,
+        coverMode: card?.coverMode,
       }}
     >
       <InnerDialog
-        card={card}
+        card={tempCard}
         boardId={boardId}
         isOpen={isOpen}
         onClose={onClose}
         onUpdate={onUpdate}
         uploadImage={handleUploadImage}
+<<<<<<< HEAD
+=======
+        isCreateMode={isCreateMode}
+        listId={listId}
+        order={order}
+        onCreated={onCreated}
+>>>>>>> origin/main
       />
     </BackgroundPickerProvider>
   );
@@ -82,12 +119,20 @@ interface InnerDialogProps {
   boardId: string;
   isOpen: boolean;
   onClose: () => void;
-  onUpdate: (card: Card) => void;
+  onUpdate?: (card: Card) => void;
   uploadImage: (options: {
     file: File;
     type: "card" | "board";
     id: string;
   }) => Promise<string>;
+<<<<<<< HEAD
+=======
+  // Create mode props
+  isCreateMode?: boolean;
+  listId?: string;
+  order?: number;
+  onCreated?: () => void;
+>>>>>>> origin/main
 }
 
 function InnerDialog({
@@ -97,6 +142,13 @@ function InnerDialog({
   onClose,
   onUpdate,
   uploadImage,
+<<<<<<< HEAD
+=======
+  isCreateMode,
+  listId,
+  order,
+  onCreated,
+>>>>>>> origin/main
 }: InnerDialogProps) {
   const [isCoverPickerOpen, setIsCoverPickerOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -110,7 +162,16 @@ function InnerDialog({
   const attachmentFileInputRef = useRef<HTMLInputElement | null>(null);
   const [showActivities, setShowActivities] = useState(true); // For comments/activities toggle
 
+  // Create mode state - default title to "Untitled Card" for new cards
+  const [title, setTitle] = useState(card.title || "Untitled Card");
+  const [description, setDescription] = useState(card.description || "");
+  const [labels, setLabels] = useState<CardLabel[]>(card.labels || []);
+  const [members, setMembers] = useState<Member[]>(card.members || []);
+  const [deadline, setDeadline] = useState<Date | undefined>(card.dueDate);
+  const [isCreating, setIsCreating] = useState(false);
+
   const { mutate: updateCard } = useUpdateCard();
+  const { mutate: createCard, isPending: isCreatePending } = useCreateCard();
   const { deleteImage } = useDeleteImage();
   const uploadAttachmentMutation = useUploadAttachment();
   const createLinkMutation = useCreateAttachmentLink();
@@ -158,12 +219,32 @@ function InnerDialog({
     return null;
   }, [imageFile, selectedColor, card.coverUrl, card.coverColor]);
 
+  // Create a local card state for the UI (used in both modes)
+  const localCard: Card = useMemo(() => ({
+    ...card,
+    title: isCreateMode ? title : card.title,
+    description: isCreateMode ? description : card.description,
+    labels: isCreateMode ? labels : card.labels,
+    members: isCreateMode ? members : card.members,
+    dueDate: isCreateMode ? deadline : card.dueDate,
+  }), [card, isCreateMode, title, description, labels, members, deadline]);
+
   const handleUpdate = useCallback(
     (updates: Partial<Card>) => {
+      if (isCreateMode) {
+        // In create mode, just update local state
+        if (updates.title !== undefined) setTitle(updates.title);
+        if (updates.description !== undefined) setDescription(updates.description || "");
+        if (updates.labels !== undefined) setLabels(updates.labels || []);
+        if (updates.members !== undefined) setMembers(updates.members || []);
+        if (updates.dueDate !== undefined) setDeadline(updates.dueDate);
+        return;
+      }
+
       if (!card) return;
 
       // Update local state immediately for optimistic UI
-      onUpdate({ ...card, ...updates });
+      onUpdate?.({ ...card, ...updates });
 
       // Sync with backend if boardId is available
       if (boardId) {
@@ -174,8 +255,77 @@ function InnerDialog({
         });
       }
     },
-    [card, boardId, onUpdate, updateCard]
+    [card, boardId, onUpdate, updateCard, isCreateMode]
   );
+
+  const handleCreateCard = async () => {
+    if (!listId) return;
+
+    setIsCreating(true);
+
+    // Use default name if no title provided
+    const cardName = localCard.title?.trim() || "Untitled Card";
+
+    try {
+      // Get background data first
+      const { color: coverColor, imageFile: currentImageFile } = getBackgroundData();
+      
+      // Create the card first
+      createCard(
+        {
+          boardId,
+          listId,
+          name: cardName,
+          order: order || 0,
+          description: localCard.description || undefined,
+          labels: localCard.labels && localCard.labels.length > 0 ? localCard.labels : undefined,
+          members: localCard.members && localCard.members.length > 0 ? localCard.members : undefined,
+          deadline: localCard.dueDate,
+          // Set cover color if provided (image covers are uploaded separately)
+          coverColor: (!currentImageFile && coverColor) ? coverColor : undefined,
+        },
+        {
+          onSuccess: async (newCard) => {
+            // If there's a cover image, upload it
+            if (currentImageFile && newCard?.id) {
+              try {
+                await uploadImage({
+                  file: currentImageFile,
+                  type: "card",
+                  id: newCard.id,
+                });
+              } catch (error) {
+                console.error("Error uploading card cover:", error);
+              }
+            }
+
+            // Invalidate to refetch with the new cover (for both color and image covers)
+            queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+
+            // Reset form and close
+            resetForm();
+            onCreated?.();
+            onClose();
+          },
+          onError: () => {
+            setIsCreating(false);
+          },
+        }
+      );
+    } catch (error) {
+      setIsCreating(false);
+    }
+  };
+
+  const resetForm = () => {
+    setTitle("Untitled Card");
+    setDescription("");
+    setLabels([]);
+    setMembers([]);
+    setDeadline(new Date()); // Reset to today's date
+    setIsCreating(false);
+    resetBackground();
+  };
 
   const handleUpdateCover = async () => {
     const { color: currentColor, imageFile: currentImageFile } = getBackgroundData();
@@ -190,7 +340,7 @@ function InnerDialog({
         const tempPreviewUrl = URL.createObjectURL(currentImageFile);
 
         // Optimistically update the card with the preview URL immediately
-        onUpdate({ ...card, coverUrl: tempPreviewUrl, coverColor: "" });
+        onUpdate?.({ ...card, coverUrl: tempPreviewUrl, coverColor: "" });
 
         // Upload the image in the background
         await uploadImage({
@@ -218,7 +368,7 @@ function InnerDialog({
 
   const handleRemoveCover = async () => {
     // Optimistically update the card to remove cover immediately
-    onUpdate({ ...card, coverColor: "", coverUrl: "", coverMode: CardCoverModeValue.NONE });
+    onUpdate?.({ ...card, coverColor: "", coverUrl: "", coverMode: CardCoverModeValue.NONE });
 
     // If the card has an existing image cover, delete it from the storage in background
     if (card.coverUrl) {
@@ -245,7 +395,7 @@ function InnerDialog({
       // Update local card state with new attachment
       if (newAttachment) {
         const updatedAttachments = [...(card.attachments || []), newAttachment];
-        onUpdate({ ...card, attachments: updatedAttachments });
+        onUpdate?.({ ...card, attachments: updatedAttachments });
       }
     }
   };
@@ -264,7 +414,7 @@ function InnerDialog({
       // Update local card state with new attachment
       if (newAttachment) {
         const updatedAttachments = [...(card.attachments || []), newAttachment];
-        onUpdate({ ...card, attachments: updatedAttachments });
+        onUpdate?.({ ...card, attachments: updatedAttachments });
       }
 
       setLinkUrl("");
@@ -294,7 +444,7 @@ function InnerDialog({
       const updatedAttachments = (card.attachments || []).filter(
         (att) => att.id !== attachmentId
       );
-      onUpdate({ ...card, attachments: updatedAttachments });
+      onUpdate?.({ ...card, attachments: updatedAttachments });
     }
   };
 
@@ -322,6 +472,17 @@ function InnerDialog({
   };
 
   const handleClose = async () => {
+<<<<<<< HEAD
+=======
+    if (isCreateMode) {
+      // In create mode, just reset form and close
+      resetForm();
+      onClose();
+      return;
+    }
+
+    // Get latest background data before closing
+>>>>>>> origin/main
     const { color: latestColor, imageFile: latestImageFile } = getBackgroundData();
 
     if (latestImageFile || latestColor) {
@@ -335,6 +496,8 @@ function InnerDialog({
     // Close the dialog after save completes
     onClose();
   };
+
+  const isSubmitting = isCreatePending || isCreating;
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -402,13 +565,13 @@ function InnerDialog({
             className="flex-1 space-y-6 p-6 overflow-y-auto max-h-full"
             style={{ minWidth: "500px" }}
           >
-            {/* Header với checkbox và title */}
-            <CardHeader card={card} onUpdate={handleUpdate} />
+            {/* Header with title */}
+            <CardHeader card={localCard} onUpdate={handleUpdate} />
 
             {/* Action buttons row */}
             <div className="flex flex-wrap gap-2">
               <CardLabels
-                card={card}
+                card={localCard}
                 onUpdate={handleUpdate}
                 boardId={boardId || ""}
                 isOpen={isLabelPopoverOpen}
@@ -416,12 +579,16 @@ function InnerDialog({
                 triggerButton={
                   <Button variant="outline" size="sm" className="h-8">
                     <Tag className="h-4 w-4 mr-1" />
+<<<<<<< HEAD
                     Labels {card.labels && card.labels.length > 0 && `(${card.labels.length})`}
+=======
+                    Labels {isCreateMode && labels.length > 0 && `(${labels.length})`}
+>>>>>>> origin/main
                   </Button>
                 }
               />
               <CardMembers
-                card={card}
+                card={localCard}
                 onUpdate={handleUpdate}
                 boardId={boardId || ""}
                 isOpen={isMemberPopoverOpen}
@@ -429,6 +596,7 @@ function InnerDialog({
                 triggerButton={
                   <Button variant="outline" size="sm" className="h-8">
                     <UserPlus className="h-4 w-4 mr-1" />
+<<<<<<< HEAD
                     Members {card.members && card.members.length > 0 && `(${card.members.length})`}
                   </Button>
                 }
@@ -448,6 +616,38 @@ function InnerDialog({
                   }
                 />
               )}
+=======
+                    Members {isCreateMode && members.length > 0 && `(${members.length})`}
+                  </Button>
+                }
+              />
+              <CardDates
+                card={localCard}
+                onUpdate={handleUpdate}
+                isOpen={isDatePopoverOpen}
+                onOpenChange={setIsDatePopoverOpen}
+                triggerButton={
+                  <Button variant="outline" size="sm" className="h-8">
+                    <Clock className="h-4 w-4 mr-1" />
+                    Due Date 
+                  </Button>
+                }
+              />
+              <CardRecurrence
+                card={localCard}
+                onUpdate={handleUpdate}
+                triggerButton={
+                  <Button variant="outline" size="sm" className="h-8">
+                    <Repeat className="h-4 w-4 mr-1" />
+                    Recurrence
+                  </Button>
+                }
+              />
+              <Button variant="outline" size="sm" className="h-8">
+                <CheckSquare className="h-4 w-4 mr-1" />
+                Checklist
+              </Button>
+>>>>>>> origin/main
               <Popover open={isAttachmentPopoverOpen} onOpenChange={setIsAttachmentPopoverOpen}>
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm" className="h-8">
@@ -543,13 +743,13 @@ function InnerDialog({
             </div>
 
             {/* Labels display - only show if has labels */}
-            {card.labels && card.labels.length > 0 && (
-              <CardLabels card={card} onUpdate={handleUpdate} boardId={boardId || ""} />
+            {localCard.labels && localCard.labels.length > 0 && (
+              <CardLabels card={localCard} onUpdate={handleUpdate} boardId={boardId || ""} />
             )}
 
             {/* Members display - only show if has members */}
-            {card.members && card.members.length > 0 && (
-              <CardMembers card={card} onUpdate={handleUpdate} boardId={boardId || ""} />
+            {localCard.members && localCard.members.length > 0 && (
+              <CardMembers card={localCard} onUpdate={handleUpdate} boardId={boardId || ""} />
             )}
 
             {(card.startDate || card.dueAt) && (
@@ -585,20 +785,20 @@ function InnerDialog({
             )}
 
             {/* Description */}
-            <CardDescription card={card} onUpdate={handleUpdate} />
+            <CardDescription card={localCard} onUpdate={handleUpdate} />
 
             {/* CheckList */}
-            <CheckList card={card} boardId={boardId} onUpdate={handleUpdate} />
+            <CheckList card={localCard} boardId={boardId} onUpdate={handleUpdate} />
 
             {/* Attachments */}
-            {card.attachments && card.attachments.length > 0 && (
+            {localCard.attachments && localCard.attachments.length > 0 && (
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold flex items-center gap-2">
                   <Paperclip className="h-4 w-4" />
                   Attachments
                 </h3>
                 <div className="space-y-3">
-                  {card.attachments.map((attachment) => {
+                  {localCard.attachments.map((attachment) => {
                     const isImage = isImageFile(attachment.url, attachment.type);
                     const displayName = attachment.name || getFileName(attachment.url);
 
@@ -682,11 +882,23 @@ function InnerDialog({
 
               {/* Comments section */}
               <CardComments
-                card={card}
+                card={localCard}
                 boardId={boardId}
                 showActivities={showActivities}
                 onToggleActivities={() => setShowActivities(!showActivities)}
               />
+
+              {/* Footer with Create button for create mode */}
+              {isCreateMode && (
+                <div className="flex justify-end gap-2 pt-4 border-t mt-auto">
+                  <Button variant="outline" onClick={handleClose}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleCreateCard} disabled={isSubmitting}>
+                    {isSubmitting ? "Creating..." : "Create Card"}
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -723,7 +935,7 @@ function InnerDialog({
             align="start"
             className="w-[400px] p-6 ml-2"
           >
-            <CardCoverPicker card={card} onRemoveCover={handleRemoveCover} />
+            <CardCoverPicker card={localCard} onRemoveCover={handleRemoveCover} />
           </PopoverContent>
         </Popover>
 

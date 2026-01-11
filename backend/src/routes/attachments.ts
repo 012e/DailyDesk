@@ -56,6 +56,16 @@ export default function createAttachmentRoutes() {
         403: {
           description: "Không có quyền tạo attachment trong Board này",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
     async (c) => {
@@ -108,7 +118,7 @@ export default function createAttachmentRoutes() {
         .returning();
 
       console.log("[ATTACHMENT] Created attachment:", result[0]);
-      return c.json(result[0]);
+      return c.json(result[0], 200);
     }
   );
 
@@ -133,6 +143,16 @@ export default function createAttachmentRoutes() {
         },
         403: {
           description: "Không có quyền truy cập Board này",
+        },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
         },
       },
     }),
@@ -174,7 +194,7 @@ export default function createAttachmentRoutes() {
         .from(attachmentsTable)
         .where(eq(attachmentsTable.cardId, cardId));
 
-      return c.json(attachments);
+      return c.json(attachments, 200);
     }
   );
 
@@ -200,6 +220,16 @@ export default function createAttachmentRoutes() {
         },
         403: {
           description: "Không có quyền xóa attachment",
+        },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
         },
       },
     }),
@@ -248,7 +278,7 @@ export default function createAttachmentRoutes() {
 
       await db.delete(attachmentsTable).where(eq(attachmentsTable.id, id));
 
-      return c.json({ message: "Xóa attachment thành công" });
+      return c.json({ message: "Xóa attachment thành công" }, 200);
     }
   );
 
