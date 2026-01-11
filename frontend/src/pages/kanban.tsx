@@ -1,29 +1,37 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useParams } from "react-router";
 import EventCalendarPage from "@/components/comp-542";
 import { Kanban } from "./kanban/Kanban";
 import { useBoard } from "@/hooks/use-board";
 import { useUpdateCard, useCreateCard } from "@/hooks/use-card";
 import { listsCardsToCalendarEvents } from "@/components/event-calendar";
-import { EventCalendar, type CalendarEvent, type Label, type Member } from "@/components/event-calendar";
+import { EventCalendar, type CalendarEvent, type Label, type Member, type CalendarView } from "@/components/event-calendar";
 import { toast } from "sonner";
 import { BoardEventsProvider } from "@/components/board-events-provider";
 
 export default function KanbanPage() {
   const { boardId } = useParams();
   const [page, setPage] = useState<"kanban" | "calendar">("kanban");
+  const [calendarView, setCalendarView] = useState<CalendarView>("month");
+  const [calendarDate, setCalendarDate] = useState(new Date());
   
   // Get board data - always call the hook, but conditionally use the data
   const board = useBoard({ boardId: boardId || "" });
   const { mutate: updateCard } = useUpdateCard();
   const { mutate: createCard } = useCreateCard();
   
-  // Convert cards to calendar events
+  // Convert cards to calendar events with recurrence support
   const calendarEvents = useMemo(() => {
     if (!boardId || !board?.lists) return [];
-    return listsCardsToCalendarEvents(board.lists);
-  }, [boardId, board?.lists]);
+    console.log('Converting cards to calendar events:', {
+      listsCount: board.lists.length,
+      totalCards: board.lists.reduce((sum, list) => sum + list.cards.length, 0),
+      calendarDate,
+      calendarView
+    });
+    return listsCardsToCalendarEvents(board.lists, calendarDate, calendarView);
+  }, [boardId, board?.lists, calendarDate, calendarView]);
 
   // Handle event operations - now writable!
   const handleEventAdd = (event: CalendarEvent) => {
@@ -132,11 +140,11 @@ export default function KanbanPage() {
       )}
       {page === "kanban" && !boardId && <Kanban boardId={boardId} />}
       {page === "calendar" && boardId ? (
-        <EventCalendar
+        <CalendarWrapper
           events={calendarEvents}
-          onEventAdd={handleEventAdd}
           boardId={boardId}
           lists={board?.lists?.map(l => ({ id: l.id, title: l.name })) || []}
+          onEventAdd={handleEventAdd}
           onEventUpdate={handleEventUpdate}
           onEventDelete={handleEventDelete}
         />
@@ -144,6 +152,40 @@ export default function KanbanPage() {
         <EventCalendarPage />
       ) : null}
       <PageTabs setPage={setPage} />
+    </div>
+  );
+}
+
+// Wrapper to track calendar view and date changes
+function CalendarWrapper({
+  events,
+  boardId,
+  lists,
+  onEventAdd,
+  onEventUpdate,
+  onEventDelete,
+}: {
+  events: CalendarEvent[];
+  boardId: string;
+  lists: Array<{ id: string; title: string }>;
+  onEventAdd?: (event: CalendarEvent) => void;
+  onEventUpdate?: (event: CalendarEvent) => void;
+  onEventDelete?: (eventId: string) => void;
+}) {
+  const calendarRef = useRef<HTMLDivElement>(null);
+
+  console.log('CalendarWrapper rendering with events:', events.length);
+  
+  return (
+    <div ref={calendarRef}>
+      <EventCalendar
+        events={events}
+        onEventAdd={onEventAdd}
+        boardId={boardId}
+        lists={lists}
+        onEventUpdate={onEventUpdate}
+        onEventDelete={onEventDelete}
+      />
     </div>
   );
 }

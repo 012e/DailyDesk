@@ -62,10 +62,10 @@ export function BoardCard({
     <Link to={`/board/${id}`}>
       <Card
         key={id}
-        className="overflow-hidden relative gap-0 pb-14 bg-center bg-no-repeat bg-cover border-0 transition-all cursor-pointer hover:shadow-md dark:hover:shadow-md-white hover:scale-[1.02] min-h-[120px]"
+        className="group overflow-hidden relative gap-0 pb-14 bg-center bg-no-repeat bg-cover border-0 transition-all cursor-pointer hover:shadow-md min-h-[120px]"
         style={backgroundStyle}
       >
-        <div className="absolute inset-0 mb-16 pointer-events-none backdrop-blur-sm dark:bg-black/25" />
+        <div className="absolute inset-0 mb-16 pointer-events-none backdrop-blur-sm dark:bg-black/25 group-hover:bg-black/20 dark:group-hover:bg-black/40 transition-colors" />
 
         <CardHeader className="flex flex-row justify-between items-start p-4 py-0 z-5">
           <CardTitle className="text-md font-medium overflow-hidden text-ellipsis max-w-[70%] z-10">

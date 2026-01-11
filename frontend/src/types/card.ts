@@ -66,6 +66,9 @@ export const CardCoverModeValue = {
 
 export type CardCoverMode =
   (typeof CardCoverModeValue)[keyof typeof CardCoverModeValue];
+
+export type RecurrenceType = "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day";
+
 export interface Card {
   id: string;
   title: string;
@@ -79,6 +82,9 @@ export interface Card {
   dueAt?: Date | string | null;
   dueComplete?: boolean;
   reminderMinutes?: number | null;
+  recurrence?: RecurrenceType;
+  recurrenceDay?: number; // 1st, 2nd, 3rd, 4th, 5th
+  recurrenceWeekday?: number; // 0=Sunday, 6=Saturday
   coverUrl: string;
   coverColor: string;
   coverMode?: CardCoverMode;

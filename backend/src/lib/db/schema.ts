@@ -46,6 +46,9 @@ export const cardsTable = sqliteTable("cards", {
   dueAt: integer("due_at", { mode: "timestamp" }),
   dueComplete: integer("due_complete", { mode: "boolean" }).default(false),
   reminderMinutes: integer("reminder_minutes"),
+  recurrence: text("recurrence"), // never, daily_weekdays, weekly, monthly_date, monthly_day
+  recurrenceDay: integer("recurrence_day"), // for monthly_day (e.g., 2 for 2nd Sunday)
+  recurrenceWeekday: integer("recurrence_weekday"), // for monthly_day (0=Sunday, 6=Saturday)
   latitude: integer("latitude"),
   longitude: integer("longitude"),
   completed: integer("completed", { mode: "boolean" }).default(false),

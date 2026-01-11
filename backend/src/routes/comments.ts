@@ -37,6 +37,16 @@ export default function createCommentRoutes() {
         403: {
           description: "Không có quyền truy cập card này",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -60,7 +70,7 @@ export default function createCommentRoutes() {
           console.error("Failed to log comment activity:", activityError);
         }
 
-        return c.json(comment);
+        return c.json(comment, 200);
       } catch (err: any) {
         if (err instanceof commentService.ServiceError) {
           return c.json({ error: err.message }, err.status);
@@ -95,6 +105,16 @@ export default function createCommentRoutes() {
         403: {
           description: "Chỉ có thể chỉnh sửa comment của chính mình",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -110,12 +130,13 @@ export default function createCommentRoutes() {
           req.content,
         );
 
-        return c.json(comment);
+        return c.json(comment, 200);
       } catch (err: any) {
         if (err instanceof commentService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in comments PUT route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -151,6 +172,16 @@ export default function createCommentRoutes() {
         403: {
           description: "Chỉ có thể xóa comment của chính mình",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -176,12 +207,13 @@ export default function createCommentRoutes() {
           );
         }
 
-        return c.json(result);
+        return c.json(result, 200);
       } catch (err: any) {
         if (err instanceof commentService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in comments DELETE route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -209,6 +241,16 @@ export default function createCommentRoutes() {
         403: {
           description: "Không có quyền truy cập card này",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -221,12 +263,13 @@ export default function createCommentRoutes() {
           user.sub,
           cardId,
         );
-        return c.json(comments);
+        return c.json(comments, 200);
       } catch (err: any) {
         if (err instanceof commentService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in comments GET route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -254,6 +297,16 @@ export default function createCommentRoutes() {
         403: {
           description: "Không có quyền truy cập card này",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -266,12 +319,13 @@ export default function createCommentRoutes() {
           user.sub,
           cardId,
         );
-        return c.json(activities);
+        return c.json(activities, 200);
       } catch (err: any) {
         if (err instanceof activityService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in activities GET route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -309,6 +363,16 @@ export default function createCommentRoutes() {
         403: {
           description: "Không có quyền truy cập card này",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -321,7 +385,7 @@ export default function createCommentRoutes() {
           user.sub,
           cardId,
         );
-        return c.json(timeline);
+        return c.json(timeline, 200);
       } catch (err: any) {
         if (
           err instanceof commentService.ServiceError ||
@@ -329,7 +393,8 @@ export default function createCommentRoutes() {
         ) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in timeline GET route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );

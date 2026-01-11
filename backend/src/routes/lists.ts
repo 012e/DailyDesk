@@ -37,6 +37,16 @@ export default function createListRoutes() {
         403: {
           description: "Không có quyền truy cập Board này",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -45,12 +55,13 @@ export default function createListRoutes() {
       const { boardId } = c.req.valid("param");
       try {
         const lists = await listsService.getListsForBoard(user.sub, boardId);
-        return c.json(lists);
+        return c.json(lists, 200);
       } catch (err: any) {
         if (err instanceof listsService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in lists GET route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -78,6 +89,16 @@ export default function createListRoutes() {
         403: {
           description: "Không có quyền tạo List trong Board này",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -87,12 +108,13 @@ export default function createListRoutes() {
       const req = c.req.valid("json");
       try {
         const list = await listsService.createList(user.sub, boardId, req);
-        return c.json(list);
+        return c.json(list, 200);
       } catch (err: any) {
         if (err instanceof listsService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in lists POST route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -120,6 +142,16 @@ export default function createListRoutes() {
         403: {
           description: "Không có quyền truy cập List này",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -128,12 +160,13 @@ export default function createListRoutes() {
       const { boardId, id } = c.req.valid("param");
       try {
         const list = await listsService.getListById(user.sub, boardId, id);
-        return c.json(list);
+        return c.json(list, 200);
       } catch (err: any) {
         if (err instanceof listsService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in lists GET by ID route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -162,6 +195,16 @@ export default function createListRoutes() {
         403: {
           description: "Không có quyền cập nhật List này",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -171,12 +214,13 @@ export default function createListRoutes() {
       const req = c.req.valid("json");
       try {
         const updated = await listsService.updateList(user.sub, boardId, id, req);
-        return c.json(updated);
+        return c.json(updated, 200);
       } catch (err: any) {
         if (err instanceof listsService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in lists PUT route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );
@@ -211,6 +255,16 @@ export default function createListRoutes() {
         403: {
           description: "Không có quyền xóa List này",
         },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
       },
     }),
 
@@ -219,12 +273,13 @@ export default function createListRoutes() {
       const { boardId, id } = c.req.valid("param");
       try {
         const result = await listsService.deleteList(user.sub, boardId, id);
-        return c.json(result);
+        return c.json(result, 200);
       } catch (err: any) {
         if (err instanceof listsService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
-        throw err;
+        console.error("Error in lists DELETE route:", err);
+        return c.json({ error: "Internal server error" }, 500);
       }
     },
   );

@@ -425,6 +425,7 @@ export function KanbanBoard({
     <div
       className={cn(
         "flex h-full flex-grow items-start gap-x-2 overflow-x-auto py-1",
+        "[&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-white/30",
         className
       )}
       ref={ref}
@@ -594,7 +595,11 @@ export function KanbanBoardColumnList({
 }: ComponentProps<"ul">) {
   return (
     <ul
-      className={cn("min-h-0.5 flex-grow overflow-y-auto", className)}
+      className={cn(
+        "min-h-0.5 flex-grow overflow-y-auto px-0.5",
+        "[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-400/30 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-gray-400/50",
+        className
+      )}
       ref={ref}
       {...props}
     />
