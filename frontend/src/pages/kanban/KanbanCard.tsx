@@ -34,6 +34,10 @@ interface KanbanCardProps {
     labels?: Label[];
     members?: Member[];
     dueDate?: Date;
+    startDate?: Date | string | null;
+    dueAt?: Date | string | null;
+    dueComplete?: boolean;
+    reminderMinutes?: number | null;
     coverUrl?: string;
     coverColor?: string;
     coverMode?: CardCoverMode;
@@ -72,6 +76,10 @@ export function KanbanCard({
     labels: card.labels || [],
     members: card.members || [],
     dueDate: card.dueDate,
+    startDate: card.startDate,
+    dueAt: card.dueAt,
+    dueComplete: card.dueComplete,
+    reminderMinutes: card.reminderMinutes,
     coverUrl: card.coverUrl || "",
     coverColor: card.coverColor || "",
     coverMode: card.coverMode,

@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import type { Card, Label, Member } from "@/types/card";
-import { X, Tag, UserPlus, Clock, Wallpaper, CheckSquare, Paperclip, FileIcon, Loader2 } from "lucide-react";
+import { X, Tag, UserPlus, Clock, Wallpaper, CheckSquare, Paperclip, FileIcon, Loader2, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -55,9 +55,14 @@ function InnerCardCreateDialog({
   const [labels, setLabels] = useState<Label[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [deadline, setDeadline] = useState<Date | undefined>(undefined);
+  const [startDate, setStartDate] = useState<Date | string | null>(null);
+  const [dueAt, setDueAt] = useState<Date | string | null>(null);
+  const [dueComplete, setDueComplete] = useState(false);
+  const [reminderMinutes, setReminderMinutes] = useState<number | null>(null);
   const [isLabelPopoverOpen, setIsLabelPopoverOpen] = useState(false);
   const [isMemberPopoverOpen, setIsMemberPopoverOpen] = useState(false);
   const [isDatePopoverOpen, setIsDatePopoverOpen] = useState(false);
+  const [isPillButtonDateOpen, setIsPillButtonDateOpen] = useState(false);
   const [isCoverPopoverOpen, setIsCoverPopoverOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
@@ -127,6 +132,10 @@ function InnerCardCreateDialog({
     labels: labels,
     members: members,
     dueDate: deadline,
+    startDate,
+    dueAt,
+    dueComplete,
+    reminderMinutes,
     coverUrl: "",
     coverColor: "",
     createdAt: new Date(),
@@ -142,6 +151,18 @@ function InnerCardCreateDialog({
     }
     if (updates.dueDate !== undefined) {
       setDeadline(updates.dueDate);
+    }
+    if (updates.startDate !== undefined) {
+      setStartDate(updates.startDate);
+    }
+    if (updates.dueAt !== undefined) {
+      setDueAt(updates.dueAt);
+    }
+    if (updates.dueComplete !== undefined) {
+      setDueComplete(updates.dueComplete);
+    }
+    if (updates.reminderMinutes !== undefined) {
+      setReminderMinutes(updates.reminderMinutes);
     }
     if (updates.description !== undefined) {
       setDescription(updates.description || "");
@@ -231,18 +252,26 @@ function InnerCardCreateDialog({
     if (!title.trim()) return;
     setIsCreating(true);
 
+    const cardData = {
+      boardId,
+      listId,
+      name: title.trim(),
+      order,
+      description: description || undefined,
+      labels: labels.length > 0 ? labels : undefined,
+      members: members.length > 0 ? members : undefined,
+      deadline: deadline,
+      startDate: startDate ? (typeof startDate === "string" ? startDate : startDate.toISOString()) : undefined,
+      dueAt: dueAt ? (typeof dueAt === "string" ? dueAt : dueAt.toISOString()) : undefined,
+      dueComplete,
+      reminderMinutes,
+    };
+
+    console.log("📤 Creating card with data:", cardData);
+
     try {
       createCard(
-        {
-          boardId,
-          listId,
-          name: title.trim(),
-          order,
-          description: description || undefined,
-          labels: labels.length > 0 ? labels : undefined,
-          members: members.length > 0 ? members : undefined,
-          deadline: deadline,
-        },
+        cardData,
         {
           onSuccess: async (newCard) => {
             if (!newCard?.id) {
@@ -399,6 +428,10 @@ function InnerCardCreateDialog({
     setLabels([]);
     setMembers([]);
     setDeadline(undefined);
+    setStartDate(null);
+    setDueAt(null);
+    setDueComplete(false);
+    setReminderMinutes(null);
     setIsCreating(false);
     resetBackground();
 
@@ -428,6 +461,17 @@ function InnerCardCreateDialog({
   };
 
   const isSubmitting = isPending || isCreating;
+
+  // Format due date for display in vi-VN locale: "HH:mm D MMM"
+  const formatDueDateVN = (date: Date | string): string => {
+    const d = typeof date === "string" ? new Date(date) : date;
+    const hours = d.getHours().toString().padStart(2, "0");
+    const minutes = d.getMinutes().toString().padStart(2, "0");
+    const day = d.getDate();
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const month = monthNames[d.getMonth()];
+    return `${hours}:${minutes} ${day} ${month}`;
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -498,7 +542,7 @@ function InnerCardCreateDialog({
         )}
 
         {/* Main content area */}
-        <div className="flex flex-col h-full w-full overflow-hidden p-6 gap-4 overflow-y-auto">
+        <div className="flex flex-col flex-1 w-full overflow-y-auto p-6 gap-4">
           {/* Title */}
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-muted-foreground">Card Title *</label>
@@ -539,18 +583,21 @@ function InnerCardCreateDialog({
                 </Button>
               }
             />
-            <CardDates
-              card={tempCard}
-              onUpdate={handleUpdate}
-              isOpen={isDatePopoverOpen}
-              onOpenChange={setIsDatePopoverOpen}
-              triggerButton={
-                <Button variant="outline" size="sm" className="h-8">
-                  <Clock className="h-4 w-4 mr-1" />
-                  Due Date {deadline && "(set)"}
-                </Button>
-              }
-            />
+            {!startDate && !dueAt && (
+              <CardDates
+                card={tempCard}
+                onUpdate={handleUpdate}
+                isOpen={isDatePopoverOpen}
+                onOpenChange={setIsDatePopoverOpen}
+                createMode={true}
+                triggerButton={
+                  <Button variant="outline" size="sm" className="h-8">
+                    <Clock className="h-4 w-4 mr-1" />
+                    Dates
+                  </Button>
+                }
+              />
+            )}
             <Popover open={isCoverPopoverOpen} onOpenChange={setIsCoverPopoverOpen}>
               <PopoverTrigger asChild>
                 <Button variant="outline" size="sm" className="h-8">
@@ -707,6 +754,38 @@ function InnerCardCreateDialog({
             </div>
           )}
 
+          {(startDate || dueAt) && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground">Dates</label>
+              <div className="flex flex-wrap gap-2">
+                {startDate && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 px-3 flex items-center gap-2"
+                    onClick={() => setIsPillButtonDateOpen(true)}
+                  >
+                    <Clock className="h-3.5 w-3.5" />
+                    <span className="text-sm">Start: {formatDueDateVN(startDate)}</span>
+                    <ChevronDown className="h-3.5 w-3.5 ml-1" />
+                  </Button>
+                )}
+                {dueAt && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 px-3 flex items-center gap-2"
+                    onClick={() => setIsPillButtonDateOpen(true)}
+                  >
+                    <Clock className="h-3.5 w-3.5" />
+                    <span className="text-sm">Due: {formatDueDateVN(dueAt)}</span>
+                    <ChevronDown className="h-3.5 w-3.5 ml-1" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Temporary CheckList Display */}
           {tempChecklistItems.length > 0 && (
             <div className="space-y-3 p-4 rounded-md bg-muted/30">
@@ -795,6 +874,17 @@ function InnerCardCreateDialog({
             </Button>
           </div>
         </div>
+
+        {(startDate || dueAt) && (
+          <CardDates
+            card={tempCard}
+            onUpdate={handleUpdate}
+            isOpen={isPillButtonDateOpen}
+            onOpenChange={setIsPillButtonDateOpen}
+            createMode={true}
+            triggerButton={null}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );
