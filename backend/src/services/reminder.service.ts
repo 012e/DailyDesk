@@ -82,10 +82,14 @@ export async function checkAndSendReminders() {
 async function sendReminder(card: {
   cardId: string;
   cardName: string;
-  dueAt: Date;
-  reminderMinutes: number;
+  dueAt: Date | null;
+  reminderMinutes: number | null;
+  dueComplete: boolean | null;
+  boardId: string;
   boardUserId: string;
 }) {
+  if (!card.dueAt || !card.reminderMinutes) return;
+  
   console.log(
     `📧 [REMINDER] Card "${card.cardName}" is due in ${card.reminderMinutes} minutes`
   );
