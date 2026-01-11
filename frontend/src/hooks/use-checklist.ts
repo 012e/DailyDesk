@@ -16,7 +16,6 @@ export function useChecklistItems(boardId: string, cardId: string) {
       // Here, we assume data is ChecklistItem[] or undefined
       return (data as unknown as ChecklistItem[]) || [];
     },
-    enabled: !!boardId && !!cardId,
   });
 }
 

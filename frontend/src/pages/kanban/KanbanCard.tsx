@@ -41,13 +41,16 @@ interface KanbanCardProps {
     labels?: Label[];
     members?: Member[];
     dueDate?: Date;
+<<<<<<< HEAD
     startDate?: Date | string | null;
     dueAt?: Date | string | null;
     dueComplete?: boolean;
     reminderMinutes?: number | null;
+=======
     recurrence?: RecurrenceType;
     recurrenceDay?: number;
     recurrenceWeekday?: number;
+>>>>>>> origin/main
     coverUrl?: string;
     coverColor?: string;
     coverMode?: CardCoverMode;
@@ -89,13 +92,16 @@ export function KanbanCard({
     labels: card.labels || [],
     members: card.members || [],
     dueDate: card.dueDate,
+<<<<<<< HEAD
     startDate: card.startDate,
     dueAt: card.dueAt,
     dueComplete: card.dueComplete,
     reminderMinutes: card.reminderMinutes,
+=======
     recurrence: card.recurrence,
     recurrenceDay: card.recurrenceDay,
     recurrenceWeekday: card.recurrenceWeekday,
+>>>>>>> origin/main
     coverUrl: card.coverUrl || "",
     coverColor: card.coverColor || "",
     coverMode: card.coverMode,
