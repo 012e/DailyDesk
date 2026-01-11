@@ -501,12 +501,16 @@ export async function updateCard(userSub: string, boardId: string, id: string, r
   if (req.description !== undefined) updateData.description = req.description;
   if (req.order !== undefined) updateData.order = req.order;
   if (req.listId !== undefined) updateData.listId = req.listId;
-  if (req.startDate !== undefined) updateData.startDate = req.startDate;
-  if (req.deadline !== undefined) updateData.deadline = req.deadline;
+  if (req.startDate !== undefined) updateData.startDate = req.startDate ? new Date(req.startDate) : null;
+  if (req.deadline !== undefined) updateData.deadline = req.deadline ? new Date(req.deadline) : null;
+  if (req.dueAt !== undefined) updateData.dueAt = req.dueAt ? new Date(req.dueAt) : null;
+  if (req.dueComplete !== undefined) updateData.dueComplete = req.dueComplete;
+  if (req.reminderMinutes !== undefined) updateData.reminderMinutes = req.reminderMinutes;
   if (req.latitude !== undefined) updateData.latitude = req.latitude;
   if (req.longitude !== undefined) updateData.longitude = req.longitude;
   if (req.coverColor !== undefined) updateData.coverColor = req.coverColor;
   if (req.coverUrl !== undefined) updateData.coverUrl = req.coverUrl;
+  if (req.coverMode !== undefined) updateData.coverMode = req.coverMode;
   if (req.completed !== undefined) updateData.completed = req.completed;
 
   let updatedCard;

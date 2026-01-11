@@ -50,6 +50,8 @@ app.onError((error, c) => {
 
 serve(app);
 
-// Start reminder cron job
-startReminderCron();
+// Start reminder cron job (only in non-test environment)
+if (process.env.NODE_ENV !== "test") {
+  startReminderCron();
+}
 

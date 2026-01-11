@@ -1,0 +1,13 @@
+{
+  "id": "3e1f5a8c-b9d2-4f7e-a6c8-9d2e4f7a6c89",
+  "prevId": "0002_panoramic_omega_red",
+  "version": "6",
+  "dialect": "sqlite",
+  "tables": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  }
+}
