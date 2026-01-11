@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import type { Card } from "@/types/card";
 import { CardCoverModeValue } from "@/types/card";
-import { X, Tag, UserPlus, Paperclip, Clock, Wallpaper, Loader2, FileIcon, ExternalLink, Download, ChevronDown } from "lucide-react";
+import { X, Tag, CheckSquare, UserPlus, Paperclip, Clock, Wallpaper, Loader2, FileIcon, ExternalLink, Download, Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CardHeader } from "./card-header";
 import { CardDescription } from "./card-description";
@@ -10,6 +10,7 @@ import { CardMembers } from "./card-members";
 import { CardComments } from "./card-comments";
 import { CardLabels } from "./card-labels";
 import { CardDates } from "./card-dates";
+import { CardRecurrence } from "./card-recurrence";
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useUpdateCard, useCreateCard } from "@/hooks/use-card";
 import { BackgroundPickerProvider } from "@/components/background-picker-provider";
@@ -96,7 +97,6 @@ export function CardEditDialog({
         onClose={onClose}
         onUpdate={onUpdate}
         uploadImage={handleUploadImage}
-
         isCreateMode={isCreateMode}
         listId={listId}
         order={order}
@@ -118,7 +118,8 @@ interface InnerDialogProps {
     type: "card" | "board";
     id: string;
   }) => Promise<string>;
-  isCreateMode: boolean;
+  // Create mode props
+  isCreateMode?: boolean;
   listId?: string;
   order?: number;
   onCreated?: () => void;
@@ -141,7 +142,6 @@ function InnerDialog({
   const [isLabelPopoverOpen, setIsLabelPopoverOpen] = useState(false);
   const [isMemberPopoverOpen, setIsMemberPopoverOpen] = useState(false);
   const [isDatePopoverOpen, setIsDatePopoverOpen] = useState(false);
-  const [isPillButtonDateOpen, setIsPillButtonDateOpen] = useState(false);
   const [isAttachmentPopoverOpen, setIsAttachmentPopoverOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
   const [linkName, setLinkName] = useState("");
@@ -164,17 +164,8 @@ function InnerDialog({
   const deleteAttachmentMutation = useDeleteAttachment();
   const { getBackgroundData, selectedColor, selectedFile, croppedFile, reset: resetBackground } = useBackgroundPickerContext();
 
+  // Get the effective image file (cropped or original)
   const imageFile = croppedFile || selectedFile;
-
-  const formatDueDateVN = (date: Date | string): string => {
-    const d = typeof date === "string" ? new Date(date) : date;
-    const hours = d.getHours().toString().padStart(2, "0");
-    const minutes = d.getMinutes().toString().padStart(2, "0");
-    const day = d.getDate();
-    const monthNames = ["thg 1", "thg 2", "thg 3", "thg 4", "thg 5", "thg 6", "thg 7", "thg 8", "thg 9", "thg 10", "thg 11", "thg 12"];
-    const month = monthNames[d.getMonth()];
-    return `${hours}:${minutes} ${day} ${month}`;
-  };
 
   /* ---------- PREVIEW IMAGE ---------- */
   const previewImageUrl = useMemo(() => {
@@ -271,7 +262,7 @@ function InnerDialog({
           coverColor: (!currentImageFile && coverColor) ? coverColor : undefined,
         },
         {
-          onSuccess: async (newCard: any) => {
+          onSuccess: async (newCard) => {
             // If there's a cover image, upload it
             if (currentImageFile && newCard?.id) {
               try {
@@ -314,6 +305,7 @@ function InnerDialog({
   };
 
   const handleUpdateCover = async () => {
+    // Get latest values from context
     const { color: currentColor, imageFile: currentImageFile } = getBackgroundData();
 
     if (!currentColor && !currentImageFile) {
@@ -341,8 +333,8 @@ function InnerDialog({
         });
       } else if (currentColor) {
         // Update local state and sync with backend
-        // Clear coverUrl to "" when setting color
-        handleUpdate({ coverColor: currentColor, coverUrl: "" });
+        // Clear coverUrl to null when setting color
+        handleUpdate({ coverColor: currentColor, coverUrl: null });
       }
       
       // Reset background context after successful save to prevent duplicate updates
@@ -380,7 +372,7 @@ function InnerDialog({
 
       // Update local card state with new attachment
       if (newAttachment) {
-        const updatedAttachments = [...(card.attachments || []), newAttachment] as any[];
+        const updatedAttachments = [...(card.attachments || []), newAttachment];
         onUpdate?.({ ...card, attachments: updatedAttachments });
       }
     }
@@ -399,7 +391,7 @@ function InnerDialog({
 
       // Update local card state with new attachment
       if (newAttachment) {
-        const updatedAttachments = [...(card.attachments || []), newAttachment] as any[];
+        const updatedAttachments = [...(card.attachments || []), newAttachment];
         onUpdate?.({ ...card, attachments: updatedAttachments });
       }
 
@@ -468,6 +460,7 @@ function InnerDialog({
     // Get latest background data before closing
     const { color: latestColor, imageFile: latestImageFile } = getBackgroundData();
 
+    // Check if there are any cover changes to save
     if (latestImageFile || latestColor) {
       setIsUploading(true);
       try {
@@ -485,7 +478,7 @@ function InnerDialog({
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent
-        className="flex! flex-col! p-0! gap-0!"
+        className="!flex !flex-col !p-0 !gap-0"
         style={{
           maxWidth: '1200px',
           width: '90vw',
@@ -562,7 +555,7 @@ function InnerDialog({
                 triggerButton={
                   <Button variant="outline" size="sm" className="h-8">
                     <Tag className="h-4 w-4 mr-1" />
-                    Labels {card.labels && card.labels.length > 0 && `(${card.labels.length})`}
+                    Labels {isCreateMode && labels.length > 0 && `(${labels.length})`}
                   </Button>
                 }
               />
@@ -575,31 +568,41 @@ function InnerDialog({
                 triggerButton={
                   <Button variant="outline" size="sm" className="h-8">
                     <UserPlus className="h-4 w-4 mr-1" />
-                    Members {card.members && card.members.length > 0 && `(${card.members.length})`}
+                    Members {isCreateMode && members.length > 0 && `(${members.length})`}
                   </Button>
                 }
               />
-              {!card.startDate && !card.dueAt && (
-                <CardDates
-                  card={card}
-                  boardId={boardId}
-                  onUpdate={handleUpdate}
-                  isOpen={isDatePopoverOpen}
-                  onOpenChange={setIsDatePopoverOpen}
-                  createMode={isCreateMode}
-                  triggerButton={
-                    <Button variant="outline" size="sm" className="h-8">
-                      <Clock className="h-4 w-4 mr-1" />
-                      Dates
-                    </Button>
-                  }
-                />
-              )}
+              <CardDates
+                card={localCard}
+                onUpdate={handleUpdate}
+                isOpen={isDatePopoverOpen}
+                onOpenChange={setIsDatePopoverOpen}
+                triggerButton={
+                  <Button variant="outline" size="sm" className="h-8">
+                    <Clock className="h-4 w-4 mr-1" />
+                    Due Date 
+                  </Button>
+                }
+              />
+              <CardRecurrence
+                card={localCard}
+                onUpdate={handleUpdate}
+                triggerButton={
+                  <Button variant="outline" size="sm" className="h-8">
+                    <Repeat className="h-4 w-4 mr-1" />
+                    Recurrence
+                  </Button>
+                }
+              />
+              <Button variant="outline" size="sm" className="h-8">
+                <CheckSquare className="h-4 w-4 mr-1" />
+                Checklist
+              </Button>
               <Popover open={isAttachmentPopoverOpen} onOpenChange={setIsAttachmentPopoverOpen}>
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm" className="h-8">
                     <Paperclip className="h-4 w-4 mr-1" />
-                    Attachment {card.attachments && card.attachments.length > 0 && `(${card.attachments.length})`}
+                    Attachment
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-80">
@@ -642,16 +645,16 @@ function InnerDialog({
                           id="attach-link-url"
                           placeholder="Paste a link..."
                           value={linkUrl}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLinkUrl(e.target.value)}
-                          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                          onChange={(e) => setLinkUrl(e.target.value)}
+                          onKeyDown={(e) => {
                             if (e.key === "Enter") handleAddLink();
                           }}
                         />
                         <Input
                           placeholder="Link name (optional)"
                           value={linkName}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLinkName(e.target.value)}
-                          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                          onChange={(e) => setLinkName(e.target.value)}
+                          onKeyDown={(e) => {
                             if (e.key === "Enter") handleAddLink();
                           }}
                         />
@@ -699,43 +702,11 @@ function InnerDialog({
               <CardMembers card={localCard} onUpdate={handleUpdate} boardId={boardId || ""} />
             )}
 
-            {(card.startDate || card.dueAt) && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">Dates</label>
-                <div className="flex flex-wrap gap-2">
-                  {card.startDate && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 px-3 flex items-center gap-2"
-                      onClick={() => setIsPillButtonDateOpen(true)}
-                    >
-                      <Clock className="h-3.5 w-3.5" />
-                      <span className="text-sm">Start: {formatDueDateVN(card.startDate)}</span>
-                      <ChevronDown className="h-3.5 w-3.5 ml-1" />
-                    </Button>
-                  )}
-                  {card.dueAt && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 px-3 flex items-center gap-2"
-                      onClick={() => setIsPillButtonDateOpen(true)}
-                    >
-                      <Clock className="h-3.5 w-3.5" />
-                      <span className="text-sm">Due: {formatDueDateVN(card.dueAt)}</span>
-                      <ChevronDown className="h-3.5 w-3.5 ml-1" />
-                    </Button>
-                  )}
-                </div>
-              </div>
-            )}
-
             {/* Description */}
             <CardDescription card={localCard} onUpdate={handleUpdate} />
 
-            {/* CheckList - only show if card already exists */}
-            {!isCreateMode && card.id && <CheckList card={localCard} boardId={boardId} onUpdate={handleUpdate} />}
+            {/* CheckList */}
+            <CheckList card={localCard} boardId={boardId} onUpdate={handleUpdate} />
 
             {/* Attachments */}
             {localCard.attachments && localCard.attachments.length > 0 && (
@@ -752,7 +723,7 @@ function InnerDialog({
                     return (
                       <div key={attachment.id} className="flex gap-3 group">
                         {/* Thumbnail */}
-                        <div className="shrink-0">
+                        <div className="flex-shrink-0">
                           {isImage ? (
                             <div className="w-28 h-20 rounded border overflow-hidden bg-muted">
                               <img
@@ -777,7 +748,7 @@ function InnerDialog({
                             className="text-sm font-medium hover:underline flex items-center gap-1 truncate"
                           >
                             {displayName}
-                            <ExternalLink className="h-3 w-3 shrink-0" />
+                            <ExternalLink className="h-3 w-3 flex-shrink-0" />
                           </a>
                           <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                             {attachment.uploadedAt && (
@@ -818,7 +789,7 @@ function InnerDialog({
           </div>
 
           {/* Right column - Comments and activity */}
-          <div className="w-96 shrink-0 border-l bg-muted/30 p-12 overflow-y-auto">
+          <div className="w-96 flex-shrink-0 border-l bg-muted/30 p-12 overflow-y-auto">
             <div className="space-y-4">
               {/* Header */}
               <div className="flex items-center justify-between">
@@ -827,15 +798,13 @@ function InnerDialog({
                 </span>
               </div>
 
-              {/* Comments section - only show if card already exists */}
-              {!isCreateMode && card.id && (
-                <CardComments
-                  card={localCard}
-                  boardId={boardId}
-                  showActivities={showActivities}
-                  onToggleActivities={() => setShowActivities(!showActivities)}
-                />
-              )}
+              {/* Comments section */}
+              <CardComments
+                card={localCard}
+                boardId={boardId}
+                showActivities={showActivities}
+                onToggleActivities={() => setShowActivities(!showActivities)}
+              />
 
               {/* Footer with Create button for create mode */}
               {isCreateMode && (
@@ -855,6 +824,7 @@ function InnerDialog({
         <Popover
           open={isCoverPickerOpen}
           onOpenChange={async (open) => {
+            // When closing the popover, save any cover changes immediately
             if (!open) {
               const { color: latestColor, imageFile: latestImageFile } = getBackgroundData();
               if (latestColor || latestImageFile) {
@@ -887,18 +857,6 @@ function InnerDialog({
             <CardCoverPicker card={localCard} onRemoveCover={handleRemoveCover} />
           </PopoverContent>
         </Popover>
-
-        {(card.startDate || card.dueAt) && (
-          <CardDates
-            card={card}
-            boardId={boardId}
-            onUpdate={handleUpdate}
-            isOpen={isPillButtonDateOpen}
-            onOpenChange={setIsPillButtonDateOpen}
-            createMode={isCreateMode}
-            triggerButton={null}
-          />
-        )}
       </DialogContent>
     </Dialog>
   );

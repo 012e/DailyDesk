@@ -71,10 +71,9 @@ export interface Card {
   labels?: Label[];
   members?: Member[];
   dueDate?: Date;
-  startDate?: Date | string | null;
-  dueAt?: Date | string | null;
-  dueComplete?: boolean;
-  reminderMinutes?: number | null;
+  recurrence?: RecurrenceType;
+  recurrenceDay?: number; // 1st, 2nd, 3rd, 4th, 5th
+  recurrenceWeekday?: number; // 0=Sunday, 6=Saturday
   coverUrl: string;
   coverColor: string;
   coverMode?: CardCoverMode;
@@ -85,14 +84,6 @@ export interface Card {
   updatedAt: Date;
   order: number;
   completed?: boolean;
-}
-
-export type DueStatus = "none" | "complete" | "overdue" | "dueSoon" | "dueLater";
-
-export interface DueStatusResult {
-  status: DueStatus;
-  label: string;
-  color: "default" | "success" | "destructive" | "warning" | "secondary";
 }
 
 export interface List {

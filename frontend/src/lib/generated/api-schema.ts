@@ -31,9 +31,9 @@ export interface paths {
                             id: string;
                             name: string;
                             userId: string;
-                            backgroundUrl?: string;
-                            backgroundColor?: string;
-                            backgroundPublicId?: string;
+                            backgroundUrl?: string | null;
+                            backgroundColor?: string | null;
+                            backgroundPublicId?: string | null;
                             lists: {
                                 /** Format: uuid */
                                 id: string;
@@ -51,7 +51,6 @@ export interface paths {
                                     coverUrl: string | null;
                                     coverPublicId: string | null;
                                     coverColor: string | null;
-                                    coverMode: string | null;
                                     /** Format: uuid */
                                     listId: string;
                                     labels: {
@@ -70,17 +69,9 @@ export interface paths {
                                     startDate: string | null;
                                     /** Format: date-time */
                                     deadline: string | null;
-                                    /** Format: date-time */
-                                    dueAt: string | null;
-                                    dueComplete: boolean | null;
-                                    reminderMinutes: number | null;
                                     latitude: number | null;
                                     longitude: number | null;
                                     completed: boolean | null;
-                                    /** Format: date-time */
-                                    createdAt: string | null;
-                                    /** Format: date-time */
-                                    updatedAt: string | null;
                                 }[];
                             }[];
                         }[];
@@ -119,19 +110,10 @@ export interface paths {
                             id: string;
                             name: string;
                             userId: string;
-                            backgroundUrl?: string;
-                            backgroundColor?: string;
-                            backgroundPublicId?: string;
+                            backgroundUrl?: string | null;
+                            backgroundColor?: string | null;
+                            backgroundPublicId?: string | null;
                         };
-                    };
-                };
-                /** @description Request failed */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": unknown;
                     };
                 };
             };
@@ -171,9 +153,9 @@ export interface paths {
                             id: string;
                             name: string;
                             userId: string;
-                            backgroundUrl?: string;
-                            backgroundColor?: string;
-                            backgroundPublicId?: string;
+                            backgroundUrl?: string | null;
+                            backgroundColor?: string | null;
+                            backgroundPublicId?: string | null;
                             lists: {
                                 /** Format: uuid */
                                 id: string;
@@ -191,7 +173,6 @@ export interface paths {
                                     coverUrl: string | null;
                                     coverPublicId: string | null;
                                     coverColor: string | null;
-                                    coverMode: string | null;
                                     /** Format: uuid */
                                     listId: string;
                                     labels: {
@@ -210,17 +191,9 @@ export interface paths {
                                     startDate: string | null;
                                     /** Format: date-time */
                                     deadline: string | null;
-                                    /** Format: date-time */
-                                    dueAt: string | null;
-                                    dueComplete: boolean | null;
-                                    reminderMinutes: number | null;
                                     latitude: number | null;
                                     longitude: number | null;
                                     completed: boolean | null;
-                                    /** Format: date-time */
-                                    createdAt: string | null;
-                                    /** Format: date-time */
-                                    updatedAt: string | null;
                                 }[];
                             }[];
                         };
@@ -272,9 +245,9 @@ export interface paths {
                             id: string;
                             name: string;
                             userId: string;
-                            backgroundUrl?: string;
-                            backgroundColor?: string;
-                            backgroundPublicId?: string;
+                            backgroundUrl?: string | null;
+                            backgroundColor?: string | null;
+                            backgroundPublicId?: string | null;
                         };
                     };
                 };
@@ -430,7 +403,6 @@ export interface paths {
                             coverUrl: string | null;
                             coverPublicId: string | null;
                             coverColor: string | null;
-                            coverMode: string | null;
                             /** Format: uuid */
                             listId: string;
                             labels: {
@@ -449,17 +421,9 @@ export interface paths {
                             startDate: string | null;
                             /** Format: date-time */
                             deadline: string | null;
-                            /** Format: date-time */
-                            dueAt: string | null;
-                            dueComplete: boolean | null;
-                            reminderMinutes: number | null;
                             latitude: number | null;
                             longitude: number | null;
                             completed: boolean | null;
-                            /** Format: date-time */
-                            createdAt: string | null;
-                            /** Format: date-time */
-                            updatedAt: string | null;
                         }[];
                     };
                 };
@@ -777,7 +741,6 @@ export interface paths {
                             coverUrl: string | null;
                             coverPublicId: string | null;
                             coverColor: string | null;
-                            coverMode: string | null;
                             /** Format: uuid */
                             listId: string;
                             labels: {
@@ -796,17 +759,9 @@ export interface paths {
                             startDate: string | null;
                             /** Format: date-time */
                             deadline: string | null;
-                            /** Format: date-time */
-                            dueAt: string | null;
-                            dueComplete: boolean | null;
-                            reminderMinutes: number | null;
                             latitude: number | null;
                             longitude: number | null;
                             completed: boolean | null;
-                            /** Format: date-time */
-                            createdAt: string | null;
-                            /** Format: date-time */
-                            updatedAt: string | null;
                         }[];
                     };
                 };
@@ -857,18 +812,12 @@ export interface paths {
                             initials: string;
                         }[];
                         /** Format: date-time */
-                        startDate?: string;
+                        startDate?: string | null;
                         /** Format: date-time */
                         deadline?: string | null;
-                        /** Format: date-time */
-                        dueAt?: string;
-                        dueComplete?: boolean;
-                        reminderMinutes?: number;
                         latitude?: number;
                         longitude?: number;
                         completed?: boolean;
-                        coverColor?: string;
-                        coverUrl?: string;
                         /** Format: uuid */
                         listId: string;
                     };
@@ -891,7 +840,6 @@ export interface paths {
                             coverUrl: string | null;
                             coverPublicId: string | null;
                             coverColor: string | null;
-                            coverMode: string | null;
                             /** Format: uuid */
                             listId: string;
                             labels: {
@@ -910,17 +858,9 @@ export interface paths {
                             startDate: string | null;
                             /** Format: date-time */
                             deadline: string | null;
-                            /** Format: date-time */
-                            dueAt: string | null;
-                            dueComplete: boolean | null;
-                            reminderMinutes: number | null;
                             latitude: number | null;
                             longitude: number | null;
                             completed: boolean | null;
-                            /** Format: date-time */
-                            createdAt: string | null;
-                            /** Format: date-time */
-                            updatedAt: string | null;
                         };
                     };
                 };
@@ -981,7 +921,6 @@ export interface paths {
                             coverUrl: string | null;
                             coverPublicId: string | null;
                             coverColor: string | null;
-                            coverMode: string | null;
                             /** Format: uuid */
                             listId: string;
                             labels: {
@@ -1000,17 +939,9 @@ export interface paths {
                             startDate: string | null;
                             /** Format: date-time */
                             deadline: string | null;
-                            /** Format: date-time */
-                            dueAt: string | null;
-                            dueComplete: boolean | null;
-                            reminderMinutes: number | null;
                             latitude: number | null;
                             longitude: number | null;
                             completed: boolean | null;
-                            /** Format: date-time */
-                            createdAt: string | null;
-                            /** Format: date-time */
-                            updatedAt: string | null;
                         };
                     };
                 };
@@ -1062,15 +993,10 @@ export interface paths {
                         startDate?: string | null;
                         /** Format: date-time */
                         deadline?: string | null;
-                        /** Format: date-time */
-                        dueAt?: string | null;
-                        dueComplete?: boolean | null;
-                        reminderMinutes?: number | null;
                         latitude?: number | null;
                         longitude?: number | null;
                         coverColor?: string | null;
                         coverUrl?: string | "" | unknown;
-                        coverMode?: string | null;
                         completed?: boolean | null;
                         /** Format: uuid */
                         listId?: string;
@@ -1094,7 +1020,6 @@ export interface paths {
                             coverUrl: string | null;
                             coverPublicId: string | null;
                             coverColor: string | null;
-                            coverMode: string | null;
                             /** Format: uuid */
                             listId: string;
                             labels: {
@@ -1113,17 +1038,9 @@ export interface paths {
                             startDate: string | null;
                             /** Format: date-time */
                             deadline: string | null;
-                            /** Format: date-time */
-                            dueAt: string | null;
-                            dueComplete: boolean | null;
-                            reminderMinutes: number | null;
                             latitude: number | null;
                             longitude: number | null;
                             completed: boolean | null;
-                            /** Format: date-time */
-                            createdAt: string | null;
-                            /** Format: date-time */
-                            updatedAt: string | null;
                         };
                     };
                 };
@@ -1186,155 +1103,6 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
-        trace?: never;
-    };
-    "/boards/{boardId}/cards/{cardId}/due": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    boardId: string;
-                    cardId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Xóa due date thành công */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            message: string;
-                        };
-                    };
-                };
-                /** @description Không có quyền cập nhật Card này */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Card hoặc Board không tồn tại */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        options?: never;
-        head?: never;
-        patch: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    boardId: string;
-                    cardId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": {
-                        /** Format: date-time */
-                        startDate?: string | null;
-                        /** Format: date-time */
-                        dueAt?: string | null;
-                        dueComplete?: boolean;
-                        /** @enum {string|null} */
-                        reminderMinutes?: "5" | "10" | "15" | "30" | "60" | "120" | "1440" | null;
-                    };
-                };
-            };
-            responses: {
-                /** @description Cập nhật due date thành công */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** Format: uuid */
-                            id: string;
-                            name: string;
-                            description: string | null;
-                            order: number;
-                            /** Format: uri */
-                            coverUrl: string | null;
-                            coverPublicId: string | null;
-                            coverColor: string | null;
-                            coverMode: string | null;
-                            /** Format: uuid */
-                            listId: string;
-                            labels: {
-                                id: string;
-                                name: string;
-                                color: string;
-                            }[] | null;
-                            members: {
-                                id: string;
-                                name: string;
-                                email: string;
-                                avatar?: string;
-                                initials: string;
-                            }[] | null;
-                            /** Format: date-time */
-                            startDate: string | null;
-                            /** Format: date-time */
-                            deadline: string | null;
-                            /** Format: date-time */
-                            dueAt: string | null;
-                            dueComplete: boolean | null;
-                            reminderMinutes: number | null;
-                            latitude: number | null;
-                            longitude: number | null;
-                            completed: boolean | null;
-                            /** Format: date-time */
-                            createdAt: string | null;
-                            /** Format: date-time */
-                            updatedAt: string | null;
-                        };
-                    };
-                };
-                /** @description Dữ liệu không hợp lệ */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Không có quyền cập nhật Card này */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Card hoặc Board không tồn tại */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
         trace?: never;
     };
     "/media/image/{type}/{id}": {
