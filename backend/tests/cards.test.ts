@@ -2043,7 +2043,7 @@ describe("Cards API Integration Tests", () => {
       expect(data).toHaveProperty("id", newCardId);
       expect(data).toHaveProperty("members");
       
-      const members = JSON.parse(data.members);
+      const members = data.members;
       expect(Array.isArray(members)).toBe(true);
       expect(members).toHaveLength(1);
       expect(members[0]).toHaveProperty("id", boardMemberId);
@@ -2062,7 +2062,7 @@ describe("Cards API Integration Tests", () => {
       const data = await res.json() as any;
       expect(data).toHaveProperty("members");
       
-      const members = JSON.parse(data.members);
+      const members = data.members;
       expect(Array.isArray(members)).toBe(true);
       expect(members).toHaveLength(1);
       expect(members[0]).toHaveProperty("id", boardMemberId);
@@ -2088,7 +2088,7 @@ describe("Cards API Integration Tests", () => {
       const data = await res.json() as any;
       expect(data).toHaveProperty("members");
       
-      const members = JSON.parse(data.members);
+      const members = data.members;
       expect(Array.isArray(members)).toBe(true);
       expect(members).toHaveLength(1);
       expect(members[0]).toHaveProperty("id", boardMemberId);
@@ -2126,7 +2126,7 @@ describe("Cards API Integration Tests", () => {
       const data = await res.json() as any;
       expect(data).toHaveProperty("members");
       
-      const members = JSON.parse(data.members);
+      const members = data.members;
       expect(Array.isArray(members)).toBe(true);
       expect(members).toHaveLength(2);
       
@@ -2158,7 +2158,7 @@ describe("Cards API Integration Tests", () => {
       const data = await res.json() as any;
       expect(data).toHaveProperty("members");
       
-      const members = JSON.parse(data.members);
+      const members = data.members;
       expect(Array.isArray(members)).toBe(true);
       expect(members).toHaveLength(0);
     });
@@ -2199,7 +2199,7 @@ describe("Cards API Integration Tests", () => {
       expect(res.status).toBe(200);
       const data = await res.json() as any;
       
-      const members = JSON.parse(data.members);
+      const members = data.members;
       expect(members).toHaveLength(1);
       expect(members[0]).toHaveProperty("id", boardMember2Id);
       expect(members[0]).toHaveProperty("name", "Bob Smith");
@@ -2259,7 +2259,7 @@ describe("Cards API Integration Tests", () => {
       const card = cards.find((c: any) => c.id === cardId);
       expect(card).toBeDefined();
       
-      const members = JSON.parse(card.members);
+      const members = card.members;
       expect(Array.isArray(members)).toBe(true);
       expect(members).toHaveLength(1);
       expect(members[0]).toHaveProperty("id", boardMemberId);
@@ -2296,7 +2296,7 @@ describe("Cards API Integration Tests", () => {
       });
 
       const data = await res.json() as any;
-      const members = JSON.parse(data.members);
+      const members = data.members;
       expect(members[0]).toHaveProperty("initials", "JM");
     });
 
@@ -2338,7 +2338,7 @@ describe("Cards API Integration Tests", () => {
       });
 
       const data = await res.json() as any;
-      const members = JSON.parse(data.members);
+      const members = data.members;
       expect(members).toHaveLength(1);
       expect(members[0]).toHaveProperty("id", boardMemberId);
     });

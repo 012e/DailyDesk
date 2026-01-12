@@ -203,6 +203,7 @@ export async function createCard(userSub: string, boardId: string, req: CreateCa
   const card = await db
     .insert(cardsTable)
     .values({
+      id: req.id,
       name: req.name,
       description: req.description,
       order: req.order,
