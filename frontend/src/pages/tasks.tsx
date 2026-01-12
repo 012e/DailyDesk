@@ -15,6 +15,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { getDueStatus } from "@/lib/due-status";
 import { useUpdateCard } from "@/hooks/use-card";
 import store from "@/stores/store";
@@ -57,7 +63,7 @@ interface TaskCard {
 }
 
 export default function TasksPage() {
-  const { isAuthenticated, isLoading: authLoading } = useAuth0();
+  const { isAuthenticated, isLoading: authLoading, getAccessTokenSilently } = useAuth0();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("dueDate");
@@ -66,21 +72,44 @@ export default function TasksPage() {
   const { data: tasks, isLoading, error, refetch } = useQuery({
     queryKey: ["all-cards"],
     queryFn: async () => {
-      const accessToken = store.get(accessTokenAtom);
-      const response = await fetch("http://localhost:3000/boards/all-cards", {
-        headers: {
-          "Authorization": `Bearer ${accessToken}`,
-        },
-      });
-      
-      if (!response.ok) {
-        throw new Error("Failed to fetch tasks");
+      try {
+        // Try to get token from store first
+        let accessToken = store.get(accessTokenAtom);
+        
+        // If no token in store, try to get it from Auth0
+        if (!accessToken) {
+          accessToken = await getAccessTokenSilently();
+          if (accessToken) {
+            store.set(accessTokenAtom, accessToken);
+          }
+        }
+        
+        if (!accessToken) {
+          throw new Error("No access token available");
+        }
+
+        const response = await fetch("http://localhost:3000/boards/cards/all", {
+          headers: {
+            "Authorization": `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Fetch error:", response.status, errorText);
+          throw new Error(`Failed to fetch tasks: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        return data as TaskCard[];
+      } catch (err) {
+        console.error("Error in queryFn:", err);
+        throw err;
       }
-      
-      const data = await response.json();
-      return data as TaskCard[];
     },
     enabled: isAuthenticated,
+    retry: 1,
   });
 
   // Filter and sort tasks
@@ -144,6 +173,22 @@ export default function TasksPage() {
     return filtered;
   }, [tasks, searchQuery, filterStatus, sortBy]);
 
+  // Group tasks by board
+  const tasksByBoard = useMemo(() => {
+    if (!filteredAndSortedTasks) return new Map();
+    
+    const grouped = new Map<string, { boardName: string; tasks: TaskCard[] }>();
+    
+    filteredAndSortedTasks.forEach((task) => {
+      if (!grouped.has(task.boardId)) {
+        grouped.set(task.boardId, { boardName: task.boardName, tasks: [] });
+      }
+      grouped.get(task.boardId)!.tasks.push(task);
+    });
+    
+    return grouped;
+  }, [filteredAndSortedTasks]);
+
   const handleToggleComplete = (task: TaskCard) => {
     updateCard(
       {
@@ -184,7 +229,21 @@ export default function TasksPage() {
         </p>
       </div>
 
-      {/* Filters and Search */}
+      {/* Filters and Search Board} onValueChange={setFilterBoard}>
+          <SelectTrigger className="w-full md:w-[200px]">
+            <SelectValue placeholder="All Boards" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Boards</SelectItem>
+            {uniqueBoards.map((board) => (
+              <SelectItem key={board.id} value={board.id}>
+                {board.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={filter*/}
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -277,134 +336,156 @@ export default function TasksPage() {
           </div>
         </div>
       ) : (
-        <div className="space-y-3">
-          {filteredAndSortedTasks.map((task) => {
-            const dueStatus = getDueStatus(task.dueAt, task.dueComplete);
+        <Accordion type="multiple" defaultValue={Array.from(tasksByBoard.keys())} className="space-y-4">
+          {Array.from(tasksByBoard.entries()).map(([boardId, { boardName, tasks: boardTasks }]) => {
+            const completedCount = boardTasks.filter(t => t.completed).length;
+            const totalCount = boardTasks.length;
 
             return (
-              <Card
-                key={task.id}
-                className={`p-4 hover:shadow-md transition-shadow ${
-                  task.completed ? "opacity-60" : ""
-                }`}
-              >
-                <div className="flex items-start gap-4">
-                  {/* Checkbox */}
-                  <Checkbox
-                    checked={task.completed || false}
-                    onCheckedChange={() => handleToggleComplete(task)}
-                    className="mt-1"
-                  />
-
-                  {/* Task Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <div className="flex-1">
-                        <h3
-                          className={`font-semibold text-lg ${
-                            task.completed ? "line-through" : ""
-                          }`}
-                        >
-                          {task.name}
-                        </h3>
-                        {task.description && (
-                          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                            {task.description}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Link to board */}
-                      <Link to={`/board/${task.boardId}`}>
-                        <Button variant="ghost" size="sm">
-                          <ExternalLink className="w-4 h-4" />
+              <AccordionItem key={boardId} value={boardId} className="border rounded-lg px-4">
+                <AccordionTrigger className="hover:no-underline">
+                  <div className="flex items-center justify-between w-full pr-4">
+                    <div className="flex items-center gap-3">
+                      <h2 className="text-xl font-semibold">{boardName}</h2>
+                      <Badge variant="secondary" className="text-xs">
+                        {completedCount}/{totalCount} completed
+                      </Badge>
+                    </div>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-3 pt-4">
+                    <div className="flex justify-end mb-2">
+                      <Link to={`/board/${boardId}`}>
+                        <Button variant="outline" size="sm">
+                          <ExternalLink className="w-4 h-4 mr-2" />
+                          Open Board
                         </Button>
                       </Link>
                     </div>
+                    {boardTasks.map((task) => {
+                      const dueStatus = getDueStatus(task.dueAt, task.dueComplete);
 
-                    {/* Labels */}
-                    {task.labels && task.labels.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mb-2">
-                        {task.labels.map((label) => (
-                          <Badge
-                            key={label.id}
-                            style={{ backgroundColor: label.color }}
-                            className="text-white text-xs"
-                          >
-                            {label.name}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
+                      return (
+                        <Card
+                          key={task.id}
+                          className={`p-4 hover:shadow-md transition-shadow ${
+                            task.completed ? "opacity-60" : ""
+                          }`}
+                        >
+                          <div className="flex items-start gap-4">
+                            {/* Checkbox */}
+                            <Checkbox
+                              checked={task.completed || false}
+                              onCheckedChange={() => handleToggleComplete(task)}
+                              className="mt-1"
+                            />
 
-                    {/* Meta information */}
-                    <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <span className="font-medium">{task.boardName}</span>
-                        <span>•</span>
-                        <span>{task.listName}</span>
-                      </div>
+                            {/* Task Content */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between gap-2 mb-2">
+                                <div className="flex-1">
+                                  <h3
+                                    className={`font-semibold text-lg ${
+                                      task.completed ? "line-through" : ""
+                                    }`}
+                                  >
+                                    {task.name}
+                                  </h3>
+                                  {task.description && (
+                                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                                      {task.description}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
 
-                      {task.dueAt && (
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
-                          <Badge
-                            variant={
-                              dueStatus.status === "overdue"
-                                ? "destructive"
-                                : dueStatus.status === "dueSoon"
-                                ? "default"
-                                : "secondary"
-                            }
-                            className="text-xs"
-                          >
-                            {new Date(task.dueAt).toLocaleDateString()}
-                          </Badge>
-                        </div>
-                      )}
+                              {/* Labels */}
+                              {task.labels && task.labels.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mb-2">
+                                  {task.labels.map((label) => (
+                                    <Badge
+                                      key={label.id}
+                                      style={{ backgroundColor: label.color }}
+                                      className="text-white text-xs"
+                                    >
+                                      {label.name}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
 
-                      {task.dueComplete && (
-                        <div className="flex items-center gap-1 text-green-600">
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span className="text-xs">Due Complete</span>
-                        </div>
-                      )}
+                              {/* Meta information */}
+                              <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                                <div className="flex items-center gap-1">
+                                  <span>{task.listName}</span>
+                                </div>
 
-                      {task.reminderMinutes && (
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          <span className="text-xs">
-                            Reminder: {task.reminderMinutes}m
-                          </span>
-                        </div>
-                      )}
+                                {task.dueAt && (
+                                  <div className="flex items-center gap-1">
+                                    <Calendar className="w-4 h-4" />
+                                    <Badge
+                                      variant={
+                                        dueStatus.status === "overdue"
+                                          ? "destructive"
+                                          : dueStatus.status === "dueSoon"
+                                          ? "default"
+                                          : "secondary"
+                                      }
+                                      className="text-xs"
+                                    >
+                                      {new Date(task.dueAt).toLocaleDateString()}
+                                    </Badge>
+                                  </div>
+                                )}
 
-                      {/* Members */}
-                      {task.members && task.members.length > 0 && (
-                        <div className="flex -space-x-2">
-                          {task.members.slice(0, 3).map((member) => (
-                            <div
-                              key={member.id}
-                              className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs border-2 border-background"
-                              title={member.name}
-                            >
-                              {member.initials}
+                                {task.dueComplete && (
+                                  <div className="flex items-center gap-1 text-green-600">
+                                    <CheckCircle2 className="w-4 h-4" />
+                                    <span className="text-xs">Due Complete</span>
+                                  </div>
+                                )}
+
+                                {task.reminderMinutes && (
+                                  <div className="flex items-center gap-1">
+                                    <Clock className="w-4 h-4" />
+                                    <span className="text-xs">
+                                      Reminder: {task.reminderMinutes}m
+                                    </span>
+                                  </div>
+                                )}
+
+                                {/* Members */}
+                                {task.members && task.members.length > 0 && (
+                                  <div className="flex -space-x-2">
+                                    {task.members.slice(0, 3).map((member) => (
+                                      <div
+                                        key={member.id}
+                                        className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs border-2 border-background"
+                                        title={member.name}
+                                      >
+                                        {member.initials}
+                                      </div>
+                                    ))}
+                                    {task.members.length > 3 && (
+                                      <div className="w-6 h-6 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-xs border-2 border-background">
+                                        +{task.members.length - 3}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          ))}
-                          {task.members.length > 3 && (
-                            <div className="w-6 h-6 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-xs border-2 border-background">
-                              +{task.members.length - 3}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                          </div>
+                        </Card>
+                      );
+                    })}
                   </div>
-                </div>
-              </Card>
+                </AccordionContent>
+              </AccordionItem>
             );
           })}
-        </div>
+        </Accordion>
       )}
     </div>
   );

@@ -43,12 +43,15 @@ export default function createCardRoutes() {
   const app = new OpenAPIHono();
   app.use("*", authMiddleware());
 
-  // GET /all-cards - Get all cards across all boards for the user (non-OpenAPI route for now)
-  app.get("/all-cards", async (c) => {
-    const user = ensureUserAuthenticated(c);
-
+  // GET /cards/all - Get all cards across all boards for the user
+  // Using /cards/all instead of /all-cards to avoid conflict with /{boardId}/cards pattern
+  app.get("/cards/all", async (c) => {
     try {
+      const user = ensureUserAuthenticated(c);
+      console.log("📥 Fetching all cards for user:", user.sub);
+
       const cards = await cardService.getAllCardsForUser(user.sub);
+      console.log("✅ Found cards:", cards.length);
 
       const parsedCards = cards.map((card) => ({
         ...card,
@@ -58,11 +61,11 @@ export default function createCardRoutes() {
 
       return c.json(parsedCards);
     } catch (err: any) {
-      console.error("Error fetching all cards:", err);
+      console.error("❌ Error fetching all cards:", err);
       if (err instanceof cardService.ServiceError) {
         return c.json({ error: err.message }, err.status);
       }
-      return c.json({ error: "Failed to fetch cards" }, 500);
+      return c.json({ error: err.message || "Failed to fetch cards" }, 500);
     }
   });
 

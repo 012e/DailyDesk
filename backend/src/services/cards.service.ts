@@ -27,11 +27,15 @@ export class ServiceError extends Error {
 
 // Get all cards across all boards for a user
 export async function getAllCardsForUser(userSub: string) {
+  console.log("🔍 getAllCardsForUser called for:", userSub);
+  
   // Get all boards that the user owns
   const boards = await db
     .select()
     .from(boardsTable)
     .where(eq(boardsTable.userId, userSub));
+
+  console.log("📊 Found boards:", boards.length);
 
   if (boards.length === 0) {
     return [];
@@ -50,6 +54,8 @@ export async function getAllCardsForUser(userSub: string) {
     .innerJoin(listsTable, eq(cardsTable.listId, listsTable.id))
     .innerJoin(boardsTable, eq(listsTable.boardId, boardsTable.id))
     .where(eq(boardsTable.userId, userSub));
+
+  console.log("🃏 Found cards:", cards.length);
 
   if (cards.length === 0) {
     return [];
