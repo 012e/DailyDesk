@@ -122,9 +122,9 @@ export async function getCardsForBoard(userSub: string, boardId: string) {
     description: c.cards.description,
     order: c.cards.order,
     listId: c.cards.listId,
-    labels: JSON.stringify(labelsByCard.get(c.cards.id) || []),
-    members: JSON.stringify(membersByCard.get(c.cards.id) || []),
-    attachments: JSON.stringify(attachmentsByCard.get(c.cards.id) || []),
+    labels: labelsByCard.get(c.cards.id) || [],
+    members: membersByCard.get(c.cards.id) || [],
+    attachments: attachmentsByCard.get(c.cards.id) || [],
     startDate: c.cards.startDate,
     deadline: c.cards.deadline,
     dueAt: c.cards.dueAt,
@@ -249,11 +249,37 @@ export async function createCard(userSub: string, boardId: string, req: any) {
   // Publish card created event
   publishBoardChanged(boardId, 'card', createdCard.id, 'created', userSub);
 
-  // Return card with labels and members as JSON for compatibility
+  // Fetch the created members if any were added
+  let cardMembers: any[] = [];
+  if (req.members && req.members.length > 0) {
+    const cardMembersData = await db
+      .select({
+        memberId: boardMembersTable.id,
+        memberName: boardMembersTable.name,
+        memberEmail: boardMembersTable.email,
+        memberAvatar: boardMembersTable.avatar,
+      })
+      .from(cardMembersTable)
+      .innerJoin(boardMembersTable, eq(cardMembersTable.memberId, boardMembersTable.id))
+      .where(eq(cardMembersTable.cardId, createdCard.id));
+
+    cardMembers = cardMembersData.map(cm => {
+      const initials = cm.memberName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      return {
+        id: cm.memberId,
+        name: cm.memberName,
+        email: cm.memberEmail,
+        avatar: cm.memberAvatar,
+        initials,
+      };
+    });
+  }
+
+  // Return card with labels and members as arrays
   return {
     ...createdCard,
-    labels: req.labels ? JSON.stringify(req.labels) : null,
-    members: req.members ? JSON.stringify(req.members) : null,
+    labels: req.labels || [],
+    members: cardMembers,
   };
 }
 
@@ -342,9 +368,9 @@ export async function getCardById(userSub: string, boardId: string, id: string) 
     description: card[0].cards.description,
     order: card[0].cards.order,
     listId: card[0].cards.listId,
-    labels: JSON.stringify(labels),
-    members: JSON.stringify(members),
-    attachments: JSON.stringify(cardAttachments),
+    labels: labels,
+    members: members,
+    attachments: cardAttachments,
     startDate: card[0].cards.startDate,
     deadline: card[0].cards.deadline,
     dueAt: card[0].cards.dueAt,
@@ -652,12 +678,58 @@ export async function updateCard(userSub: string, boardId: string, id: string, r
   const action = (req.listId && req.listId !== existingCard[0].listId) ? 'moved' : 'updated';
   publishBoardChanged(boardId, 'card', id, action, userSub);
 
-  // Return card with labels and members as JSON for compatibility
+  // Fetch updated labels and members if they were modified
+  let updatedLabels = undefined;
+  let updatedMembers = undefined;
+
+  if (req.labels !== undefined) {
+    const cardLabelsData = await db
+      .select({
+        labelId: labelsTable.id,
+        labelName: labelsTable.name,
+        labelColor: labelsTable.color,
+      })
+      .from(cardLabelsTable)
+      .innerJoin(labelsTable, eq(cardLabelsTable.labelId, labelsTable.id))
+      .where(eq(cardLabelsTable.cardId, id));
+
+    updatedLabels = cardLabelsData.map(cl => ({
+      id: cl.labelId,
+      name: cl.labelName,
+      color: cl.labelColor,
+    }));
+  }
+
+  if (req.members !== undefined) {
+    const cardMembersData = await db
+      .select({
+        memberId: boardMembersTable.id,
+        memberName: boardMembersTable.name,
+        memberEmail: boardMembersTable.email,
+        memberAvatar: boardMembersTable.avatar,
+      })
+      .from(cardMembersTable)
+      .innerJoin(boardMembersTable, eq(cardMembersTable.memberId, boardMembersTable.id))
+      .where(eq(cardMembersTable.cardId, id));
+
+    updatedMembers = cardMembersData.map(cm => {
+      const initials = cm.memberName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      return {
+        id: cm.memberId,
+        name: cm.memberName,
+        email: cm.memberEmail,
+        avatar: cm.memberAvatar,
+        initials,
+      };
+    });
+  }
+
+  // Return card with labels, members, and attachments as arrays
   return {
     ...updatedCard,
-    labels: req.labels !== undefined ? JSON.stringify(req.labels) : undefined,
-    members: req.members !== undefined ? JSON.stringify(req.members) : undefined,
-    attachments: JSON.stringify(cardAttachments),
+    labels: updatedLabels,
+    members: updatedMembers,
+    attachments: cardAttachments,
   };
 }
 

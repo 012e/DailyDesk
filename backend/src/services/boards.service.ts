@@ -388,15 +388,102 @@ export async function getCardsForBoard(userSub: string, id: string) {
   await checkBoardAccess(id, userSub);
 
   const cards = await db
-    .select({
-      id: cardsTable.id,
-      name: cardsTable.name,
-      order: cardsTable.order,
-      listId: cardsTable.listId,
-    })
+    .select()
     .from(cardsTable)
     .innerJoin(listsTable, eq(cardsTable.listId, listsTable.id))
     .where(eq(listsTable.boardId, id));
 
-  return cards;
+  const cardIds = cards.map(c => c.cards.id);
+
+  if (cardIds.length === 0) {
+    return [];
+  }
+
+  // Get labels for all cards
+  const cardLabelsData = await db
+    .select({
+      cardId: cardLabelsTable.cardId,
+      labelId: labelsTable.id,
+      labelName: labelsTable.name,
+      labelColor: labelsTable.color,
+    })
+    .from(cardLabelsTable)
+    .innerJoin(labelsTable, eq(cardLabelsTable.labelId, labelsTable.id))
+    .where(sql`${cardLabelsTable.cardId} IN (${sql.join(cardIds.map(id => sql`${id}`), sql`, `)})`);
+
+  // Get members for all cards
+  const cardMembersData = await db
+    .select({
+      cardId: cardMembersTable.cardId,
+      memberId: boardMembersTable.id,
+      memberName: boardMembersTable.name,
+      memberEmail: boardMembersTable.email,
+      memberAvatar: boardMembersTable.avatar,
+    })
+    .from(cardMembersTable)
+    .innerJoin(boardMembersTable, eq(cardMembersTable.memberId, boardMembersTable.id))
+    .where(sql`${cardMembersTable.cardId} IN (${sql.join(cardIds.map(id => sql`${id}`), sql`, `)})`);
+
+  // Get attachments for all cards
+  const cardAttachmentsData = await db
+    .select()
+    .from(attachmentsTable)
+    .where(sql`${attachmentsTable.cardId} IN (${sql.join(cardIds.map(id => sql`${id}`), sql`, `)})`);
+
+  // Group labels, members, and attachments by card ID
+  const labelsByCard = new Map<string, Array<{ id: string; name: string; color: string }>>();
+  for (const cl of cardLabelsData) {
+    if (!labelsByCard.has(cl.cardId)) {
+      labelsByCard.set(cl.cardId, []);
+    }
+    labelsByCard.get(cl.cardId)!.push({
+      id: cl.labelId,
+      name: cl.labelName,
+      color: cl.labelColor,
+    });
+  }
+
+  const membersByCard = new Map<string, Array<{ id: string; name: string; email: string; avatar: string | null; initials: string }>>();
+  for (const cm of cardMembersData) {
+    if (!membersByCard.has(cm.cardId)) {
+      membersByCard.set(cm.cardId, []);
+    }
+    const initials = cm.memberName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    membersByCard.get(cm.cardId)!.push({
+      id: cm.memberId,
+      name: cm.memberName,
+      email: cm.memberEmail,
+      avatar: cm.memberAvatar,
+      initials,
+    });
+  }
+
+  const attachmentsByCard = new Map<string, Array<any>>();
+  for (const attachment of cardAttachmentsData) {
+    if (!attachmentsByCard.has(attachment.cardId)) {
+      attachmentsByCard.set(attachment.cardId, []);
+    }
+    attachmentsByCard.get(attachment.cardId)!.push(attachment);
+  }
+
+  return cards.map(c => ({
+    id: c.cards.id,
+    name: c.cards.name,
+    description: c.cards.description,
+    order: c.cards.order,
+    listId: c.cards.listId,
+    labels: labelsByCard.get(c.cards.id) || [],
+    members: membersByCard.get(c.cards.id) || [],
+    attachments: attachmentsByCard.get(c.cards.id) || [],
+    startDate: c.cards.startDate,
+    deadline: c.cards.deadline,
+    dueAt: c.cards.dueAt,
+    dueComplete: c.cards.dueComplete,
+    reminderMinutes: c.cards.reminderMinutes,
+    latitude: c.cards.latitude,
+    longitude: c.cards.longitude,
+    coverColor: c.cards.coverColor,
+    coverUrl: c.cards.coverUrl,
+    completed: c.cards.completed,
+  }));
 }
