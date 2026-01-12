@@ -1,14 +1,14 @@
 import z from "zod";
 
 // Label schema for card labels (subset of full Label)
-const CardLabelSchema = z.object({
+export const CardLabelSchema = z.object({
   id: z.string(),
   name: z.string(),
   color: z.string(),
 });
 
 // Member schema for card members (output - full details)
-const CardMemberSchema = z.object({
+export const CardMemberSchema = z.object({
   id: z.string(),
   name: z.string(),
   email: z.string(),
@@ -17,8 +17,21 @@ const CardMemberSchema = z.object({
 });
 
 // Member schema for input (only ID needed)
-const CardMemberInputSchema = z.object({
+export const CardMemberInputSchema = z.object({
   id: z.string(),
+});
+
+// Attachment schema
+export const CardAttachmentSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  url: z.string(),
+  publicId: z.string().nullable(),
+  type: z.string(),
+  size: z.number(),
+  uploadedAt: z.coerce.date(),
+  uploadedBy: z.string(),
+  cardId: z.string(),
 });
 
 export const CardSchema = z.object({
@@ -26,14 +39,14 @@ export const CardSchema = z.object({
   name: z.string().nonempty(),
   description: z.string().nullable(),
   order: z.number().int(),
-  coverUrl: z.string().url().nullable(),
+  coverUrl: z.url().nullable(),
   coverPublicId: z.string().nullable(),
   coverColor: z.string().nullable(),
   coverMode: z.string().nullable(),
   listId: z.uuidv7(),
   labels: CardLabelSchema.array().nullable().optional(),
   members: CardMemberSchema.array().nullable().optional(),
-  attachments: z.any().array().nullable().optional(),
+  attachments: CardAttachmentSchema.array().nullable().optional(),
   startDate: z.coerce.date().nullable(),
   deadline: z.coerce.date().nullable(),
   dueAt: z.coerce.date().nullable(),
@@ -54,6 +67,7 @@ export const CreateCardSchema = z.object({
   name: z.string().nonempty(),
   description: z.string().optional(),
   order: z.number().int(),
+  listId: z.uuidv7(),
   labels: CardLabelSchema.array().optional(),
   members: CardMemberInputSchema.array().optional(),
   startDate: z.string().datetime().optional(),
@@ -75,6 +89,7 @@ export const UpdateCardSchema = z.object({
   name: z.string().nonempty().optional(),
   description: z.string().nullable().optional(),
   order: z.number().int().optional(),
+  listId: z.uuidv7().optional(),
   labels: CardLabelSchema.array().nullable().optional(),
   members: CardMemberInputSchema.array().nullable().optional(),
   startDate: z.string().datetime().nullable().optional(),

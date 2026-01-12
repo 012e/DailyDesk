@@ -14,6 +14,21 @@ import { ContentfulStatusCode } from "hono/utils/http-status";
 import { randomUUID } from "crypto";
 import { logActivity } from "./activities.service";
 import { publishBoardChanged } from "./events.service";
+import { 
+  CreateCardSchema, 
+  UpdateCardSchema,
+  CardLabelSchema,
+  CardMemberSchema,
+  CardAttachmentSchema
+} from "@/types/cards";
+import type { z } from "zod";
+
+// Infer types from Zod schemas
+type CreateCardRequest = z.infer<typeof CreateCardSchema>;
+type UpdateCardRequest = z.infer<typeof UpdateCardSchema>;
+type CardLabel = z.infer<typeof CardLabelSchema>;
+type CardMember = z.infer<typeof CardMemberSchema>;
+type CardAttachment = z.infer<typeof CardAttachmentSchema>;
 
 export class ServiceError extends Error {
   status: ContentfulStatusCode;
@@ -81,7 +96,7 @@ export async function getCardsForBoard(userSub: string, boardId: string) {
     .from(attachmentsTable)
     .where(sql`${attachmentsTable.cardId} IN (${sql.join(cardIds.map(id => sql`${id}`), sql`, `)})`);
 
-  const labelsByCard = new Map<string, Array<{ id: string; name: string; color: string }>>();
+  const labelsByCard = new Map<string, CardLabel[]>();
   for (const cl of cardLabelsData) {
     if (!labelsByCard.has(cl.cardId)) {
       labelsByCard.set(cl.cardId, []);
@@ -93,7 +108,7 @@ export async function getCardsForBoard(userSub: string, boardId: string) {
     });
   }
 
-  const membersByCard = new Map<string, Array<{ id: string; name: string; email: string; avatar: string | null; initials: string }>>();
+  const membersByCard = new Map<string, CardMember[]>();
   for (const cm of cardMembersData) {
     if (!membersByCard.has(cm.cardId)) {
       membersByCard.set(cm.cardId, []);
@@ -108,7 +123,7 @@ export async function getCardsForBoard(userSub: string, boardId: string) {
     });
   }
 
-  const attachmentsByCard = new Map<string, Array<any>>();
+  const attachmentsByCard = new Map<string, CardAttachment[]>();
   for (const attachment of cardAttachmentsData) {
     if (!attachmentsByCard.has(attachment.cardId)) {
       attachmentsByCard.set(attachment.cardId, []);
@@ -138,7 +153,7 @@ export async function getCardsForBoard(userSub: string, boardId: string) {
   }));
 }
 
-export async function createCard(userSub: string, boardId: string, req: any) {
+export async function createCard(userSub: string, boardId: string, req: CreateCardRequest) {
   const board = await db
     .select()
     .from(boardsTable)
@@ -188,13 +203,12 @@ export async function createCard(userSub: string, boardId: string, req: any) {
   const card = await db
     .insert(cardsTable)
     .values({
-      id: req.id,
       name: req.name,
       description: req.description,
       order: req.order,
       listId: req.listId,
       startDate: req.startDate ? new Date(req.startDate) : null,
-      deadline: req.deadline,
+      deadline: req.deadline ? new Date(req.deadline) : null,
       dueAt: req.dueAt ? new Date(req.dueAt) : null,
       dueComplete: req.dueComplete ?? false,
       reminderMinutes: req.reminderMinutes ?? null,
@@ -216,7 +230,7 @@ export async function createCard(userSub: string, boardId: string, req: any) {
   const createdCard = card[0];
 
   if (req.labels && req.labels.length > 0) {
-    const labelInserts = req.labels.map((label: any) => ({
+    const labelInserts = req.labels.map((label) => ({
       id: randomUUID(),
       cardId: createdCard.id,
       labelId: label.id,
@@ -225,7 +239,7 @@ export async function createCard(userSub: string, boardId: string, req: any) {
   }
 
   if (req.members && req.members.length > 0) {
-    const memberInserts = req.members.map((member: any) => ({
+    const memberInserts = req.members.map((member) => ({
       id: randomUUID(),
       cardId: createdCard.id,
       memberId: member.id,
@@ -250,7 +264,7 @@ export async function createCard(userSub: string, boardId: string, req: any) {
   publishBoardChanged(boardId, 'card', createdCard.id, 'created', userSub);
 
   // Fetch the created members if any were added
-  let cardMembers: any[] = [];
+  let cardMembers: CardMember[] = [];
   if (req.members && req.members.length > 0) {
     const cardMembersData = await db
       .select({
@@ -384,7 +398,7 @@ export async function getCardById(userSub: string, boardId: string, id: string) 
   };
 }
 
-export async function updateCard(userSub: string, boardId: string, id: string, req: any) {
+export async function updateCard(userSub: string, boardId: string, id: string, req: UpdateCardRequest) {
   const board = await db
     .select()
     .from(boardsTable)
@@ -522,7 +536,7 @@ export async function updateCard(userSub: string, boardId: string, id: string, r
     }
   }
 
-  const updateData: any = {};
+  const updateData: Partial<typeof cardsTable.$inferInsert> = {};
   if (req.name !== undefined) updateData.name = req.name;
   if (req.description !== undefined) updateData.description = req.description;
   if (req.order !== undefined) updateData.order = req.order;
@@ -561,12 +575,12 @@ export async function updateCard(userSub: string, boardId: string, id: string, r
       await db.delete(cardLabelsTable).where(eq(cardLabelsTable.cardId, id));
 
       if (req.labels && req.labels.length > 0) {
-        const labelInserts = req.labels.map((label: any) => ({
+        const labelInserts = req.labels.map((label) => ({
           id: randomUUID(),
           cardId: id,
           labelId: label.id,
         }));
-        const result = await db.insert(cardLabelsTable).values(labelInserts);
+        await db.insert(cardLabelsTable).values(labelInserts);
       }
     } catch (error) {
       console.error("Error updating labels:", error);
@@ -578,7 +592,7 @@ export async function updateCard(userSub: string, boardId: string, id: string, r
     await db.delete(cardMembersTable).where(eq(cardMembersTable.cardId, id));
 
     if (req.members && req.members.length > 0) {
-      const memberInserts = req.members.map((member: any) => ({
+      const memberInserts = req.members.map((member) => ({
         id: randomUUID(),
         cardId: id,
         memberId: member.id,
@@ -822,7 +836,7 @@ export async function updateCardDue(
     throw new ServiceError("Card không tồn tại", 404);
   }
 
-  const updateData: any = { updatedAt: new Date() };
+  const updateData: Partial<typeof cardsTable.$inferInsert> = { updatedAt: new Date() };
 
   if (dueData.startDate !== undefined) {
     updateData.startDate = dueData.startDate ? new Date(dueData.startDate) : null;
