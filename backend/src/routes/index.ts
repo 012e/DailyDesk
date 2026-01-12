@@ -5,12 +5,11 @@ import createCardRoutes from "./cards";
 import createImageRoute from "./media.image";
 import createChecklistItemRoutes from "./checklist-items";
 import createLabelRoutes from "./labels";
-import createMemberRoutes from "./members";
+import createMemberRoutes, { createUserSearchRoutes } from "./members";
 import createChatRoutes from "./chat";
 import createAttachmentRoutes from "./attachments";
 import createCommentRoutes from "./comments";
 import createSSERoutes from "./sse";
-import createUserRoutes from "./users";
 
 export default function setupRoutes(app: OpenAPIHono) {
   app.route("/boards", createSSERoutes());
@@ -24,7 +23,7 @@ export default function setupRoutes(app: OpenAPIHono) {
   app.route("/boards", createAttachmentRoutes());
   app.route("/boards", createCommentRoutes());
   app.route("/chat", createChatRoutes());
-  app.route("/users", createUserRoutes());
+  app.route("/users", createUserSearchRoutes());
 
   return app;
 }

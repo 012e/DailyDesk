@@ -7,7 +7,7 @@ import { createTestApp } from "./helpers/app";
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
-describe("Users API Integration Tests", () => {
+describe("Users Search API Integration Tests (via Members Routes)", () => {
   let app: OpenAPIHono;
 
   beforeEach(() => {
