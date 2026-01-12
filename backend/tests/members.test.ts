@@ -828,4 +828,228 @@ describe("Members API Integration Tests", () => {
       expect(data[0]).not.toHaveProperty("last_login");
     });
   });
+
+  describe("POST /boards/{boardId}/members/by-user-id", () => {
+    test("should add member by userId with auto-fetch from Auth0", async () => {
+      // Create a board
+      const boardId = uuidv7();
+      await app.request("/boards", {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          id: boardId,
+          name: "Test Board for Auto-Fetch",
+        }),
+      });
+
+      // Mock Auth0 API response for user lookup
+      const mockAuth0User = {
+        user_id: "auth0|autofetch123",
+        email: "autofetch@example.com",
+        name: "Auto Fetch User",
+        picture: "https://example.com/auto.jpg",
+        nickname: "autofetch",
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => mockAuth0User,
+      });
+
+      // Add member by userId (should auto-fetch from Auth0)
+      const res = await app.request(`/boards/${boardId}/members/by-user-id`, {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          userId: "auth0|autofetch123",
+          role: "member",
+        }),
+      });
+
+      expect(res.status).toBe(200);
+      const member = await res.json() as any;
+      
+      expect(member).toHaveProperty("userId", "auth0|autofetch123");
+      expect(member).toHaveProperty("name", "Auto Fetch User");
+      expect(member).toHaveProperty("email", "autofetch@example.com");
+      expect(member).toHaveProperty("avatar", "https://example.com/auto.jpg");
+      expect(member).toHaveProperty("role", "member");
+    });
+
+    test("should return 409 if member already exists when adding by userId", async () => {
+      // Create a board
+      const boardId = uuidv7();
+      await app.request("/boards", {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          id: boardId,
+          name: "Test Board",
+        }),
+      });
+
+      // Add a member manually first
+      const memberId = uuidv7();
+      await app.request(`/boards/${boardId}/members`, {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          id: memberId,
+          userId: "auth0|existing123",
+          name: "Existing User",
+          email: "existing@example.com",
+          role: "member",
+        }),
+      });
+
+      // Try to add the same user by userId
+      const res = await app.request(`/boards/${boardId}/members/by-user-id`, {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          userId: "auth0|existing123",
+          role: "member",
+        }),
+      });
+
+      expect(res.status).toBe(409);
+      const data = await res.json() as any;
+      expect(data.error).toContain("đã tồn tại");
+    });
+
+    test("should return 404 if user not found in Auth0", async () => {
+      // Create a board
+      const boardId = uuidv7();
+      await app.request("/boards", {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          id: boardId,
+          name: "Test Board",
+        }),
+      });
+
+      // Mock Auth0 API returning 404
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        statusText: "Not Found",
+        text: async () => "User not found",
+      });
+
+      const res = await app.request(`/boards/${boardId}/members/by-user-id`, {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          userId: "auth0|nonexistent999",
+          role: "member",
+        }),
+      });
+
+      expect(res.status).toBe(404);
+    });
+
+    test("should only allow board owner to add members by userId", async () => {
+      // Create a board
+      const boardId = uuidv7();
+      await app.request("/boards", {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          id: boardId,
+          name: "Test Board",
+        }),
+      });
+
+      // Try to add member with different user credentials
+      const res = await app.request(`/boards/${boardId}/members/by-user-id`, {
+        method: "POST",
+        headers: createAuthHeaders("different-user-id"),
+        body: JSON.stringify({
+          userId: "auth0|newuser123",
+          role: "member",
+        }),
+      });
+
+      expect(res.status).toBe(403);
+      const data = await res.json() as any;
+      expect(data.error).toContain("Chỉ chủ board");
+    });
+
+    test("should use default role as member if not specified", async () => {
+      // Create a board
+      const boardId = uuidv7();
+      await app.request("/boards", {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          id: boardId,
+          name: "Test Board",
+        }),
+      });
+
+      // Mock Auth0 API response
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          user_id: "auth0|defaultrole",
+          email: "default@example.com",
+          name: "Default Role User",
+        }),
+      });
+
+      // Add member without specifying role
+      const res = await app.request(`/boards/${boardId}/members/by-user-id`, {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          userId: "auth0|defaultrole",
+        }),
+      });
+
+      expect(res.status).toBe(200);
+      const member = await res.json() as any;
+      expect(member).toHaveProperty("role", "member");
+    });
+
+    test("should respect custom role when adding by userId", async () => {
+      // Create a board
+      const boardId = uuidv7();
+      await app.request("/boards", {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          id: boardId,
+          name: "Test Board",
+        }),
+      });
+
+      // Mock Auth0 API response
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          user_id: "auth0|adminuser",
+          email: "admin@example.com",
+          name: "Admin User",
+        }),
+      });
+
+      // Add member with admin role
+      const res = await app.request(`/boards/${boardId}/members/by-user-id`, {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          userId: "auth0|adminuser",
+          role: "admin",
+        }),
+      });
+
+      expect(res.status).toBe(200);
+      const member = await res.json() as any;
+      expect(member).toHaveProperty("role", "admin");
+    });
+  });
 });
