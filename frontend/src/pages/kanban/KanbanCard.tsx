@@ -12,21 +12,16 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { Checkbox } from "@/components/ui/checkbox";
-import type { Card as CardType, Label, Member, Attachment, Comment, ActivityLog, CardCoverMode, RecurrenceType } from "@/types/card";
+import type { Card as CardType, Label, Member, Attachment, Comment, ActivityLog, CardCoverMode} from "@/types/card";
 import { useAtom } from "jotai";
 import { isCardDialogOpenAtom, selectedCardAtom } from "./atoms";
-import { Repeat } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { getRecurrenceShortLabel } from "@/lib/recurrence-utils";
 import { useUpdateCard } from "@/hooks/use-card";
+
 
 type NormalizedCard = CardType & {
   title: string;
   description?: string;
   color?: KanbanBoardCircleColor;
-  recurrence?: RecurrenceType;
-  recurrenceDay?: number;
-  recurrenceWeekday?: number;
 };
 
 interface KanbanCardProps {
@@ -41,9 +36,10 @@ interface KanbanCardProps {
     labels?: Label[];
     members?: Member[];
     dueDate?: Date;
-    recurrence?: RecurrenceType;
-    recurrenceDay?: number;
-    recurrenceWeekday?: number;
+    startDate?: Date | string | null;
+    dueAt?: Date | string | null;
+    dueComplete?: boolean;
+    reminderMinutes?: number | null;
     coverUrl?: string;
     coverColor?: string;
     coverMode?: CardCoverMode;
@@ -85,9 +81,10 @@ export function KanbanCard({
     labels: card.labels || [],
     members: card.members || [],
     dueDate: card.dueDate,
-    recurrence: card.recurrence,
-    recurrenceDay: card.recurrenceDay,
-    recurrenceWeekday: card.recurrenceWeekday,
+    startDate: card.startDate,
+    dueAt: card.dueAt,
+    dueComplete: card.dueComplete,
+    reminderMinutes: card.reminderMinutes,
     coverUrl: card.coverUrl || "",
     coverColor: card.coverColor || "",
     coverMode: card.coverMode,
@@ -99,8 +96,6 @@ export function KanbanCard({
     color: card.color,
     completed: card.completed,
   };
-
-  const recurrenceLabel = getRecurrenceShortLabel(normalizedCard.recurrence);
 
   const openCardDialog = () => {
     setSelectedCard(normalizedCard);
@@ -176,18 +171,16 @@ export function KanbanCard({
                 </div>
               </div>
             ) : (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <div onClick={handleToggleComplete} className="flex-shrink-0">
-                    <Checkbox 
-                      checked={normalizedCard.completed} 
-                      className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
-                    />
-                  </div>
-                  <KanbanBoardCardTitle className={`line-clamp-2 ${normalizedCard.completed ? "line-through text-muted-foreground" : ""}`}>
-                    {normalizedCard.title}
-                  </KanbanBoardCardTitle>
+              <div className="flex items-center gap-2">
+                <div onClick={handleToggleComplete} className="flex-shrink-0">
+                  <Checkbox 
+                    checked={normalizedCard.completed} 
+                    className="border-primary/50 data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
+                  />
                 </div>
+                <KanbanBoardCardTitle className={`line-clamp-2 ${normalizedCard.completed ? "line-through text-muted-foreground opacity-50" : ""}`}>
+                  {normalizedCard.title}
+                </KanbanBoardCardTitle>
               </div>
             )}
           </KanbanBoardCard>

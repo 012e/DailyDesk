@@ -27,7 +27,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { CardCoverModeValue, type CardCoverMode } from "@/types/card";
+import { type CardCoverMode } from "@/types/card";
 
 /*
 Accessibility
@@ -427,8 +427,8 @@ export function KanbanBoard({
   return (
     <div
       className={cn(
-        "flex h-full flex-grow items-start gap-x-2 overflow-x-auto py-1",
-        "[&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-white/30",
+        "flex h-full flex-grow gap-x-2 overflow-x-auto py-1",
+        "[&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-white/30 ",
         className
       )}
       ref={ref}
@@ -466,7 +466,7 @@ export type KanbanBoardColumnProps = {
 };
 
 export const kanbanBoardColumnClassNames =
-  "w-64 flex-shrink-0 rounded-lg border flex flex-col border-border bg-sidebar py-2 max-h-full transition-colors";
+  "w-64 flex-shrink-0 rounded-lg border flex flex-col border-border bg-sidebar py-2 h-full min-h-0 transition-colors";
 
 export function KanbanBoardColumn({
   className,

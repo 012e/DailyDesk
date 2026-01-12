@@ -15,10 +15,10 @@ export default function Layout() {
     <Providers>
       <SidebarProvider>
         <AppSidebar />
-        <main className="flex flex-col w-full h-screen bg-background">
+        <main className="flex flex-col w-full h-screen bg-background overflow-hidden">
           <ReactQueryDevtools initialIsOpen={false} />
           {/* Theme Toggle - Fixed position top right */}
-          <div className="flex justify-between items-center p-2 z-50">
+          <div className="sticky top-0 right-0 flex justify-between items-center px-4 py-2 z-50 bg-background/80 backdrop-blur-sm">
             <SidebarTrigger />
             <ThemeToggle />
           </div>

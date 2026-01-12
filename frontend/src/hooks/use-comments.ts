@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
-import type { Comment, ActivityLog } from "@/types/card";
+import type { Comment, ActivityLog, TimelineItem } from "@/types/card";
 
 /**
  * Hook để lấy timeline (comments + activities) cho một card
@@ -25,10 +25,7 @@ export function useCardTimeline(boardId: string, cardId: string) {
         throw new Error("Failed to fetch timeline");
       }
 
-      return data as Array<
-        | (Comment & { type: "comment" })
-        | (ActivityLog & { type: "activity" })
-      >;
+      return data as TimelineItem[];
     },
     enabled: !!boardId && !!cardId,
   });

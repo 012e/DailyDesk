@@ -6,6 +6,7 @@ import { setupBearerAuth } from "@/lib/auth";
 import { logger } from "hono/logger";
 import { poweredBy } from "hono/powered-by";
 import { HTTPException } from "hono/http-exception";
+import { startReminderCron } from "@/services/reminder.service";
 
 import dotenv from "dotenv";
 dotenv.config({ path: [".env", ".env.local"] });
@@ -48,3 +49,9 @@ app.onError((error, c) => {
 });
 
 serve(app);
+
+// Start reminder cron job (only in non-test environment)
+if (process.env.NODE_ENV !== "test") {
+  startReminderCron();
+}
+

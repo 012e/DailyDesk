@@ -23,7 +23,7 @@ interface KanbanColumnProps {
     cards: BackendCard[];
   };
   boardId: string;
-  onDropOverColumn: (data: string, type: "card" | "column") => void;
+  onDropOverColumn: (data: string) => void;
   onDropOverListItem: (
     targetCardId: string,
     data: string,
@@ -48,6 +48,7 @@ export function KanbanColumn({
   return (
     <KanbanBoardColumn
       key={column.id}
+      className="h-full"
       columnId={column.id}
       onDropOverColumn={onDropOverColumn}
       index={index}
