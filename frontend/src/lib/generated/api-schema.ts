@@ -74,6 +74,10 @@ export interface paths {
                                     dueAt: string | null;
                                     dueComplete: boolean | null;
                                     reminderMinutes: number | null;
+                                    /** @enum {string|null} */
+                                    recurrence: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day" | null;
+                                    recurrenceDay: number | null;
+                                    recurrenceWeekday: number | null;
                                     latitude: number | null;
                                     longitude: number | null;
                                     completed: boolean | null;
@@ -84,6 +88,17 @@ export interface paths {
                                 }[];
                             }[];
                         }[];
+                    };
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
                     };
                 };
             };
@@ -132,6 +147,17 @@ export interface paths {
                     };
                     content: {
                         "application/json": unknown;
+                    };
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
                     };
                 };
             };
@@ -214,6 +240,10 @@ export interface paths {
                                     dueAt: string | null;
                                     dueComplete: boolean | null;
                                     reminderMinutes: number | null;
+                                    /** @enum {string|null} */
+                                    recurrence: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day" | null;
+                                    recurrenceDay: number | null;
+                                    recurrenceWeekday: number | null;
                                     latitude: number | null;
                                     longitude: number | null;
                                     completed: boolean | null;
@@ -239,6 +269,17 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content?: never;
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
                 };
             };
         };
@@ -292,6 +333,17 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
+                };
             };
         };
         post?: never;
@@ -330,6 +382,17 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content?: never;
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
                 };
             };
         };
@@ -385,6 +448,17 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content?: never;
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
                 };
             };
         };
@@ -453,6 +527,10 @@ export interface paths {
                             dueAt: string | null;
                             dueComplete: boolean | null;
                             reminderMinutes: number | null;
+                            /** @enum {string|null} */
+                            recurrence: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day" | null;
+                            recurrenceDay: number | null;
+                            recurrenceWeekday: number | null;
                             latitude: number | null;
                             longitude: number | null;
                             completed: boolean | null;
@@ -476,6 +554,17 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content?: never;
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
                 };
             };
         };
@@ -535,6 +624,17 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
+                };
             };
         };
         put?: never;
@@ -587,6 +687,17 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content?: never;
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
                 };
             };
         };
@@ -645,6 +756,17 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
+                };
             };
         };
         put: {
@@ -696,6 +818,17 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
+                };
             };
         };
         post?: never;
@@ -735,6 +868,17 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content?: never;
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
                 };
             };
         };
@@ -800,6 +944,10 @@ export interface paths {
                             dueAt: string | null;
                             dueComplete: boolean | null;
                             reminderMinutes: number | null;
+                            /** @enum {string|null} */
+                            recurrence: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day" | null;
+                            recurrenceDay: number | null;
+                            recurrenceWeekday: number | null;
                             latitude: number | null;
                             longitude: number | null;
                             completed: boolean | null;
@@ -864,11 +1012,15 @@ export interface paths {
                         dueAt?: string;
                         dueComplete?: boolean;
                         reminderMinutes?: number;
+                        /** @enum {string} */
+                        recurrence?: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day";
+                        recurrenceDay?: number;
+                        recurrenceWeekday?: number;
                         latitude?: number;
                         longitude?: number;
-                        completed?: boolean;
                         coverColor?: string;
                         coverUrl?: string;
+                        completed?: boolean;
                         /** Format: uuid */
                         listId: string;
                     };
@@ -914,6 +1066,10 @@ export interface paths {
                             dueAt: string | null;
                             dueComplete: boolean | null;
                             reminderMinutes: number | null;
+                            /** @enum {string|null} */
+                            recurrence: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day" | null;
+                            recurrenceDay: number | null;
+                            recurrenceWeekday: number | null;
                             latitude: number | null;
                             longitude: number | null;
                             completed: boolean | null;
@@ -1004,6 +1160,10 @@ export interface paths {
                             dueAt: string | null;
                             dueComplete: boolean | null;
                             reminderMinutes: number | null;
+                            /** @enum {string|null} */
+                            recurrence: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day" | null;
+                            recurrenceDay: number | null;
+                            recurrenceWeekday: number | null;
                             latitude: number | null;
                             longitude: number | null;
                             completed: boolean | null;
@@ -1066,6 +1226,10 @@ export interface paths {
                         dueAt?: string | null;
                         dueComplete?: boolean | null;
                         reminderMinutes?: number | null;
+                        /** @enum {string|null} */
+                        recurrence?: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day" | null;
+                        recurrenceDay?: number | null;
+                        recurrenceWeekday?: number | null;
                         latitude?: number | null;
                         longitude?: number | null;
                         coverColor?: string | null;
@@ -1117,6 +1281,10 @@ export interface paths {
                             dueAt: string | null;
                             dueComplete: boolean | null;
                             reminderMinutes: number | null;
+                            /** @enum {string|null} */
+                            recurrence: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day" | null;
+                            recurrenceDay: number | null;
+                            recurrenceWeekday: number | null;
                             latitude: number | null;
                             longitude: number | null;
                             completed: boolean | null;
@@ -1302,6 +1470,10 @@ export interface paths {
                             dueAt: string | null;
                             dueComplete: boolean | null;
                             reminderMinutes: number | null;
+                            /** @enum {string|null} */
+                            recurrence: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day" | null;
+                            recurrenceDay: number | null;
+                            recurrenceWeekday: number | null;
                             latitude: number | null;
                             longitude: number | null;
                             completed: boolean | null;
@@ -1393,6 +1565,17 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
+                };
             };
         };
         delete: {
@@ -1427,6 +1610,17 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content?: never;
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
                 };
             };
         };
@@ -1485,6 +1679,17 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
+                };
             };
         };
         put?: never;
@@ -1541,6 +1746,17 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content?: never;
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
                 };
             };
         };
@@ -1601,6 +1817,17 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
+                };
             };
         };
         put: {
@@ -1655,6 +1882,17 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
+                };
             };
         };
         post?: never;
@@ -1695,6 +1933,17 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content?: never;
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
                 };
             };
         };
@@ -1751,6 +2000,17 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
+                };
             };
         };
         put?: never;
@@ -1803,6 +2063,17 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content?: never;
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
                 };
             };
         };
@@ -1869,6 +2140,17 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
+                };
             };
         };
         post?: never;
@@ -1908,6 +2190,17 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content?: never;
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
                 };
             };
         };
@@ -1973,6 +2266,17 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content?: never;
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
                 };
             };
         };
@@ -2052,6 +2356,17 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
+                };
             };
         };
         delete?: never;
@@ -2127,6 +2442,17 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
+                };
             };
         };
         post?: never;
@@ -2166,6 +2492,17 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content?: never;
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
                 };
             };
         };
@@ -2230,6 +2567,17 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
+                };
             };
         };
         put?: never;
@@ -2293,6 +2641,17 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
+                };
             };
         };
         delete?: never;
@@ -2344,6 +2703,17 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content?: never;
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
                 };
             };
         };
@@ -2411,6 +2781,17 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
+                };
             };
         };
         put?: never;
@@ -2471,6 +2852,17 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content?: never;
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
                 };
             };
         };
@@ -2547,6 +2939,17 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
+                };
             };
         };
         post?: never;
@@ -2588,6 +2991,17 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
+                };
             };
         };
         options?: never;
@@ -2627,7 +3041,7 @@ export interface paths {
                             cardId: string;
                             userId: string;
                             /** @enum {string} */
-                            actionType: "card.created" | "card.renamed" | "card.moved" | "card.archived" | "card.description.updated" | "member.added" | "member.removed" | "label.added" | "label.removed" | "deadline.set" | "deadline.changed" | "deadline.removed" | "checklist.added" | "checklist.completed" | "checklist.uncompleted" | "comment.added" | "comment.deleted" | "attachment.added" | "attachment.removed";
+                            actionType: "card.created" | "card.renamed" | "card.moved" | "card.archived" | "card.description.updated" | "member.added" | "member.removed" | "label.added" | "label.removed" | "deadline.set" | "deadline.changed" | "deadline.removed" | "card.due.updated" | "card.due.removed" | "checklist.added" | "checklist.completed" | "checklist.uncompleted" | "comment.added" | "comment.deleted" | "attachment.added" | "attachment.removed";
                             description: string;
                             metadata: {
                                 [key: string]: unknown;
@@ -2658,6 +3072,17 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content?: never;
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
                 };
             };
         };
@@ -2720,7 +3145,7 @@ export interface paths {
                             cardId: string;
                             userId: string;
                             /** @enum {string} */
-                            actionType: "card.created" | "card.renamed" | "card.moved" | "card.archived" | "card.description.updated" | "member.added" | "member.removed" | "label.added" | "label.removed" | "deadline.set" | "deadline.changed" | "deadline.removed" | "checklist.added" | "checklist.completed" | "checklist.uncompleted" | "comment.added" | "comment.deleted" | "attachment.added" | "attachment.removed";
+                            actionType: "card.created" | "card.renamed" | "card.moved" | "card.archived" | "card.description.updated" | "member.added" | "member.removed" | "label.added" | "label.removed" | "deadline.set" | "deadline.changed" | "deadline.removed" | "card.due.updated" | "card.due.removed" | "checklist.added" | "checklist.completed" | "checklist.uncompleted" | "comment.added" | "comment.deleted" | "attachment.added" | "attachment.removed";
                             description: string;
                             metadata: {
                                 [key: string]: unknown;
@@ -2753,6 +3178,17 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content?: never;
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
                 };
             };
         };
@@ -2802,6 +3238,72 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/members/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    /** @description Search query (email, name, or username) */
+                    q: string;
+                    /** @description Number of results per page */
+                    per_page?: string;
+                    /** @description Page number (0-indexed) */
+                    page?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description User search results from Auth0 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            user_id: string;
+                            email?: string;
+                            name?: string;
+                            picture?: string;
+                            nickname?: string;
+                        }[];
+                    };
+                };
+                /** @description Unauthorized - Missing or invalid authentication */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;

@@ -117,7 +117,6 @@ export default function createAttachmentRoutes() {
         })
         .returning();
 
-      console.log("[ATTACHMENT] Created attachment:", result[0]);
       return c.json(result[0], 200);
     }
   );

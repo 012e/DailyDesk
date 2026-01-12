@@ -9,7 +9,7 @@ interface AppProps {
 function App({ children }: AppProps) {
   const { isAuthenticated } = useAuth0();
   return (
-    <div className="h-full w-full">
+    <>
       {!isAuthenticated ? (
         <LoginButton />
       ) : (
@@ -17,7 +17,7 @@ function App({ children }: AppProps) {
           <Home />
         </div>
       )}
-    </div>
+    </>
   );
 }
 

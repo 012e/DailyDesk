@@ -326,22 +326,12 @@ export function listsCardsToCalendarEvents(
       const recurrenceDay = 'recurrenceDay' in card ? card.recurrenceDay : undefined;
       const recurrenceWeekday = 'recurrenceWeekday' in card ? card.recurrenceWeekday : undefined;
       
-      console.log('Processing card:', {
-        id: card.id,
-        name: 'name' in card ? card.name : ('title' in card ? card.title : 'unknown'),
-        recurrence,
-        recurrenceDay,
-        recurrenceWeekday,
-        deadline: 'deadline' in card ? card.deadline : ('dueDate' in card ? card.dueDate : undefined)
-      });
-      
       const baseEvent = cardToCalendarEvent(card, listName, list.id);
       
       if (!baseEvent) continue;
       
       // If card has recurrence, generate instances
       if (recurrence && recurrence !== "never") {
-        console.log('Generating recurring instances for card:', baseEvent.id);
         const instances = generateRecurringInstances(
           baseEvent.end, // Use end date (which is the due date)
           recurrence,
@@ -350,8 +340,6 @@ export function listsCardsToCalendarEvents(
           range.start,
           range.end
         );
-        
-        console.log('Generated instances:', instances.length);
         
         // Create an event for each instance
         instances.forEach((instance, index) => {
@@ -375,7 +363,6 @@ export function listsCardsToCalendarEvents(
     }
   }
   
-  console.log('Total calendar events generated:', allEvents.length);
   return allEvents;
 }
 

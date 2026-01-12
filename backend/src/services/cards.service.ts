@@ -14,6 +14,22 @@ import { ContentfulStatusCode } from "hono/utils/http-status";
 import { randomUUID } from "crypto";
 import { logActivity } from "./activities.service";
 import { publishBoardChanged } from "./events.service";
+import { ensureBoardMembersExist } from "./members.service";
+import { 
+  CreateCardSchema, 
+  UpdateCardSchema,
+  CardLabelSchema,
+  CardMemberSchema,
+  CardAttachmentSchema
+} from "@/types/cards";
+import type { z } from "zod";
+
+// Infer types from Zod schemas
+type CreateCardRequest = z.infer<typeof CreateCardSchema>;
+type UpdateCardRequest = z.infer<typeof UpdateCardSchema>;
+type CardLabel = z.infer<typeof CardLabelSchema>;
+type CardMember = z.infer<typeof CardMemberSchema>;
+type CardAttachment = z.infer<typeof CardAttachmentSchema>;
 
 export class ServiceError extends Error {
   status: ContentfulStatusCode;
@@ -81,7 +97,7 @@ export async function getCardsForBoard(userSub: string, boardId: string) {
     .from(attachmentsTable)
     .where(sql`${attachmentsTable.cardId} IN (${sql.join(cardIds.map(id => sql`${id}`), sql`, `)})`);
 
-  const labelsByCard = new Map<string, Array<{ id: string; name: string; color: string }>>();
+  const labelsByCard = new Map<string, CardLabel[]>();
   for (const cl of cardLabelsData) {
     if (!labelsByCard.has(cl.cardId)) {
       labelsByCard.set(cl.cardId, []);
@@ -93,7 +109,7 @@ export async function getCardsForBoard(userSub: string, boardId: string) {
     });
   }
 
-  const membersByCard = new Map<string, Array<{ id: string; name: string; email: string; avatar: string | null; initials: string }>>();
+  const membersByCard = new Map<string, CardMember[]>();
   for (const cm of cardMembersData) {
     if (!membersByCard.has(cm.cardId)) {
       membersByCard.set(cm.cardId, []);
@@ -108,7 +124,7 @@ export async function getCardsForBoard(userSub: string, boardId: string) {
     });
   }
 
-  const attachmentsByCard = new Map<string, Array<any>>();
+  const attachmentsByCard = new Map<string, CardAttachment[]>();
   for (const attachment of cardAttachmentsData) {
     if (!attachmentsByCard.has(attachment.cardId)) {
       attachmentsByCard.set(attachment.cardId, []);
@@ -122,9 +138,9 @@ export async function getCardsForBoard(userSub: string, boardId: string) {
     description: c.cards.description,
     order: c.cards.order,
     listId: c.cards.listId,
-    labels: JSON.stringify(labelsByCard.get(c.cards.id) || []),
-    members: JSON.stringify(membersByCard.get(c.cards.id) || []),
-    attachments: JSON.stringify(attachmentsByCard.get(c.cards.id) || []),
+    labels: labelsByCard.get(c.cards.id) || [],
+    members: membersByCard.get(c.cards.id) || [],
+    attachments: attachmentsByCard.get(c.cards.id) || [],
     startDate: c.cards.startDate,
     deadline: c.cards.deadline,
     dueAt: c.cards.dueAt,
@@ -138,7 +154,7 @@ export async function getCardsForBoard(userSub: string, boardId: string) {
   }));
 }
 
-export async function createCard(userSub: string, boardId: string, req: any) {
+export async function createCard(userSub: string, boardId: string, req: CreateCardRequest) {
   const board = await db
     .select()
     .from(boardsTable)
@@ -178,13 +194,6 @@ export async function createCard(userSub: string, boardId: string, req: any) {
     throw new ServiceError(`Order must be between 0 and ${listSize} for this list`, 400);
   }
 
-  console.log("📝 Creating card with dates:", {
-    startDate: req.startDate,
-    dueAt: req.dueAt,
-    dueComplete: req.dueComplete,
-    reminderMinutes: req.reminderMinutes,
-  });
-
   const card = await db
     .insert(cardsTable)
     .values({
@@ -194,7 +203,7 @@ export async function createCard(userSub: string, boardId: string, req: any) {
       order: req.order,
       listId: req.listId,
       startDate: req.startDate ? new Date(req.startDate) : null,
-      deadline: req.deadline,
+      deadline: req.deadline ? new Date(req.deadline) : null,
       dueAt: req.dueAt ? new Date(req.dueAt) : null,
       dueComplete: req.dueComplete ?? false,
       reminderMinutes: req.reminderMinutes ?? null,
@@ -206,17 +215,10 @@ export async function createCard(userSub: string, boardId: string, req: any) {
     })
     .returning();
 
-  console.log("✅ Card created with dates:", {
-    startDate: card[0].startDate,
-    dueAt: card[0].dueAt,
-    dueComplete: card[0].dueComplete,
-    reminderMinutes: card[0].reminderMinutes,
-  });
-
   const createdCard = card[0];
 
   if (req.labels && req.labels.length > 0) {
-    const labelInserts = req.labels.map((label: any) => ({
+    const labelInserts = req.labels.map((label) => ({
       id: randomUUID(),
       cardId: createdCard.id,
       labelId: label.id,
@@ -225,12 +227,18 @@ export async function createCard(userSub: string, boardId: string, req: any) {
   }
 
   if (req.members && req.members.length > 0) {
-    const memberInserts = req.members.map((member: any) => ({
-      id: randomUUID(),
-      cardId: createdCard.id,
-      memberId: member.id,
-    }));
-    await db.insert(cardMembersTable).values(memberInserts);
+    // Ensure all members exist in board_members table (fetch from Auth0 if needed)
+    const memberIds = req.members.map(m => m.id);
+    const validatedMembers = await ensureBoardMembersExist(boardId, memberIds);
+    
+    if (validatedMembers.length > 0) {
+      const memberInserts = validatedMembers.map((member) => ({
+        id: randomUUID(),
+        cardId: createdCard.id,
+        memberId: member.id,
+      }));
+      await db.insert(cardMembersTable).values(memberInserts);
+    }
   }
 
   // Log activity for card creation (non-blocking)
@@ -249,11 +257,37 @@ export async function createCard(userSub: string, boardId: string, req: any) {
   // Publish card created event
   publishBoardChanged(boardId, 'card', createdCard.id, 'created', userSub);
 
-  // Return card with labels and members as JSON for compatibility
+  // Fetch the created members if any were added
+  let cardMembers: CardMember[] = [];
+  if (req.members && req.members.length > 0) {
+    const cardMembersData = await db
+      .select({
+        memberId: boardMembersTable.id,
+        memberName: boardMembersTable.name,
+        memberEmail: boardMembersTable.email,
+        memberAvatar: boardMembersTable.avatar,
+      })
+      .from(cardMembersTable)
+      .innerJoin(boardMembersTable, eq(cardMembersTable.memberId, boardMembersTable.id))
+      .where(eq(cardMembersTable.cardId, createdCard.id));
+
+    cardMembers = cardMembersData.map(cm => {
+      const initials = cm.memberName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      return {
+        id: cm.memberId,
+        name: cm.memberName,
+        email: cm.memberEmail,
+        avatar: cm.memberAvatar,
+        initials,
+      };
+    });
+  }
+
+  // Return card with labels and members as arrays
   return {
     ...createdCard,
-    labels: req.labels ? JSON.stringify(req.labels) : null,
-    members: req.members ? JSON.stringify(req.members) : null,
+    labels: req.labels || [],
+    members: cardMembers,
   };
 }
 
@@ -342,9 +376,9 @@ export async function getCardById(userSub: string, boardId: string, id: string) 
     description: card[0].cards.description,
     order: card[0].cards.order,
     listId: card[0].cards.listId,
-    labels: JSON.stringify(labels),
-    members: JSON.stringify(members),
-    attachments: JSON.stringify(cardAttachments),
+    labels: labels,
+    members: members,
+    attachments: cardAttachments,
     startDate: card[0].cards.startDate,
     deadline: card[0].cards.deadline,
     dueAt: card[0].cards.dueAt,
@@ -358,7 +392,7 @@ export async function getCardById(userSub: string, boardId: string, id: string) 
   };
 }
 
-export async function updateCard(userSub: string, boardId: string, id: string, req: any) {
+export async function updateCard(userSub: string, boardId: string, id: string, req: UpdateCardRequest) {
   const board = await db
     .select()
     .from(boardsTable)
@@ -496,7 +530,7 @@ export async function updateCard(userSub: string, boardId: string, id: string, r
     }
   }
 
-  const updateData: any = {};
+  const updateData: Partial<typeof cardsTable.$inferInsert> = {};
   if (req.name !== undefined) updateData.name = req.name;
   if (req.description !== undefined) updateData.description = req.description;
   if (req.order !== undefined) updateData.order = req.order;
@@ -535,12 +569,12 @@ export async function updateCard(userSub: string, boardId: string, id: string, r
       await db.delete(cardLabelsTable).where(eq(cardLabelsTable.cardId, id));
 
       if (req.labels && req.labels.length > 0) {
-        const labelInserts = req.labels.map((label: any) => ({
+        const labelInserts = req.labels.map((label) => ({
           id: randomUUID(),
           cardId: id,
           labelId: label.id,
         }));
-        const result = await db.insert(cardLabelsTable).values(labelInserts);
+        await db.insert(cardLabelsTable).values(labelInserts);
       }
     } catch (error) {
       console.error("Error updating labels:", error);
@@ -552,12 +586,18 @@ export async function updateCard(userSub: string, boardId: string, id: string, r
     await db.delete(cardMembersTable).where(eq(cardMembersTable.cardId, id));
 
     if (req.members && req.members.length > 0) {
-      const memberInserts = req.members.map((member: any) => ({
-        id: randomUUID(),
-        cardId: id,
-        memberId: member.id,
-      }));
-      await db.insert(cardMembersTable).values(memberInserts);
+      // Ensure all members exist in board_members table (fetch from Auth0 if needed)
+      const memberIds = req.members.map(m => m.id);
+      const validatedMembers = await ensureBoardMembersExist(boardId, memberIds);
+      
+      if (validatedMembers.length > 0) {
+        const memberInserts = validatedMembers.map((member) => ({
+          id: randomUUID(),
+          cardId: id,
+          memberId: member.id,
+        }));
+        await db.insert(cardMembersTable).values(memberInserts);
+      }
     }
   }
 
@@ -652,12 +692,58 @@ export async function updateCard(userSub: string, boardId: string, id: string, r
   const action = (req.listId && req.listId !== existingCard[0].listId) ? 'moved' : 'updated';
   publishBoardChanged(boardId, 'card', id, action, userSub);
 
-  // Return card with labels and members as JSON for compatibility
+  // Fetch updated labels and members if they were modified
+  let updatedLabels = undefined;
+  let updatedMembers = undefined;
+
+  if (req.labels !== undefined) {
+    const cardLabelsData = await db
+      .select({
+        labelId: labelsTable.id,
+        labelName: labelsTable.name,
+        labelColor: labelsTable.color,
+      })
+      .from(cardLabelsTable)
+      .innerJoin(labelsTable, eq(cardLabelsTable.labelId, labelsTable.id))
+      .where(eq(cardLabelsTable.cardId, id));
+
+    updatedLabels = cardLabelsData.map(cl => ({
+      id: cl.labelId,
+      name: cl.labelName,
+      color: cl.labelColor,
+    }));
+  }
+
+  if (req.members !== undefined) {
+    const cardMembersData = await db
+      .select({
+        memberId: boardMembersTable.id,
+        memberName: boardMembersTable.name,
+        memberEmail: boardMembersTable.email,
+        memberAvatar: boardMembersTable.avatar,
+      })
+      .from(cardMembersTable)
+      .innerJoin(boardMembersTable, eq(cardMembersTable.memberId, boardMembersTable.id))
+      .where(eq(cardMembersTable.cardId, id));
+
+    updatedMembers = cardMembersData.map(cm => {
+      const initials = cm.memberName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      return {
+        id: cm.memberId,
+        name: cm.memberName,
+        email: cm.memberEmail,
+        avatar: cm.memberAvatar,
+        initials,
+      };
+    });
+  }
+
+  // Return card with labels, members, and attachments as arrays
   return {
     ...updatedCard,
-    labels: req.labels !== undefined ? JSON.stringify(req.labels) : undefined,
-    members: req.members !== undefined ? JSON.stringify(req.members) : undefined,
-    attachments: JSON.stringify(cardAttachments),
+    labels: updatedLabels,
+    members: updatedMembers,
+    attachments: cardAttachments,
   };
 }
 
@@ -750,7 +836,7 @@ export async function updateCardDue(
     throw new ServiceError("Card không tồn tại", 404);
   }
 
-  const updateData: any = { updatedAt: new Date() };
+  const updateData: Partial<typeof cardsTable.$inferInsert> = { updatedAt: new Date() };
 
   if (dueData.startDate !== undefined) {
     updateData.startDate = dueData.startDate ? new Date(dueData.startDate) : null;

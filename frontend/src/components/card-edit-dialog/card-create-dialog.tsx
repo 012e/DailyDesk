@@ -267,8 +267,6 @@ function InnerCardCreateDialog({
       reminderMinutes,
     };
 
-    console.log("📤 Creating card with data:", cardData);
-
     try {
       createCard(
         cardData,

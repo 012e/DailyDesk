@@ -5,7 +5,7 @@ import createCardRoutes from "./cards";
 import createImageRoute from "./media.image";
 import createChecklistItemRoutes from "./checklist-items";
 import createLabelRoutes from "./labels";
-import createMemberRoutes from "./members";
+import createMemberRoutes, { createUserSearchRoutes } from "./members";
 import createChatRoutes from "./chat";
 import createAttachmentRoutes from "./attachments";
 import createCommentRoutes from "./comments";
@@ -23,6 +23,7 @@ export default function setupRoutes(app: OpenAPIHono) {
   app.route("/boards", createAttachmentRoutes());
   app.route("/boards", createCommentRoutes());
   app.route("/chat", createChatRoutes());
+  app.route("/members", createUserSearchRoutes());
 
   return app;
 }
