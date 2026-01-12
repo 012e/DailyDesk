@@ -22,9 +22,9 @@ export function ThemeToggle() {
       size="icon"
       onClick={handleClick}
       aria-label="Toggle theme"
-      className="relative z-50"
+      className="relative z-50 cursor-pointer bg-transparent"
     >
-      {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+      {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
     </Button>
   );
 }

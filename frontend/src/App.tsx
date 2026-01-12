@@ -9,11 +9,11 @@ interface AppProps {
 function App({ children }: AppProps) {
   const { isAuthenticated } = useAuth0();
   return (
-    <div>
+    <div className="h-full w-full">
       {!isAuthenticated ? (
         <LoginButton />
       ) : (
-        <div>
+        <div className="h-full w-full">
           <Home />
         </div>
       )}

@@ -18,10 +18,11 @@ export default function Layout() {
         <main className="flex flex-col w-full h-screen bg-background">
           <ReactQueryDevtools initialIsOpen={false} />
           {/* Theme Toggle - Fixed position top right */}
-          <div className="fixed top-2 right-2 z-50">
+          <div className="flex justify-between items-center p-2 z-50">
+            <SidebarTrigger />
             <ThemeToggle />
           </div>
-          <SidebarTrigger />
+
           <ErrorBoundary
             fallback={
               <div className="flex justify-center items-center w-full h-full">

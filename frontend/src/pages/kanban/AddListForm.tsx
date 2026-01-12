@@ -87,10 +87,10 @@ export function AddListForm({ onAddList }: AddListFormProps) {
   return (
     <Button
       variant="ghost"
-      className="justify-start py-2 px-3 h-fit shrink-0"
+      className="justify-start py-2 px-3 h-fit shrink-0 w-64 bg-black/40 backdrop-blur-md hover:bg-black/60 text-white transition-all"
       onClick={() => setIsAddingList(true)}
     >
-      <PlusIcon className="mr-2 size-4" />
+      <PlusIcon className="mr-2 size-4 " />
       Add List
     </Button>
   );

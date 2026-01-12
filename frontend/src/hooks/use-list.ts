@@ -7,6 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 export const CreateListSchema = z.object({
   name: z.string().nonempty(),
+  order: z.number().int().optional(),
 });
 
 export type CreateListType = z.infer<typeof CreateListSchema>;
@@ -26,7 +27,7 @@ export function useListActions() {
       body: {
         id: uuidv7(),
         name: list.name,
-        order: 1,
+        order: list.order !== undefined ? list.order : 10000,
       },
     });
 
@@ -35,7 +36,7 @@ export function useListActions() {
     });
   }
 
-  async function updateList(listId: string, name: string) {
+  async function updateList(listId: string, name: string, order?: number) {
     if (!boardId) throw new Error("board id is undefined");
     await api.PUT("/boards/{boardId}/lists/{id}", {
       params: {
@@ -46,6 +47,7 @@ export function useListActions() {
       },
       body: {
         name: name,
+        order: order,
       },
     });
 

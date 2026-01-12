@@ -6,12 +6,13 @@ import {
   type KanbanBoardDropDirection,
 } from "@/components/kanban";
 import { useBoard, useUpdateBoard } from "@/hooks/use-board";
-import { useUpdateCard } from "@/hooks/use-card";
+import { useUpdateCard, useDeleteCard } from "@/hooks/use-card";
 import { useListActions } from "@/hooks/use-list";
 import { useMembers } from "@/hooks/use-member";
 import { useUploadImage } from "@/hooks/use-image";
 import type { Card as CardType } from "@/types/card";
 import { useAtom, useSetAtom } from "jotai";
+import { useDraggableScroll } from "@/hooks/use-draggable-scroll";
 import { useEffect, useState, useMemo } from "react";
 import { AddListForm } from "./AddListForm";
 import {
@@ -46,6 +47,9 @@ export function Kanban({ boardId }: KanbanProps) {
   const [filters, setFilters] = useState<FilterState>(emptyFilterState);
 
   const { mutate: updateCard } = useUpdateCard();
+  const { mutate: deleteCard } = useDeleteCard();
+
+  const { ref: scrollRef, ...dragEvents } = useDraggableScroll<HTMLDivElement>();
 
   // Auth0 user has 'sub' field for user ID
   const isOwner = currentUser?.sub === board?.userId;
@@ -66,8 +70,9 @@ export function Kanban({ boardId }: KanbanProps) {
       }
       
       // Then sort
+      const sortedCards = [...cards];
       if (filters.sortBy !== "none") {
-        cards = [...cards].sort((a, b) => {
+        sortedCards.sort((a, b) => {
           switch (filters.sortBy) {
             case "name-asc":
               return a.name.localeCompare(b.name);
@@ -93,9 +98,16 @@ export function Kanban({ boardId }: KanbanProps) {
               return 0;
           }
         });
+      } else {
+        // Default sort for cards: order
+        sortedCards.sort((a, b) => (a.order || 0) - (b.order || 0));
       }
       
-      return { ...list, cards };
+      return { ...list, cards: sortedCards };
+    })
+    .sort((a, b) => {
+       // Sort lists by order
+       return (a.order || 0) - (b.order || 0);
     });
   }, [lists, filters]);
 
@@ -128,8 +140,60 @@ export function Kanban({ boardId }: KanbanProps) {
     setBoardId(boardId);
   }, [boardId, setBoardId]);
 
-  const handleDropOverColumn = (columnId: string, dataTransferData: string) => {
+  const handleDropOverColumn = (
+    columnId: string,
+    dataTransferData: string,
+    type: "card" | "column"
+  ) => {
     if (!boardId) return;
+
+    if (type === "column") {
+      try {
+        const data = JSON.parse(dataTransferData);
+        if (data.id === columnId) return;
+
+        const draggedId = data.id;
+        const targetIndex = filteredLists.findIndex((l) => l.id === columnId);
+        if (targetIndex === -1) return;
+
+        const draggedIndex = filteredLists.findIndex((l) => l.id === draggedId);
+        if (draggedIndex === -1) return;
+
+        // Calculate new order
+        let newOrder: number;
+        const sortedLists = [...filteredLists]; // Assumed sorted by order
+        
+        const targetList = sortedLists[targetIndex];
+        const isMovingRight = draggedIndex < targetIndex;
+        
+        if (isMovingRight) {
+             // Insert AFTER target
+             // If target is last item, nextNext is null.
+             const nextNext = targetIndex < sortedLists.length - 1 ? sortedLists[targetIndex + 1] : null;
+             const targetOrder = targetList.order || 0;
+             const nextNextOrder = nextNext ? (nextNext.order || targetOrder + 20000) : (targetOrder + 20000);
+             newOrder = Math.round((targetOrder + nextNextOrder) / 2);
+        } else {
+             // Insert BEFORE target
+             const prevPrev = targetIndex > 0 ? sortedLists[targetIndex - 1] : null;
+             const targetOrder = targetList.order || 0;
+             const prevPrevOrder = prevPrev ? (prevPrev.order || 0) : 0;
+             // If we are inserting at the start (prevPrev is null), 0...targetOrder.
+             // If targetOrder is 1, newOrder = 0.5 -> round -> 1. Collision.
+             // But if targetOrder is usually large (10000), it's fine.
+             // If targetOrder is 0, we need negative?
+             // Let's assume order can be whatever.
+             newOrder = Math.round((prevPrevOrder + targetOrder) / 2);
+        }
+        
+        const draggedList = filteredLists[draggedIndex];
+        updateList(draggedId, draggedList.name, newOrder);
+        
+      } catch (e) {
+        console.error("Failed to parse drag data:", e);
+      }
+      return;
+    }
 
     let cardId: string;
     try {
@@ -193,8 +257,13 @@ export function Kanban({ boardId }: KanbanProps) {
 
   const handleAddList = async (title: string) => {
     try {
+      // Calculate next order
+      const maxOrder = lists.reduce((max, list) => Math.max(max, list.order || 0), 0);
+      const nextOrder = maxOrder + 10000;
+      
       await createList({
         name: title,
+        order: nextOrder,
       });
     } catch (error) {
       console.error("Failed to create list:", error);
@@ -226,15 +295,39 @@ export function Kanban({ boardId }: KanbanProps) {
     setSelectedCard(updatedCard);
   };
 
-  const handleDeleteCard = () => {
-    // TODO: Connect this to a backend mutation/hook.
-    setIsCardDialogOpen(false);
-    setSelectedCard(null);
+  const handleDeleteCard = (cardId: string) => {
+    if (!boardId) return;
+    
+    deleteCard(
+      { boardId, cardId },
+      {
+        onSuccess: () => {
+          toast.success("Card deleted!", { position: "bottom-left" });
+          setIsCardDialogOpen(false);
+          setSelectedCard(null);
+        },
+        onError: () => {
+          toast.error("Failed to delete card", { position: "bottom-left" });
+        },
+      }
+    );
   };
 
   return (
     <KanbanBoardProvider>
-      <div className="p-4 w-full h-full">
+      <div
+        className="p-4 w-full min-h-screen"
+        style={{
+          backgroundImage: board.backgroundUrl
+            ? `url(${board.backgroundUrl})`
+            : undefined,
+          backgroundColor: board.backgroundColor ?? undefined,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          backgroundAttachment: "fixed",
+        }}
+      >
         {/* Trello-style Header Bar */}
         <BoardHeaderBar
           boardId={boardId || ""}
@@ -245,19 +338,20 @@ export function Kanban({ boardId }: KanbanProps) {
           onFiltersChange={setFilters}
           onEditBoard={() => setIsEditBoardOpen(true)}
         />
-        <KanbanBoard>
-          {filteredLists.map((column) => (
+        <KanbanBoard ref={scrollRef} {...dragEvents} className="cursor-grab active:cursor-grabbing">
+          {filteredLists.map((column, index) => (
             <KanbanColumn
               key={column.id}
               column={column}
               boardId={boardId || ""}
-              onDropOverColumn={(data) => handleDropOverColumn(column.id, data)}
+              onDropOverColumn={(data, type) => handleDropOverColumn(column.id, data, type)}
               onDropOverListItem={(targetCardId, data, direction) =>
                 handleDropOverListItem(column.id, targetCardId, data, direction)
               }
               onSaveColumnEdit={handleSaveColumnEdit}
               onDeleteColumn={handleDeleteColumn}
               onDeleteCard={handleDeleteCard}
+              index={index}
             />
           ))}
 
