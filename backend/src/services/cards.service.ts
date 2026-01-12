@@ -41,6 +41,130 @@ export class ServiceError extends Error {
   }
 }
 
+// Get all cards across all boards for a user
+export async function getAllCardsForUser(userSub: string) {
+  console.log("🔍 getAllCardsForUser called for:", userSub);
+  
+  // Get all boards that the user owns
+  const boards = await db
+    .select()
+    .from(boardsTable)
+    .where(eq(boardsTable.userId, userSub));
+
+  console.log("📊 Found boards:", boards.length);
+
+  if (boards.length === 0) {
+    return [];
+  }
+
+  const boardIds = boards.map(b => b.id);
+
+  // Get all cards from all lists in all boards
+  const cards = await db
+    .select({
+      card: cardsTable,
+      list: listsTable,
+      board: boardsTable,
+    })
+    .from(cardsTable)
+    .innerJoin(listsTable, eq(cardsTable.listId, listsTable.id))
+    .innerJoin(boardsTable, eq(listsTable.boardId, boardsTable.id))
+    .where(eq(boardsTable.userId, userSub));
+
+  console.log("🃏 Found cards:", cards.length);
+
+  if (cards.length === 0) {
+    return [];
+  }
+
+  const cardIds = cards.map(c => c.card.id);
+
+  // Fetch labels for all cards
+  const cardLabelsData = cardIds.length > 0 ? await db
+    .select({
+      cardId: cardLabelsTable.cardId,
+      labelId: labelsTable.id,
+      labelName: labelsTable.name,
+      labelColor: labelsTable.color,
+    })
+    .from(cardLabelsTable)
+    .innerJoin(labelsTable, eq(cardLabelsTable.labelId, labelsTable.id))
+    .where(sql`${cardLabelsTable.cardId} IN (${sql.join(cardIds.map(id => sql`${id}`), sql`, `)})`) : [];
+
+  // Fetch members for all cards
+  const cardMembersData = cardIds.length > 0 ? await db
+    .select({
+      cardId: cardMembersTable.cardId,
+      memberId: boardMembersTable.id,
+      memberName: boardMembersTable.name,
+      memberEmail: boardMembersTable.email,
+      memberAvatar: boardMembersTable.avatar,
+    })
+    .from(cardMembersTable)
+    .innerJoin(boardMembersTable, eq(cardMembersTable.memberId, boardMembersTable.id))
+    .where(sql`${cardMembersTable.cardId} IN (${sql.join(cardIds.map(id => sql`${id}`), sql`, `)})`) : [];
+
+  // Organize labels by card
+  const labelsByCard = new Map<string, Array<{ id: string; name: string; color: string }>>();
+  for (const cl of cardLabelsData) {
+    if (!labelsByCard.has(cl.cardId)) {
+      labelsByCard.set(cl.cardId, []);
+    }
+    labelsByCard.get(cl.cardId)!.push({
+      id: cl.labelId,
+      name: cl.labelName,
+      color: cl.labelColor,
+    });
+  }
+
+  // Organize members by card
+  const membersByCard = new Map<string, Array<{ id: string; name: string; email: string; avatar: string | null; initials: string }>>();
+  for (const cm of cardMembersData) {
+    if (!membersByCard.has(cm.cardId)) {
+      membersByCard.set(cm.cardId, []);
+    }
+    const initials = cm.memberName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    membersByCard.get(cm.cardId)!.push({
+      id: cm.memberId,
+      name: cm.memberName,
+      email: cm.memberEmail,
+      avatar: cm.memberAvatar,
+      initials,
+    });
+  }
+
+  // Return cards with board and list information
+  return cards.map(c => ({
+    id: c.card.id,
+    name: c.card.name,
+    description: c.card.description,
+    order: c.card.order,
+    listId: c.card.listId,
+    listName: c.list.name,
+    boardId: c.board.id,
+    boardName: c.board.name,
+    labels: JSON.stringify(labelsByCard.get(c.card.id) || []),
+    members: JSON.stringify(membersByCard.get(c.card.id) || []),
+    startDate: c.card.startDate,
+    deadline: c.card.deadline,
+    dueAt: c.card.dueAt,
+    dueComplete: c.card.dueComplete,
+    reminderMinutes: c.card.reminderMinutes,
+    recurrence: c.card.recurrence,
+    recurrenceDay: c.card.recurrenceDay,
+    recurrenceWeekday: c.card.recurrenceWeekday,
+    latitude: c.card.latitude,
+    longitude: c.card.longitude,
+    coverColor: c.card.coverColor,
+    coverUrl: c.card.coverUrl,
+    coverPublicId: c.card.coverPublicId,
+    coverMode: c.card.coverMode,
+    completed: c.card.completed,
+    createdAt: c.card.createdAt,
+    updatedAt: c.card.updatedAt,
+  }));
+}
+
 // Note: `userSub` is the authenticated user's subject (user id)
 export async function getCardsForBoard(userSub: string, boardId: string) {
   const board = await db

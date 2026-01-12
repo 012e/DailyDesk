@@ -5,6 +5,7 @@ import App from "./App.tsx";
 import "./index.css";
 import Layout from "./Layout.tsx";
 import Kanban from "./pages/kanban.tsx";
+import Tasks from "./pages/tasks.tsx";
 
 import NotFound from "@/pages/not-found.tsx";
 import SignInPage from "./pages/sign-in.tsx";
@@ -18,6 +19,7 @@ createRoot(document.getElementById("root")!).render(
         <Route element={<Layout />} errorElement={<h1>error</h1>}>
           <Route path="/" element={<App />} />
           <Route path="/board/:boardId" element={<Kanban />} />
+          <Route path="/tasks" element={<Tasks />} />
           <Route path="/sign-in/*" element={<SignInPage />} />
           <Route path="/doc" element={<Doc />} />
           <Route path="*" element={<NotFound />} />

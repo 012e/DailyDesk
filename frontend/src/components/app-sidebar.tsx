@@ -1,6 +1,7 @@
 import {
   BookOpen,
   Calendar,
+  CheckSquare,
   Home,
   Inbox,
   Search,
@@ -25,6 +26,11 @@ const items = [
     title: "Home",
     url: "/",
     icon: Home,
+  },
+  {
+    title: "All Tasks",
+    url: "/tasks",
+    icon: CheckSquare,
   },
   {
     title: "Inbox",
