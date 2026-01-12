@@ -103,7 +103,7 @@ export function createUserSearchRoutes() {
           });
         }
 
-        const users = await response.json();
+        const users = await response.json() as any[];
         
         // Map the Auth0 response to our schema
         const results = users.map((user: any) => ({

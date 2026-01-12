@@ -63,10 +63,10 @@ export const createCardTool = (boardId: string, userId: string) =>
           name,
           order,
           listId,
-          startDate: startDate ? new Date(startDate) : null,
-          deadline: deadline ? new Date(deadline) : null,
-          latitude: latitude ?? null,
-          longitude: longitude ?? null,
+          startDate: startDate ?? undefined,
+          deadline: deadline ? new Date(deadline) : undefined,
+          latitude: latitude ?? undefined,
+          longitude: longitude ?? undefined,
         });
 
         return {
