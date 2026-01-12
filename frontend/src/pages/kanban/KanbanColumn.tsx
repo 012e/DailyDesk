@@ -32,6 +32,7 @@ interface KanbanColumnProps {
   onSaveColumnEdit: (columnId: string, newName: string) => void;
   onDeleteColumn: (columnId: string) => void;
   onDeleteCard: (cardId: string) => void;
+  index: number;
 }
 
 export function KanbanColumn({
@@ -42,12 +43,15 @@ export function KanbanColumn({
   onSaveColumnEdit,
   onDeleteColumn,
   onDeleteCard,
+  index,
 }: KanbanColumnProps) {
   return (
     <KanbanBoardColumn
       key={column.id}
+      className="h-full"
       columnId={column.id}
       onDropOverColumn={onDropOverColumn}
+      index={index}
     >
       <KanbanBoardColumnHeader>
         <ColumnHeader

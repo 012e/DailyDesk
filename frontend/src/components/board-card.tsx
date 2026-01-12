@@ -78,7 +78,7 @@ export function BoardCard({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 z-20 bg-white/20 hover:bg-white/40 backdrop-blur-sm"
+                className="h-8 w-8 z-20 bg-transparent hover:bg-white/40"
               >
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
@@ -100,7 +100,7 @@ export function BoardCard({
         </CardHeader>
 
         <CardContent className="z-10 p-4 pt-0">
-          <p className="text-sm dark:text-gray-200 text-muted-foreground">
+          <p className="text-sm text-white dark:text-gray-200 ">
             Click to open board
           </p>
         </CardContent>

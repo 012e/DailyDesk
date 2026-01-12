@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { Card } from "@/types/card";
 import { uuidv7 } from "uuidv7";
 import api from "@/lib/api";
 import { useDeleteImage } from "@/hooks/use-image";
@@ -86,35 +85,29 @@ export function useDeleteCard() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (cardId: string) => {
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      return cardId;
-    },
+    mutationFn: async (params: { boardId: string; cardId: string }) => {
+      const { error } = await api.DELETE("/boards/{boardId}/cards/{id}", {
+        params: {
+          path: {
+            boardId: params.boardId,
+            id: params.cardId,
+          },
+        },
+      });
 
-    onMutate: async (cardId) => {
-      await queryClient.cancelQueries({ queryKey: ["cards"] });
-
-      const previousCards = queryClient.getQueryData<Card[]>(["cards"]);
-
-      if (previousCards) {
-        queryClient.setQueryData<Card[]>(
-          ["cards"],
-          previousCards.filter((card) => card.id !== cardId),
-        );
+      if (error) {
+        throw new Error("Failed to delete card");
       }
 
-      return { previousCards };
+      return params.cardId;
     },
 
-    onError: (err, _variables, context) => {
-      if (context?.previousCards) {
-        queryClient.setQueryData(["cards"], context.previousCards);
-      }
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["board", variables.boardId] });
+    },
+
+    onError: (err) => {
       console.error("Failed to delete card:", err);
-    },
-
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["cards"] });
     },
   });
 }

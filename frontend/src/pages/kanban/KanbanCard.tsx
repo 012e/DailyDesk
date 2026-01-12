@@ -11,10 +11,12 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import type { Card as CardType, Label, Member, Attachment, Comment, ActivityLog, CardCoverMode } from "@/types/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import type { Card as CardType, Label, Member, Attachment, Comment, ActivityLog, CardCoverMode} from "@/types/card";
 import { useAtom } from "jotai";
 import { isCardDialogOpenAtom, selectedCardAtom } from "./atoms";
-import { CheckCircle2 } from "lucide-react";
+import { useUpdateCard } from "@/hooks/use-card";
+
 
 type NormalizedCard = CardType & {
   title: string;
@@ -50,6 +52,7 @@ interface KanbanCardProps {
     completed?: boolean;
   };
   columnId: string;
+  boardId: string;
   onDropOverListItem: (
     data: string,
     direction: KanbanBoardDropDirection
@@ -60,11 +63,13 @@ interface KanbanCardProps {
 export function KanbanCard({
   card,
   columnId,
+  boardId,
   onDropOverListItem,
   onDelete,
 }: KanbanCardProps) {
   const [, setSelectedCard] = useAtom(selectedCardAtom);
   const [, setIsCardDialogOpen] = useAtom(isCardDialogOpenAtom);
+  const { mutate: updateCard } = useUpdateCard();
 
   const normalizedCard: NormalizedCard = {
     id: card.id,
@@ -103,6 +108,15 @@ export function KanbanCard({
     }
   };
 
+  const handleToggleComplete = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent opening the card dialog
+    updateCard({
+      boardId,
+      cardId: normalizedCard.id,
+      completed: !normalizedCard.completed,
+    });
+  };
+
   return (
     <KanbanBoardColumnListItem
       key={normalizedCard.id}
@@ -125,9 +139,12 @@ export function KanbanCard({
                 />
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 pt-8">
                   <div className="flex items-center gap-2">
-                    {normalizedCard.completed && (
-                      <CheckCircle2 className="h-4 w-4 text-green-400 flex-shrink-0" />
-                    )}
+                    <div onClick={handleToggleComplete} className="flex-shrink-0">
+                      <Checkbox 
+                        checked={normalizedCard.completed} 
+                        className="border-white/70 data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
+                      />
+                    </div>
                     <KanbanBoardCardTitle className={`text-white drop-shadow-md line-clamp-2 ${normalizedCard.completed ? "line-through opacity-75" : ""}`}>
                       {normalizedCard.title}
                     </KanbanBoardCardTitle>
@@ -141,9 +158,12 @@ export function KanbanCard({
               >
                 <div className="w-full bg-gradient-to-t from-black/70 to-transparent p-3 pt-8">
                   <div className="flex items-center gap-2">
-                    {normalizedCard.completed && (
-                      <CheckCircle2 className="h-4 w-4 text-green-400 flex-shrink-0" />
-                    )}
+                    <div onClick={handleToggleComplete} className="flex-shrink-0">
+                      <Checkbox 
+                        checked={normalizedCard.completed} 
+                        className="border-white/70 data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
+                      />
+                    </div>
                     <KanbanBoardCardTitle className={`text-white drop-shadow-sm line-clamp-2 ${normalizedCard.completed ? "line-through opacity-75" : ""}`}>
                       {normalizedCard.title}
                     </KanbanBoardCardTitle>
@@ -152,10 +172,13 @@ export function KanbanCard({
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                {normalizedCard.completed && (
-                  <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
-                )}
-                <KanbanBoardCardTitle className={`line-clamp-2 ${normalizedCard.completed ? "line-through text-muted-foreground" : ""}`}>
+                <div onClick={handleToggleComplete} className="flex-shrink-0">
+                  <Checkbox 
+                    checked={normalizedCard.completed} 
+                    className="border-primary/50 data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
+                  />
+                </div>
+                <KanbanBoardCardTitle className={`line-clamp-2 ${normalizedCard.completed ? "line-through text-muted-foreground opacity-50" : ""}`}>
                   {normalizedCard.title}
                 </KanbanBoardCardTitle>
               </div>

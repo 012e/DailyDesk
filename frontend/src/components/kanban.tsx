@@ -27,7 +27,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { CardCoverModeValue, type CardCoverMode } from "@/types/card";
+import { type CardCoverMode } from "@/types/card";
 
 /*
 Accessibility
@@ -389,7 +389,10 @@ Constants
  */
 const DATA_TRANSFER_TYPES = {
   CARD: "kanban-board-card",
+  COLUMN: "kanban-board-column",
 };
+
+// ... existing code ...
 
 const KANBAN_BOARD_CIRCLE_COLORS_MAP = {
   primary: "bg-kanban-board-circle-primary",
@@ -424,8 +427,8 @@ export function KanbanBoard({
   return (
     <div
       className={cn(
-        "flex h-full flex-grow items-start gap-x-2 overflow-x-auto py-1",
-        "[&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-white/30",
+        "flex h-full flex-grow gap-x-2 overflow-x-auto py-1",
+        "[&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-white/30 ",
         className
       )}
       ref={ref}
@@ -458,45 +461,73 @@ Column
 
 export type KanbanBoardColumnProps = {
   columnId: string;
-  onDropOverColumn?: (dataTransferData: string) => void;
+  onDropOverColumn?: (dataTransferData: string, type: "card" | "column") => void;
+  index?: number;
 };
 
 export const kanbanBoardColumnClassNames =
-  "w-64 flex-shrink-0 rounded-lg border flex flex-col border-border bg-sidebar py-2 max-h-full";
+  "w-64 flex-shrink-0 rounded-lg border flex flex-col border-border bg-sidebar py-2 h-full min-h-0 transition-colors";
 
 export function KanbanBoardColumn({
   className,
   columnId,
   onDropOverColumn,
+  index,
   ref,
   ...props
 }: ComponentProps<"section"> & KanbanBoardColumnProps) {
   const [isDropTarget, setIsDropTarget] = useState(false);
-  const { onDragEnd, onDragOver } = useDndEvents();
+  const [isColumnDropTarget, setIsColumnDropTarget] = useState(false);
+  const { onDragStart, onDragEnd, onDragOver } = useDndEvents();
 
   return (
     <section
       aria-labelledby={`column-${columnId}-title`}
       className={cn(
         kanbanBoardColumnClassNames,
-        isDropTarget && "border-primary",
+        isDropTarget && "border-primary bg-primary/10",
+        isColumnDropTarget && "border-primary opacity-50",
         className
       )}
+      draggable
+      onDragStart={(event) => {
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData(
+          DATA_TRANSFER_TYPES.COLUMN,
+          JSON.stringify({ id: columnId, index })
+        );
+        onDragStart(columnId);
+      }}
       onDragLeave={() => {
         setIsDropTarget(false);
+        setIsColumnDropTarget(false);
       }}
       onDragOver={(event) => {
         if (event.dataTransfer.types.includes(DATA_TRANSFER_TYPES.CARD)) {
           event.preventDefault();
           setIsDropTarget(true);
           onDragOver("", columnId);
+        } else if (event.dataTransfer.types.includes(DATA_TRANSFER_TYPES.COLUMN)) {
+           // allow column reordering
+           event.preventDefault();
+           setIsColumnDropTarget(true);
+           onDragOver("", columnId);
         }
       }}
       onDrop={(event) => {
-        const data = event.dataTransfer.getData(DATA_TRANSFER_TYPES.CARD);
-        onDropOverColumn?.(data);
-        onDragEnd(JSON.parse(data).id as string, columnId);
-        setIsDropTarget(false);
+        event.stopPropagation(); // Stop prop so we don't trigger parent drops if any
+        
+        if (event.dataTransfer.types.includes(DATA_TRANSFER_TYPES.CARD)) {
+            const data = event.dataTransfer.getData(DATA_TRANSFER_TYPES.CARD);
+            onDropOverColumn?.(data, "card");
+            onDragEnd(JSON.parse(data).id as string, columnId);
+            setIsDropTarget(false);
+        } else if (event.dataTransfer.types.includes(DATA_TRANSFER_TYPES.COLUMN)) {
+            const data = event.dataTransfer.getData(DATA_TRANSFER_TYPES.COLUMN);
+            onDropOverColumn?.(data, "column");
+             onDragEnd(JSON.parse(data).id as string, columnId);
+            setIsColumnDropTarget(false);
+        }
       }}
       ref={ref}
       {...props}
@@ -652,12 +683,14 @@ export function KanbanBoardColumnListItem({
         }
       }}
       onDrop={(event) => {
-        event.stopPropagation();
-        const data = event.dataTransfer.getData(DATA_TRANSFER_TYPES.CARD);
-        onDropOverListItem?.(data, dropDirection);
-
-        onDragEnd(JSON.parse(data).id as string, cardId);
-        setDropDirection("none");
+        if (event.dataTransfer.types.includes(DATA_TRANSFER_TYPES.CARD)) {
+          event.stopPropagation();
+          const data = event.dataTransfer.getData(DATA_TRANSFER_TYPES.CARD);
+          onDropOverListItem?.(data, dropDirection);
+  
+          onDragEnd(JSON.parse(data).id as string, cardId);
+          setDropDirection("none");
+        }
       }}
       ref={ref}
       {...props}

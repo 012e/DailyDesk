@@ -13,7 +13,7 @@ function App({ children }: AppProps) {
       {!isAuthenticated ? (
         <LoginButton />
       ) : (
-        <div>
+        <div className="h-full w-full">
           <Home />
         </div>
       )}

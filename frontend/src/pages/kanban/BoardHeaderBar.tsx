@@ -71,6 +71,7 @@ interface BoardHeaderBarProps {
   filters: FilterState;
   onFiltersChange: (filters: FilterState) => void;
   onEditBoard: () => void;
+  progress?: number;
 }
 
 // Avatar colors for members
@@ -104,6 +105,7 @@ export function BoardHeaderBar({
   filters,
   onFiltersChange,
   onEditBoard,
+  progress = 0,
 }: BoardHeaderBarProps) {
   const [isMembersSheetOpen, setIsMembersSheetOpen] = useState(false);
   const [isLabelsSheetOpen, setIsLabelsSheetOpen] = useState(false);
@@ -142,7 +144,7 @@ export function BoardHeaderBar({
 
   return (
     <>
-      <div className="sticky top-1 z-10 flex items-center justify-between mb-4 bg-card/80 dark:bg-black/30 backdrop-blur-sm rounded-lg px-4 py-2 mr-4  border border-border/50">
+      <div className="sticky top-1 z-10 mb-4 flex items-center justify-between bg-card/80 dark:bg-black/30 backdrop-blur-sm rounded-lg px-4 py-2 border border-border/50">
         {/* Left Section - Board Name */}
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-semibold tracking-tight text-foreground">{boardName}</h2>
@@ -167,7 +169,7 @@ export function BoardHeaderBar({
           <TooltipProvider>
             <Sheet open={isMembersSheetOpen} onOpenChange={setIsMembersSheetOpen}>
               <SheetTrigger asChild>
-                <div className="flex items-center cursor-pointer group">
+                <div className="flex items-center cursor-pointer group hidden lg:flex">
                   <div className="flex -space-x-2">
                     {members.slice(0, 5).map((member, index) => {
                       const colorClass = AVATAR_COLORS[index % AVATAR_COLORS.length];
@@ -203,9 +205,21 @@ export function BoardHeaderBar({
                     )}
                   </div>
                   {/* Progress Bar under avatars */}
-                  <div className="ml-1 h-1 w-12 bg-muted rounded-full overflow-hidden">
-                    <div className="h-full bg-cyan-400 rounded-full" style={{ width: "60%" }} />
-                  </div>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="ml-1 h-1 w-12 bg-muted rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-cyan-400 rounded-full transition-all duration-500 ease-out" 
+                            style={{ width: `${progress}%` }} 
+                          />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Board Progress: {Math.round(progress)}%</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
               </SheetTrigger>
               <SheetContent>
@@ -237,7 +251,7 @@ export function BoardHeaderBar({
                   placeholder="Search..."
                   value={filters.searchQuery}
                   onChange={(e) => onFiltersChange({ ...filters, searchQuery: e.target.value })}
-                  className="h-5 w-40 bg-transparent border-none text-foreground placeholder:text-muted-foreground text-xs focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
+                  className="h-5 w-20 md:w-40 bg-transparent border-none text-foreground placeholder:text-muted-foreground text-xs focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
                 />
                 {filters.searchQuery && (
                   <Button
@@ -272,7 +286,7 @@ export function BoardHeaderBar({
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-foreground/70 hover:text-foreground hover:bg-muted"
+                        className="h-8 w-8 text-foreground/70 hover:text-foreground hover:bg-muted hidden md:flex"
                       >
                         <Tags className="h-4 w-4" />
                       </Button>
@@ -313,6 +327,10 @@ export function BoardHeaderBar({
                   <DropdownMenuItem onClick={handleCopyLink}>
                     <Copy className="h-4 w-4 mr-2" />
                     Copy Board Link
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setIsLabelsSheetOpen(true)} className="md:hidden">
+                    <Tags className="h-4 w-4 mr-2" />
+                    Manage Labels
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={onEditBoard}>
                     <Settings className="h-4 w-4 mr-2" />
