@@ -1,6 +1,6 @@
 import db from "@/lib/db";
 import { boardsTable, listsTable, cardsTable, cardLabelsTable, cardMembersTable, labelsTable, boardMembersTable, attachmentsTable } from "@/lib/db/schema";
-import { eq, asc, sql } from "drizzle-orm";
+import { eq, asc, sql, or } from "drizzle-orm";
 import { ContentfulStatusCode } from "hono/utils/http-status";
 import { publishBoardChanged } from "./events.service";
 
@@ -14,8 +14,49 @@ export class ServiceError extends Error {
   }
 }
 
+/**
+ * Helper function to check if a user has access to a board (owner or member)
+ */
+async function checkBoardAccess(boardId: string, userSub: string, requireOwner: boolean = false): Promise<{ isOwner: boolean; isMember: boolean }> {
+  const board = await db
+    .select()
+    .from(boardsTable)
+    .where(eq(boardsTable.id, boardId))
+    .limit(1);
+
+  if (board.length === 0) {
+    throw new ServiceError("Board không tồn tại", 404);
+  }
+
+  const isOwner = board[0].userId === userSub;
+  
+  let isMember = false;
+  if (!isOwner) {
+    const memberCheck = await db
+      .select()
+      .from(boardMembersTable)
+      .where(
+        sql`${boardMembersTable.boardId} = ${boardId} AND ${boardMembersTable.userId} = ${userSub}`
+      )
+      .limit(1);
+    isMember = memberCheck.length > 0;
+  }
+
+  if (requireOwner && !isOwner) {
+    throw new ServiceError("Chỉ chủ board mới có thể thực hiện thao tác này", 403);
+  }
+
+  if (!isOwner && !isMember) {
+    throw new ServiceError("Không có quyền truy cập Board này", 403);
+  }
+
+  return { isOwner, isMember };
+}
+
+
 export async function getBoardsForUser(userSub: string) {
-  const boards = await db.query.boardsTable.findMany({
+  // Get boards where user is the owner
+  const ownedBoards = await db.query.boardsTable.findMany({
     where: eq(boardsTable.userId, userSub),
     with: {
       lists: {
@@ -29,9 +70,39 @@ export async function getBoardsForUser(userSub: string) {
     },
   });
 
+  // Get boards where user is a member
+  const memberBoards = await db
+    .select({
+      boardId: boardMembersTable.boardId,
+    })
+    .from(boardMembersTable)
+    .where(eq(boardMembersTable.userId, userSub));
+
+  const memberBoardIds = memberBoards.map(mb => mb.boardId);
+
+  let sharedBoards: any[] = [];
+  if (memberBoardIds.length > 0) {
+    sharedBoards = await db.query.boardsTable.findMany({
+      where: sql`${boardsTable.id} IN (${sql.join(memberBoardIds.map(id => sql`${id}`), sql`, `)})`,
+      with: {
+        lists: {
+          orderBy: asc(listsTable.order),
+          with: {
+            cards: {
+              orderBy: asc(cardsTable.order),
+            },
+          },
+        },
+      },
+    });
+  }
+
+  // Combine owned and shared boards
+  const boards = [...ownedBoards, ...sharedBoards];
+
   // Get all card IDs from all boards
-  const cardIds = boards.flatMap(board =>
-    board.lists.flatMap(list => list.cards.map(card => card.id))
+  const cardIds = boards.flatMap((board: any) =>
+    board.lists.flatMap((list: any) => list.cards.map((card: any) => card.id))
   );
 
   if (cardIds.length === 0) {
@@ -107,11 +178,11 @@ export async function getBoardsForUser(userSub: string) {
   }
 
   // Add labels, members, and attachments to cards in all boards
-  return boards.map(board => ({
+  return boards.map((board: any) => ({
     ...board,
-    lists: board.lists.map(list => ({
+    lists: board.lists.map((list: any) => ({
       ...list,
-      cards: list.cards.map(card => ({
+      cards: list.cards.map((card: any) => ({
         ...card,
         labels: labelsByCard.get(card.id) || [],
         members: membersByCard.get(card.id) || [],
@@ -155,7 +226,20 @@ export async function getBoardById(userSub: string, id: string) {
   });
 
   if (!board) throw new ServiceError("Board không tồn tại", 404);
-  if (board.userId !== userSub) throw new ServiceError("Không có quyền truy cập Board này", 403);
+  
+  // Check if user is owner or member
+  const isOwner = board.userId === userSub;
+  const isMember = await db
+    .select()
+    .from(boardMembersTable)
+    .where(
+      sql`${boardMembersTable.boardId} = ${id} AND ${boardMembersTable.userId} = ${userSub}`
+    )
+    .limit(1);
+
+  if (!isOwner && isMember.length === 0) {
+    throw new ServiceError("Không có quyền truy cập Board này", 403);
+  }
 
   // Get all card IDs from the board
   const cardIds = board.lists.flatMap(list => list.cards.map(card => card.id));
@@ -250,20 +334,8 @@ export async function getBoardById(userSub: string, id: string) {
 }
 
 export async function updateBoard(userSub: string, id: string, req: any) {
-  // Check if board exists and user owns it
-  const existingBoard = await db
-    .select()
-    .from(boardsTable)
-    .where(eq(boardsTable.id, id))
-    .limit(1);
-
-  if (existingBoard.length === 0) {
-    throw new ServiceError("Board không tồn tại", 404);
-  }
-
-  if (existingBoard[0].userId !== userSub) {
-    throw new ServiceError("Không có quyền cập nhật Board này", 403);
-  }
+  // Check if board exists and user is the owner (only owner can update)
+  await checkBoardAccess(id, userSub, true);
 
   const updateData: {
     name?: string;
@@ -288,20 +360,8 @@ export async function updateBoard(userSub: string, id: string, req: any) {
 }
 
 export async function deleteBoard(userSub: string, id: string) {
-  // Check if board exists and user owns it
-  const existingBoard = await db
-    .select()
-    .from(boardsTable)
-    .where(eq(boardsTable.id, id))
-    .limit(1);
-
-  if (existingBoard.length === 0) {
-    throw new ServiceError("Board không tồn tại", 404);
-  }
-
-  if (existingBoard[0].userId !== userSub) {
-    throw new ServiceError("Không có quyền xóa Board này", 403);
-  }
+  // Check if board exists and user is the owner (only owner can delete)
+  await checkBoardAccess(id, userSub, true);
 
   await db.delete(boardsTable).where(eq(boardsTable.id, id));
 
@@ -312,20 +372,8 @@ export async function deleteBoard(userSub: string, id: string) {
 }
 
 export async function getListsForBoard(userSub: string, id: string) {
-  // Check if board exists and user owns it
-  const board = await db
-    .select()
-    .from(boardsTable)
-    .where(eq(boardsTable.id, id))
-    .limit(1);
-
-  if (board.length === 0) {
-    throw new ServiceError("Board không tồn tại", 404);
-  }
-
-  if (board[0].userId !== userSub) {
-    throw new ServiceError("Không có quyền truy cập Board này", 403);
-  }
+  // Check if board exists and user has access
+  await checkBoardAccess(id, userSub);
 
   const lists = await db
     .select()
@@ -336,20 +384,8 @@ export async function getListsForBoard(userSub: string, id: string) {
 }
 
 export async function getCardsForBoard(userSub: string, id: string) {
-  // Check if board exists and user owns it
-  const board = await db
-    .select()
-    .from(boardsTable)
-    .where(eq(boardsTable.id, id))
-    .limit(1);
-
-  if (board.length === 0) {
-    throw new ServiceError("Board không tồn tại", 404);
-  }
-
-  if (board[0].userId !== userSub) {
-    throw new ServiceError("Không có quyền truy cập Board này", 403);
-  }
+  // Check if board exists and user has access
+  await checkBoardAccess(id, userSub);
 
   const cards = await db
     .select({

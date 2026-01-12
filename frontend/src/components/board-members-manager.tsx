@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Users, Plus, Trash2, X, Mail, User as UserIcon } from "lucide-react";
+import { Users, Plus, Trash2, Mail, User as UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Avatar,
@@ -24,7 +24,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useMembers, useCreateMember, useDeleteMember, useUpdateMember } from "@/hooks/use-member";
-import { uuidv7 } from "uuidv7";
+import { useUserSearch, type UserSearchResult } from "@/hooks/use-user-search";
+import { toast } from "sonner";
 
 interface BoardMembersManagerProps {
   boardId: string;
@@ -33,44 +34,78 @@ interface BoardMembersManagerProps {
 
 export function BoardMembersManager({ boardId, isOwner }: BoardMembersManagerProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedUser, setSelectedUser] = useState<{
+    userId: string;
+    name: string;
+    email: string;
+    avatar?: string;
+  } | null>(null);
   const [role, setRole] = useState<"member" | "admin" | "viewer">("member");
 
   const { data: members = [], isLoading } = useMembers(boardId);
+  const { data: searchResults = [], isLoading: isSearching } = useUserSearch(
+    searchQuery,
+    isAddDialogOpen && searchQuery.length >= 2
+  );
   const { mutate: createMember, isPending: isCreating } = useCreateMember();
   const { mutate: deleteMember } = useDeleteMember();
   const { mutate: updateMember } = useUpdateMember();
 
+  // Reset form when dialog closes
+  useState(() => {
+    if (!isAddDialogOpen) {
+      setSearchQuery("");
+      setSelectedUser(null);
+      setRole("member");
+    }
+  });
+
+  const handleSelectUser = (user: UserSearchResult) => {
+    setSelectedUser({
+      userId: user.user_id,
+      name: user.name || user.nickname || user.email || "Unknown User",
+      email: user.email || "",
+      avatar: user.picture,
+    });
+    setSearchQuery("");
+  };
+
   const handleAddMember = () => {
-    if (!email.trim() || !name.trim()) {
-      alert("Please enter email and name");
+    if (!selectedUser) {
+      toast.error("Please select a user to add");
       return;
     }
 
-    // Generate a user ID (in production, this would come from Clerk)
-    const userId = uuidv7();
+    // Check if user is already a member
+    const isAlreadyMember = members.some(
+      (m) => m.userId === selectedUser.userId || m.email === selectedUser.email
+    );
+
+    if (isAlreadyMember) {
+      toast.error("This user is already a member of the board");
+      return;
+    }
 
     createMember(
       {
         boardId,
-        userId,
-        name: name.trim(),
-        email: email.trim(),
-        avatar: avatarUrl.trim() || null,
+        userId: selectedUser.userId,
+        name: selectedUser.name,
+        email: selectedUser.email,
+        avatar: selectedUser.avatar || null,
         role,
       },
       {
         onSuccess: () => {
+          toast.success(`${selectedUser.name} has been added to the board`);
           setIsAddDialogOpen(false);
-          setEmail("");
-          setName("");
-          setAvatarUrl("");
+          setSelectedUser(null);
+          setSearchQuery("");
           setRole("member");
         },
         onError: (error) => {
-          alert(`Error adding member: ${error.message}`);
+          toast.error(`Failed to add member: ${error.message}`);
         },
       }
     );
@@ -109,61 +144,137 @@ export function BoardMembersManager({ boardId, isOwner }: BoardMembersManagerPro
                 Add Member
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-md">
               <DialogHeader>
                 <DialogTitle>Add New Member</DialogTitle>
                 <DialogDescription>
-                  Invite others to join this board
+                  Search and invite users to join this board
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">
-                    <Mail className="h-4 w-4 inline mr-1" />
-                    Email *
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="member@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="name">
-                    <UserIcon className="h-4 w-4 inline mr-1" />
-                    Name *
-                  </Label>
-                  <Input
-                    id="name"
-                    placeholder="John Doe"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="avatar">Avatar URL (optional)</Label>
-                  <Input
-                    id="avatar"
-                    placeholder="https://..."
-                    value={avatarUrl}
-                    onChange={(e) => setAvatarUrl(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="role">Role</Label>
-                  <Select value={role} onValueChange={(value) => setRole(value as any)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="viewer">Viewer (View only)</SelectItem>
-                      <SelectItem value="member">Member (Can edit)</SelectItem>
-                      <SelectItem value="admin">Admin (Full access)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                {/* Selected User Display or Search */}
+                {selectedUser ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3 p-3 border rounded-lg bg-muted/50">
+                      <Avatar>
+                        <AvatarImage src={selectedUser.avatar} alt={selectedUser.name} />
+                        <AvatarFallback>
+                          {selectedUser.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")
+                            .toUpperCase()
+                            .slice(0, 2)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{selectedUser.name}</p>
+                        <p className="text-sm text-muted-foreground truncate">
+                          {selectedUser.email}
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => setSelectedUser(null)}
+                      >
+                        <Mail className="h-4 w-4" />
+                      </Button>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="role">Role</Label>
+                      <Select
+                        value={role}
+                        onValueChange={(value) =>
+                          setRole(value as "member" | "admin" | "viewer")
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="viewer">Viewer (View only)</SelectItem>
+                          <SelectItem value="member">Member (Can edit)</SelectItem>
+                          <SelectItem value="admin">Admin (Full access)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Label htmlFor="search">
+                      <UserIcon className="h-4 w-4 inline mr-1" />
+                      Search Users
+                    </Label>
+                    <Input
+                      id="search"
+                      type="text"
+                      placeholder="Search by name or email..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      autoComplete="off"
+                    />
+                    
+                    {/* Search Results */}
+                    {searchQuery.length >= 2 && (
+                      <div className="border rounded-lg max-h-64 overflow-y-auto">
+                        {isSearching ? (
+                          <div className="p-4 text-center text-sm text-muted-foreground">
+                            Searching...
+                          </div>
+                        ) : searchResults.length === 0 ? (
+                          <div className="p-4 text-center text-sm text-muted-foreground">
+                            No users found
+                          </div>
+                        ) : (
+                          <div className="p-2 space-y-1">
+                            {searchResults.map((user) => {
+                              const displayName =
+                                user.name || user.nickname || user.email || "Unknown User";
+                              const initials = displayName
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")
+                                .toUpperCase()
+                                .slice(0, 2);
+
+                              return (
+                                <button
+                                  key={user.user_id}
+                                  className="w-full flex items-center gap-3 p-2 rounded-md hover:bg-muted transition-colors text-left"
+                                  onClick={() => handleSelectUser(user)}
+                                >
+                                  <Avatar className="h-8 w-8">
+                                    <AvatarImage src={user.picture} alt={displayName} />
+                                    <AvatarFallback>{initials}</AvatarFallback>
+                                  </Avatar>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-medium text-sm truncate">
+                                      {displayName}
+                                    </p>
+                                    {user.email && (
+                                      <p className="text-xs text-muted-foreground truncate">
+                                        {user.email}
+                                      </p>
+                                    )}
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {searchQuery.length > 0 && searchQuery.length < 2 && (
+                      <p className="text-xs text-muted-foreground">
+                        Type at least 2 characters to search
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="flex justify-end gap-2">
                 <Button
@@ -172,7 +283,10 @@ export function BoardMembersManager({ boardId, isOwner }: BoardMembersManagerPro
                 >
                   Cancel
                 </Button>
-                <Button onClick={handleAddMember} disabled={isCreating}>
+                <Button
+                  onClick={handleAddMember}
+                  disabled={!selectedUser || isCreating}
+                >
                   {isCreating ? "Adding..." : "Add Member"}
                 </Button>
               </div>
@@ -225,7 +339,7 @@ export function BoardMembersManager({ boardId, isOwner }: BoardMembersManagerPro
                     <Select
                       value={member.role}
                       onValueChange={(value) =>
-                        handleRoleChange(member.id, value as any)
+                        handleRoleChange(member.id, value as "member" | "admin" | "viewer")
                       }
                     >
                       <SelectTrigger className="w-32 h-8">
