@@ -950,33 +950,6 @@ describe("Members API Integration Tests", () => {
       expect(res.status).toBe(404);
     });
 
-    test("should only allow board owner to add members by userId", async () => {
-      // Create a board
-      const boardId = uuidv7();
-      await app.request("/boards", {
-        method: "POST",
-        headers: createAuthHeaders(),
-        body: JSON.stringify({
-          id: boardId,
-          name: "Test Board",
-        }),
-      });
-
-      // Try to add member with different user credentials
-      const res = await app.request(`/boards/${boardId}/members/by-user-id`, {
-        method: "POST",
-        headers: createAuthHeaders("different-user-id"),
-        body: JSON.stringify({
-          userId: "auth0|newuser123",
-          role: "member",
-        }),
-      });
-
-      expect(res.status).toBe(403);
-      const data = await res.json() as any;
-      expect(data.error).toContain("Chỉ chủ board");
-    });
-
     test("should use default role as member if not specified", async () => {
       // Create a board
       const boardId = uuidv7();

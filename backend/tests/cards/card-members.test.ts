@@ -446,13 +446,14 @@ describe("Cards Members Tests", () => {
           id: newCardId,
           name: "Card with Auto-Fetched Member",
           listId: testListId,
-          order: 2,
+          order: 0,
           members: [{ id: newMemberId }],
         }),
       });
 
-      expect(res.status).toBe(200);
       const data = await res.json() as any;
+      console.log(data);
+      expect(res.status).toBe(200);
       expect(data.members).toHaveLength(1);
       expect(data.members[0]).toHaveProperty("name", "Fetched User");
     });
