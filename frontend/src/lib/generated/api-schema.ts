@@ -3244,7 +3244,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/users/search": {
+    "/members/search": {
         parameters: {
             query?: never;
             header?: never;
