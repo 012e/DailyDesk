@@ -27,16 +27,6 @@ export function generateRecurringInstances(
   rangeEnd?: Date,
   maxInstances: number = 100
 ): RecurringEventInstance[] {
-  console.log('generateRecurringInstances called:', {
-    originalDate,
-    recurrence,
-    recurrenceDay,
-    recurrenceWeekday,
-    rangeStart,
-    rangeEnd,
-    maxInstances
-  });
-
   if (!recurrence || recurrence === "never") {
     return [{ instanceDate: originalDate, isOriginal: true }];
   }
@@ -58,13 +48,10 @@ export function generateRecurringInstances(
       recurrenceWeekday
     );
 
-    console.log('Next date calculated:', nextDate);
-
     if (!nextDate) break;
 
     // Stop if we've exceeded the range end
     if (rangeEnd && isAfter(nextDate, rangeEnd)) {
-      console.log('Exceeded range end, stopping');
       break;
     }
 
@@ -77,7 +64,6 @@ export function generateRecurringInstances(
     count++;
   }
 
-  console.log('Generated total instances:', instances.length);
   return instances;
 }
 

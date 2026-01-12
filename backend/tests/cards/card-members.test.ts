@@ -1,8 +1,12 @@
-import { describe, test, expect, beforeEach } from "vitest";
+import { describe, test, expect, beforeEach, vi } from "vitest";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { createAuthHeaders } from "../helpers/auth";
 import { createTestApp } from "../helpers/app";
 import { uuidv7 } from "uuidv7";
+
+// Mock fetch globally for Auth0 API calls
+const mockFetch = vi.fn();
+global.fetch = mockFetch;
 
 describe("Cards Members Tests", () => {
   let app: OpenAPIHono;
@@ -12,6 +16,9 @@ describe("Cards Members Tests", () => {
   beforeEach(async () => {
     // Create a new app instance for each test
     app = createTestApp();
+    
+    // Clear all mocks before each test
+    vi.clearAllMocks();
 
     // Create a test board and list to use for card tests
     testBoardId = uuidv7();
@@ -381,6 +388,24 @@ describe("Cards Members Tests", () => {
       const data = await res.json() as any;
       expect(data.members).toHaveLength(1);
       expect(data.members[0]).toHaveProperty("id", boardMemberId);
+    });
+  });
+  describe("Card Members - Auto-fetch from Auth0", () => {
+    let cardId: string;
+
+    beforeEach(async () => {
+      // Create a card for testing
+      cardId = uuidv7();
+      await app.request(`/boards/${testBoardId}/cards`, {
+        method: "POST",
+        headers: createAuthHeaders(),
+        body: JSON.stringify({
+          id: cardId,
+          name: "Card for Auto-fetch Tests",
+          listId: testListId,
+          order: 0,
+        }),
+      });
     });
   });
 });

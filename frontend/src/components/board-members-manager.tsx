@@ -62,8 +62,6 @@ export function BoardMembersManager({ boardId, isOwner }: BoardMembersManagerPro
   });
 
   const handleSelectUser = (user: UserSearchResult) => {
-    console.log("Selected user:", user);
-    toast.success(`Selected user: ${user.name || user.email}`);
     setSelectedUser({
       userId: user.user_id,
       name: user.name || user.nickname || user.email || "Unknown User",

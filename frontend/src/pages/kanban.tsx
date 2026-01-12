@@ -24,12 +24,6 @@ export default function KanbanPage() {
   // Convert cards to calendar events with recurrence support
   const calendarEvents = useMemo(() => {
     if (!boardId || !board?.lists) return [];
-    console.log('Converting cards to calendar events:', {
-      listsCount: board.lists.length,
-      totalCards: board.lists.reduce((sum, list) => sum + list.cards.length, 0),
-      calendarDate,
-      calendarView
-    });
     return listsCardsToCalendarEvents(board.lists, calendarDate, calendarView);
   }, [boardId, board?.lists, calendarDate, calendarView]);
 
@@ -174,8 +168,6 @@ function CalendarWrapper({
 }) {
   const calendarRef = useRef<HTMLDivElement>(null);
 
-  console.log('CalendarWrapper rendering with events:', events.length);
-  
   return (
     <div ref={calendarRef}>
       <EventCalendar

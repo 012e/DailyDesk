@@ -101,9 +101,6 @@ export async function ensureBoardMemberExists(
     return existingMember[0];
   }
 
-  // Member doesn't exist, fetch from Auth0
-  console.log(`Member ${userId} not found in board ${boardId}, fetching from Auth0...`);
-  
   const auth0User = await fetchAuth0UserById(userId);
   
   if (!auth0User) {
@@ -124,8 +121,6 @@ export async function ensureBoardMemberExists(
     })
     .returning();
 
-  console.log(`✅ Created new board member: ${newMember[0].name} (${newMember[0].email})`);
-  
   return newMember[0];
 }
 
