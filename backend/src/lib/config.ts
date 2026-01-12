@@ -32,6 +32,8 @@ export const configSchema = z.object({
   openai: z.string().nonempty().optional(),
   defaultModel: z.string().default("gpt-4o-mini"),
   systemPrompt: z.string().default(SYSTEM_PROMPT),
+  auth0Token: z.string().nonempty().optional(), // Auth0 Management API token
+  auth0Domain: z.string().nonempty(), // Auth0 domain
 });
 
 /**
@@ -66,6 +68,8 @@ export default function getConfig(): Config {
     authIssuerUrl: "https://" + process.env.AUTH0_DOMAIN! + "/",
     authAudience: process.env.AUTH0_API_AUDIENCE!,
     openai: process.env.OPENAI_API_KEY || undefined,
+    auth0Token: process.env.AUTH0_TOKEN || undefined,
+    auth0Domain: process.env.AUTH0_DOMAIN!,
   };
 
   return configSchema.parse(rawConfig);

@@ -71,13 +71,10 @@ export function useUploadAttachment() {
         throw new Error("Failed to create attachment");
       }
 
-      console.log("[UPLOAD ATTACHMENT] Backend response:", data);
       return data;
     },
 
     onSuccess: async (data, variables) => {
-      console.log("[UPLOAD ATTACHMENT] Success, refetching board query:", variables.boardId);
-      console.log("[UPLOAD ATTACHMENT] Attachment data:", data);
       // Use refetchQueries to force immediate refetch instead of just invalidating
       await queryClient.refetchQueries({ queryKey: ["board", variables.boardId] });
     },

@@ -44,16 +44,7 @@ export default function createCardRoutes() {
       try {
         const cards = await cardService.getCardsForBoard(user.sub, boardId);
 
-        const parsedCards = cards.map((card) => ({
-          ...card,
-          labels: card.labels ? JSON.parse(card.labels) : null,
-          members: card.members ? JSON.parse(card.members) : null,
-          attachments: card.attachments ? JSON.parse(card.attachments) : null,
-        }));
-
-        console.log("📤 GET cards response (first card with dates):", parsedCards.find(c => c.dueAt || c.startDate));
-
-        return c.json(parsedCards);
+        return c.json(cards);
       } catch (err: any) {
         if (err instanceof cardService.ServiceError) {
           return c.json({ error: err.message }, err.status);
@@ -101,15 +92,7 @@ export default function createCardRoutes() {
       try {
         const card = await cardService.createCard(user.sub, boardId, req);
 
-        // Parse JSON fields for response
-        const parsedCard = {
-          ...card,
-          labels: card.labels ? JSON.parse(card.labels) : null,
-          members: card.members ? JSON.parse(card.members) : null,
-          // attachments: card.attachments ? JSON.parse(card.attachments) : null,
-        };
-
-        return c.json(parsedCard);
+        return c.json(card);
       } catch (err: any) {
         if (err instanceof cardService.ServiceError) {
           return c.json({ error: err.message }, err.status);
@@ -152,15 +135,7 @@ export default function createCardRoutes() {
       try {
         const card = await cardService.getCardById(user.sub, boardId, id);
 
-        // Parse JSON fields for response
-        const parsedCard = {
-          ...card,
-          labels: card.labels ? JSON.parse(card.labels) : null,
-          members: card.members ? JSON.parse(card.members) : null,
-          attachments: card.attachments ? JSON.parse(card.attachments) : null,
-        };
-
-        return c.json(parsedCard);
+        return c.json(card);
       } catch (err: any) {
         if (err instanceof cardService.ServiceError) {
           return c.json({ error: err.message }, err.status);
@@ -214,17 +189,7 @@ export default function createCardRoutes() {
           req,
         );
 
-        // Parse JSON fields for response
-        const parsedCard = {
-          ...updated,
-          labels: updated.labels ? JSON.parse(updated.labels) : null,
-          members: updated.members ? JSON.parse(updated.members) : null,
-          attachments: updated.attachments
-            ? JSON.parse(updated.attachments)
-            : null,
-        };
-
-        return c.json(parsedCard);
+        return c.json(updated);
       } catch (err: any) {
         console.error("Error in updateCard route:", err);
         if (err instanceof cardService.ServiceError) {
@@ -319,11 +284,8 @@ export default function createCardRoutes() {
       const { boardId, cardId } = c.req.valid("param");
       const dueData = c.req.valid("json");
 
-      console.log("📥 PATCH /due request - boardId:", boardId, "cardId:", cardId, "dueData:", dueData);
-
       try {
         const updatedCard = await cardService.updateCardDue(user.sub, boardId, cardId, dueData);
-        console.log("✅ Updated card due:", updatedCard.dueAt, updatedCard.dueComplete, updatedCard.reminderMinutes);
         return c.json(updatedCard);
       } catch (err: any) {
         console.error("❌ Update due error:", err);

@@ -78,7 +78,6 @@ export async function checkAndSendReminders() {
         sentAt: now,
       });
 
-      console.log(`✅ Reminder sent for card "${card.cardName}" (ID: ${card.cardId})`);
     } catch (error) {
       console.error(`❌ Failed to send reminder for card ${card.cardId}:`, error);
     }

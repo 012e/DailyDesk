@@ -35,6 +35,8 @@ vi.mock("@/lib/config", () => {
       isProduction: false,
       authIssuerUrl: "https://test-domain.auth0.com/",
       authAudience: "test-audience",
+      auth0Token: "mock-auth0-management-token",
+      auth0Domain: "test-domain.auth0.com",
     }),
   };
 });
