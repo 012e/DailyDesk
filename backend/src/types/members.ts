@@ -29,3 +29,9 @@ export const AddMemberByEmailSchema = z.object({
   email: z.email(),
   role: z.enum(["member", "admin", "viewer"]).optional().default("member"),
 });
+
+// Schema for adding member by userId (will fetch from Auth0 if not exists)
+export const AddMemberByUserIdSchema = z.object({
+  userId: z.string().describe("Auth0 user ID (e.g., auth0|123456)"),
+  role: z.enum(["member", "admin", "viewer"]).optional().default("member"),
+});

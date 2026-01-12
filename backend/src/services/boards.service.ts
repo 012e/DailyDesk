@@ -279,8 +279,6 @@ export async function getBoardById(userSub: string, id: string) {
     .from(attachmentsTable)
     .where(sql`${attachmentsTable.cardId} IN (${sql.join(cardIds.map(id => sql`${id}`), sql`, `)})`);
 
-  console.log("[GET BOARD BY ID] Found attachments:", cardAttachmentsData.length);
-
   // Group labels and members by card ID
   const labelsByCard = new Map<string, Array<{ id: string; name: string; color: string }>>();
   for (const cl of cardLabelsData) {

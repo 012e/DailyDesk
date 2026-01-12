@@ -44,8 +44,6 @@ export default function createCardRoutes() {
       try {
         const cards = await cardService.getCardsForBoard(user.sub, boardId);
 
-        console.log("📤 GET cards response (first card with dates):", cards.find(c => c.dueAt || c.startDate));
-
         return c.json(cards);
       } catch (err: any) {
         if (err instanceof cardService.ServiceError) {
@@ -286,11 +284,8 @@ export default function createCardRoutes() {
       const { boardId, cardId } = c.req.valid("param");
       const dueData = c.req.valid("json");
 
-      console.log("📥 PATCH /due request - boardId:", boardId, "cardId:", cardId, "dueData:", dueData);
-
       try {
         const updatedCard = await cardService.updateCardDue(user.sub, boardId, cardId, dueData);
-        console.log("✅ Updated card due:", updatedCard.dueAt, updatedCard.dueComplete, updatedCard.reminderMinutes);
         return c.json(updatedCard);
       } catch (err: any) {
         console.error("❌ Update due error:", err);

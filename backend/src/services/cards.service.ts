@@ -14,6 +14,7 @@ import { ContentfulStatusCode } from "hono/utils/http-status";
 import { randomUUID } from "crypto";
 import { logActivity } from "./activities.service";
 import { publishBoardChanged } from "./events.service";
+import { ensureBoardMembersExist } from "./members.service";
 import { 
   CreateCardSchema, 
   UpdateCardSchema,
@@ -193,13 +194,6 @@ export async function createCard(userSub: string, boardId: string, req: CreateCa
     throw new ServiceError(`Order must be between 0 and ${listSize} for this list`, 400);
   }
 
-  console.log("📝 Creating card with dates:", {
-    startDate: req.startDate,
-    dueAt: req.dueAt,
-    dueComplete: req.dueComplete,
-    reminderMinutes: req.reminderMinutes,
-  });
-
   const card = await db
     .insert(cardsTable)
     .values({
@@ -221,13 +215,6 @@ export async function createCard(userSub: string, boardId: string, req: CreateCa
     })
     .returning();
 
-  console.log("✅ Card created with dates:", {
-    startDate: card[0].startDate,
-    dueAt: card[0].dueAt,
-    dueComplete: card[0].dueComplete,
-    reminderMinutes: card[0].reminderMinutes,
-  });
-
   const createdCard = card[0];
 
   if (req.labels && req.labels.length > 0) {
@@ -240,12 +227,18 @@ export async function createCard(userSub: string, boardId: string, req: CreateCa
   }
 
   if (req.members && req.members.length > 0) {
-    const memberInserts = req.members.map((member) => ({
-      id: randomUUID(),
-      cardId: createdCard.id,
-      memberId: member.id,
-    }));
-    await db.insert(cardMembersTable).values(memberInserts);
+    // Ensure all members exist in board_members table (fetch from Auth0 if needed)
+    const memberIds = req.members.map(m => m.id);
+    const validatedMembers = await ensureBoardMembersExist(boardId, memberIds);
+    
+    if (validatedMembers.length > 0) {
+      const memberInserts = validatedMembers.map((member) => ({
+        id: randomUUID(),
+        cardId: createdCard.id,
+        memberId: member.id,
+      }));
+      await db.insert(cardMembersTable).values(memberInserts);
+    }
   }
 
   // Log activity for card creation (non-blocking)
@@ -593,12 +586,18 @@ export async function updateCard(userSub: string, boardId: string, id: string, r
     await db.delete(cardMembersTable).where(eq(cardMembersTable.cardId, id));
 
     if (req.members && req.members.length > 0) {
-      const memberInserts = req.members.map((member) => ({
-        id: randomUUID(),
-        cardId: id,
-        memberId: member.id,
-      }));
-      await db.insert(cardMembersTable).values(memberInserts);
+      // Ensure all members exist in board_members table (fetch from Auth0 if needed)
+      const memberIds = req.members.map(m => m.id);
+      const validatedMembers = await ensureBoardMembersExist(boardId, memberIds);
+      
+      if (validatedMembers.length > 0) {
+        const memberInserts = validatedMembers.map((member) => ({
+          id: randomUUID(),
+          cardId: id,
+          memberId: member.id,
+        }));
+        await db.insert(cardMembersTable).values(memberInserts);
+      }
     }
   }
 

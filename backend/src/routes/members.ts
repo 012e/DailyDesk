@@ -9,10 +9,12 @@ import {
   MemberSchema,
   CreateMemberSchema,
   UpdateMemberSchema,
+  AddMemberByUserIdSchema,
 } from "@/types/members";
 import getConfig from "@/lib/config";
 import { HTTPException } from "hono/http-exception";
 import { ContentfulStatusCode } from "hono/utils/http-status";
+import { ensureBoardMemberExists } from "@/services/members.service";
 
 const TAGS = ["Members"];
 
@@ -302,6 +304,99 @@ export default function createMemberRoutes() {
         .returning();
 
       return c.json(member[0], 200);
+    }
+  );
+
+  // POST /boards/{boardId}/members/by-user-id - Add a member by Auth0 userId (auto-fetch from Auth0)
+  app.openapi(
+    createRoute({
+      method: "post",
+      tags: TAGS,
+      path: "/{boardId}/members/by-user-id",
+      security: defaultSecurityScheme(),
+      request: {
+        params: z.object({
+          boardId: z.uuid(),
+        }),
+        body: jsonBody(AddMemberByUserIdSchema),
+      },
+      responses: {
+        200: successJson(MemberSchema, {
+          description: "Thêm Member thành công (tự động lấy thông tin từ Auth0)",
+        }),
+        404: {
+          description: "Board không tồn tại hoặc User không tìm thấy trong Auth0",
+        },
+        403: {
+          description: "Không có quyền thêm Member vào Board này",
+        },
+        409: {
+          description: "Member đã tồn tại trong Board",
+        },
+        500: {
+          content: {
+            "application/json": {
+              schema: z.object({
+                error: z.string(),
+              }),
+            },
+          },
+          description: "Internal server error",
+        },
+      },
+    }),
+
+    async (c) => {
+      const user = ensureUserAuthenticated(c);
+      const { boardId } = c.req.valid("param");
+      const req = c.req.valid("json");
+
+      try {
+        // Check if board exists and user owns it
+        const board = await db
+          .select()
+          .from(boardsTable)
+          .where(eq(boardsTable.id, boardId))
+          .limit(1);
+
+        if (board.length === 0) {
+          return c.json({ error: "Board không tồn tại" }, 404);
+        }
+
+        // Only board owner can add members
+        if (board[0].userId !== user.sub) {
+          return c.json({ error: "Chỉ chủ board mới có thể thêm member" }, 403);
+        }
+
+        // Check if member already exists
+        const existingMember = await db
+          .select()
+          .from(boardMembersTable)
+          .where(
+            and(
+              eq(boardMembersTable.boardId, boardId),
+              eq(boardMembersTable.userId, req.userId)
+            )
+          )
+          .limit(1);
+
+        if (existingMember.length > 0) {
+          return c.json({ error: "Member đã tồn tại trong Board" }, 409);
+        }
+
+        // Use the service to ensure member exists (will fetch from Auth0 if needed)
+        const member = await ensureBoardMemberExists(boardId, req.userId, req.role || "member");
+
+        return c.json(member, 200);
+      } catch (error: any) {
+        console.error("Error adding member by userId:", error);
+        
+        if (error.status) {
+          return c.json({ error: error.message }, error.status);
+        }
+        
+        return c.json({ error: "Failed to add member" }, 500);
+      }
     }
   );
 
