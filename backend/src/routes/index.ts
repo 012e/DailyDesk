@@ -23,7 +23,7 @@ export default function setupRoutes(app: OpenAPIHono) {
   app.route("/boards", createAttachmentRoutes());
   app.route("/boards", createCommentRoutes());
   app.route("/chat", createChatRoutes());
-  app.route("/users", createUserSearchRoutes());
+  app.route("/members", createUserSearchRoutes());
 
   return app;
 }

@@ -545,7 +545,7 @@ describe("Members API Integration Tests", () => {
     });
   });
 
-  describe("GET /users/search", () => {
+  describe("GET /members/search", () => {
     test("should search users successfully with valid query", async () => {
       const mockAuth0Response = [
         {
@@ -570,7 +570,7 @@ describe("Members API Integration Tests", () => {
         json: async () => mockAuth0Response,
       });
 
-      const res = await app.request("/users/search?q=john&per_page=10&page=0", {
+      const res = await app.request("/members/search?q=john&per_page=10&page=0", {
         method: "GET",
         headers: createAuthHeaders(),
       });
@@ -613,7 +613,7 @@ describe("Members API Integration Tests", () => {
         json: async () => mockAuth0Response,
       });
 
-      const res = await app.request("/users/search?q=user&per_page=5&page=2", {
+      const res = await app.request("/members/search?q=user&per_page=5&page=2", {
         method: "GET",
         headers: createAuthHeaders(),
       });
@@ -635,7 +635,7 @@ describe("Members API Integration Tests", () => {
         json: async () => [],
       });
 
-      const res = await app.request("/users/search?q=test", {
+      const res = await app.request("/members/search?q=test", {
         method: "GET",
         headers: createAuthHeaders(),
       });
@@ -655,7 +655,7 @@ describe("Members API Integration Tests", () => {
         json: async () => [],
       });
 
-      const res = await app.request("/users/search?q=nonexistent", {
+      const res = await app.request("/members/search?q=nonexistent", {
         method: "GET",
         headers: createAuthHeaders(),
       });
@@ -667,7 +667,7 @@ describe("Members API Integration Tests", () => {
     });
 
     test("should reject request without authentication", async () => {
-      const res = await app.request("/users/search?q=john", {
+      const res = await app.request("/members/search?q=john", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -679,7 +679,7 @@ describe("Members API Integration Tests", () => {
     });
 
     test("should require query parameter", async () => {
-      const res = await app.request("/users/search", {
+      const res = await app.request("/members/search", {
         method: "GET",
         headers: createAuthHeaders(),
       });
@@ -690,7 +690,7 @@ describe("Members API Integration Tests", () => {
     });
 
     test("should reject empty query parameter", async () => {
-      const res = await app.request("/users/search?q=", {
+      const res = await app.request("/members/search?q=", {
         method: "GET",
         headers: createAuthHeaders(),
       });
@@ -708,7 +708,7 @@ describe("Members API Integration Tests", () => {
         text: async () => "Rate limit exceeded",
       });
 
-      const res = await app.request("/users/search?q=john", {
+      const res = await app.request("/members/search?q=john", {
         method: "GET",
         headers: createAuthHeaders(),
       });
@@ -725,7 +725,7 @@ describe("Members API Integration Tests", () => {
         text: async () => "Invalid token",
       });
 
-      const res = await app.request("/users/search?q=john", {
+      const res = await app.request("/members/search?q=john", {
         method: "GET",
         headers: createAuthHeaders(),
       });
@@ -736,7 +736,7 @@ describe("Members API Integration Tests", () => {
     test("should handle network errors", async () => {
       mockFetch.mockRejectedValueOnce(new Error("Network error"));
 
-      const res = await app.request("/users/search?q=john", {
+      const res = await app.request("/members/search?q=john", {
         method: "GET",
         headers: createAuthHeaders(),
       });
@@ -753,7 +753,7 @@ describe("Members API Integration Tests", () => {
 
       const specialQuery = "test@example.com";
       const res = await app.request(
-        `/users/search?q=${encodeURIComponent(specialQuery)}`,
+        `/members/search?q=${encodeURIComponent(specialQuery)}`,
         {
           method: "GET",
           headers: createAuthHeaders(),
@@ -774,7 +774,7 @@ describe("Members API Integration Tests", () => {
         json: async () => [],
       });
 
-      const res = await app.request("/users/search?q=test", {
+      const res = await app.request("/members/search?q=test", {
         method: "GET",
         headers: createAuthHeaders(),
       });
@@ -804,7 +804,7 @@ describe("Members API Integration Tests", () => {
         json: async () => [mockAuth0User],
       });
 
-      const res = await app.request("/users/search?q=complete", {
+      const res = await app.request("/members/search?q=complete", {
         method: "GET",
         headers: createAuthHeaders(),
       });
