@@ -4,7 +4,7 @@ import { createAuthHeaders } from "../helpers/auth";
 import { createTestApp } from "../helpers/app";
 import { uuidv7 } from "uuidv7";
 
-describe("Cards API Integration Tests", () => {
+describe("Cards Members Tests", () => {
   let app: OpenAPIHono;
   let testBoardId: string;
   let testListId: string;
