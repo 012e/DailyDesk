@@ -346,7 +346,13 @@ export default function TasksPage() {
                 <AccordionTrigger className="hover:no-underline">
                   <div className="flex items-center justify-between w-full pr-4">
                     <div className="flex items-center gap-3">
-                      <h2 className="text-xl font-semibold">{boardName}</h2>
+                      <Link 
+                        to={`/board/${boardId}`} 
+                        onClick={(e) => e.stopPropagation()}
+                        className="hover:underline"
+                      >
+                        <h2 className="text-xl font-semibold">{boardName}</h2>
+                      </Link>
                       <Badge variant="secondary" className="text-xs">
                         {completedCount}/{totalCount} completed
                       </Badge>
@@ -355,14 +361,6 @@ export default function TasksPage() {
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-3 pt-4">
-                    <div className="flex justify-end mb-2">
-                      <Link to={`/board/${boardId}`}>
-                        <Button variant="outline" size="sm">
-                          <ExternalLink className="w-4 h-4 mr-2" />
-                          Open Board
-                        </Button>
-                      </Link>
-                    </div>
                     {boardTasks.map((task) => {
                       const dueStatus = getDueStatus(task.dueAt, task.dueComplete);
 
