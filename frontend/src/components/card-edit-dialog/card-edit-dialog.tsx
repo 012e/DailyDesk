@@ -39,6 +39,7 @@ interface CardEditDialogProps {
   listId?: string;
   order?: number;
   onCreated?: () => void;
+  defaultIsTemplate?: boolean;
 }
 
 export function CardEditDialog({
@@ -50,6 +51,7 @@ export function CardEditDialog({
   listId,
   order,
   onCreated,
+  defaultIsTemplate,
 }: CardEditDialogProps) {
   const { uploadImage } = useUploadImage();
 
@@ -79,6 +81,7 @@ export function CardEditDialog({
     coverColor: "",
     createdAt: new Date(),
     updatedAt: new Date(),
+    isTemplate: defaultIsTemplate,
   };
 
   return (
@@ -154,6 +157,7 @@ function InnerDialog({
   const [labels, setLabels] = useState<CardLabel[]>(card.labels || []);
   const [members, setMembers] = useState<Member[]>(card.members || []);
   const [deadline, setDeadline] = useState<Date | undefined>(card.dueDate);
+  const [isTemplate, setIsTemplate] = useState(card.isTemplate || false);
   const [isCreating, setIsCreating] = useState(false);
 
   const { mutate: updateCard } = useUpdateCard();
@@ -213,7 +217,8 @@ function InnerDialog({
     labels: isCreateMode ? labels : card.labels,
     members: isCreateMode ? members : card.members,
     dueDate: isCreateMode ? deadline : card.dueDate,
-  }), [card, isCreateMode, title, description, labels, members, deadline]);
+    isTemplate: isCreateMode ? isTemplate : card.isTemplate,
+  }), [card, isCreateMode, title, description, labels, members, deadline, isTemplate]);
 
   const handleUpdate = useCallback(
     (updates: Partial<Card>) => {
@@ -224,6 +229,7 @@ function InnerDialog({
         if (updates.labels !== undefined) setLabels(updates.labels || []);
         if (updates.members !== undefined) setMembers(updates.members || []);
         if (updates.dueDate !== undefined) setDeadline(updates.dueDate);
+        if (updates.isTemplate !== undefined) setIsTemplate(updates.isTemplate);
         return;
       }
 
@@ -269,6 +275,7 @@ function InnerDialog({
           deadline: localCard.dueDate,
           // Set cover color if provided (image covers are uploaded separately)
           coverColor: (!currentImageFile && coverColor) ? coverColor : undefined,
+          isTemplate: localCard.isTemplate,
         },
         {
           onSuccess: async (newCard) => {

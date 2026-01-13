@@ -50,6 +50,7 @@ export function AddCardForm({ columnId, cardsCount }: AddCardFormProps) {
 
   const { mutate: createCard } = useCreateCard();
   const [isCreatingFromTemplate, setIsCreatingFromTemplate] = useState(false);
+  const [isCreatingTemplate, setIsCreatingTemplate] = useState(false);
 
   const isDialogOpen = addingCardColumnId === columnId;
 
@@ -59,6 +60,7 @@ export function AddCardForm({ columnId, cardsCount }: AddCardFormProps) {
 
   const closeDialog = () => {
     setAddingCardColumnId(null);
+    setIsCreatingTemplate(false);
   };
 
   // Filter templates from all cards in the board
@@ -85,7 +87,6 @@ export function AddCardForm({ columnId, cardsCount }: AddCardFormProps) {
       },
       {
         onSuccess: () => {
-          toast.success("Card created from template");
           setIsCreatingFromTemplate(false);
         },
         onError: () => {
@@ -104,8 +105,7 @@ export function AddCardForm({ columnId, cardsCount }: AddCardFormProps) {
           Add Card
         </KanbanBoardColumnButton>
         
-        {templates.length > 0 && (
-          <Popover>
+        <Popover>
             <PopoverTrigger asChild>
               <Button size="icon" variant="ghost" className="h-9 w-9 shrink-0" disabled={isCreatingFromTemplate}>
                  {isCreatingFromTemplate ? (
@@ -116,31 +116,48 @@ export function AddCardForm({ columnId, cardsCount }: AddCardFormProps) {
               </Button>
             </PopoverTrigger>
             <PopoverContent side="right" align="start" className="w-64 p-2">
-              <div className="text-sm font-medium mb-2 px-2 text-muted-foreground">Create from template</div>
-              <div className="grid gap-1 max-h-[300px] overflow-y-auto">
-                {templates.map(card => (
-                  <Button 
-                    key={card.id} 
+              <div className="text-sm font-medium mb-2 px-2 text-muted-foreground">Templates</div>
+              <div className="space-y-1">
+                 <Button 
                     variant="ghost" 
-                    className="justify-start font-normal h-auto py-2 px-2 text-left" 
-                    onClick={() => handleCreateFromTemplate(card)}
-                  >
-                    <div className="flex flex-col gap-1 items-start overflow-hidden w-full">
-                       <span className="truncate w-full font-medium">{card.name || (card as any).title}</span>
-                       {card.labels && card.labels.length > 0 && (
-                          <div className="flex gap-1 flex-wrap">
-                            {card.labels.slice(0, 3).map(l => (
-                               <div key={l.id} className="h-1.5 w-6 rounded-full" style={{ backgroundColor: l.color }}></div>
-                            ))}
-                          </div>
-                       )}
-                    </div>
-                  </Button>
-                ))}
+                    className="w-full justify-start font-medium text-primary hover:text-primary hover:bg-primary/10"
+                    onClick={() => setIsCreatingTemplate(true)}
+                 >
+                    <PlusIcon className="mr-2 h-4 w-4" />
+                    Create new template
+                 </Button>
+                 
+                 {templates.length > 0 && <div className="h-px bg-border my-1" />}
+
+                 <div className="grid gap-1 max-h-[300px] overflow-y-auto">
+                    {templates.map(card => (
+                      <Button 
+                        key={card.id} 
+                        variant="ghost" 
+                        className="justify-start font-normal h-auto py-2 px-2 text-left" 
+                        onClick={() => handleCreateFromTemplate(card)}
+                      >
+                        <div className="flex flex-col gap-1 items-start overflow-hidden w-full">
+                           <span className="truncate w-full font-medium">{card.name || (card as any).title}</span>
+                           {card.labels && card.labels.length > 0 && (
+                              <div className="flex gap-1 flex-wrap">
+                                {card.labels.slice(0, 3).map(l => (
+                                   <div key={l.id} className="h-1.5 w-6 rounded-full" style={{ backgroundColor: l.color }}></div>
+                                ))}
+                              </div>
+                           )}
+                        </div>
+                      </Button>
+                    ))}
+                    {templates.length === 0 && (
+                        <div className="text-xs text-muted-foreground px-2 py-4 text-center">
+                            No templates found. Create one to get started!
+                        </div>
+                    )}
+                 </div>
               </div>
             </PopoverContent>
           </Popover>
-        )}
       </KanbanBoardColumnFooter>
 
       {boardId && (
@@ -148,8 +165,9 @@ export function AddCardForm({ columnId, cardsCount }: AddCardFormProps) {
           boardId={boardId}
           listId={columnId}
           order={cardsCount}
-          isOpen={isDialogOpen}
+          isOpen={isDialogOpen || isCreatingTemplate}
           onClose={closeDialog}
+          defaultIsTemplate={isCreatingTemplate}
         />
       )}
     </>
