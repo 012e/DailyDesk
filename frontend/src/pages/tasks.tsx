@@ -228,22 +228,6 @@ export default function TasksPage() {
           View and manage all your tasks across all boards
         </p>
       </div>
-
-      {/* Filters and Search Board} onValueChange={setFilterBoard}>
-          <SelectTrigger className="w-full md:w-[200px]">
-            <SelectValue placeholder="All Boards" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Boards</SelectItem>
-            {uniqueBoards.map((board) => (
-              <SelectItem key={board.id} value={board.id}>
-                {board.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={filter*/}
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -255,22 +239,9 @@ export default function TasksPage() {
           />
         </div>
 
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-full md:w-[180px]">
-            <Filter className="w-4 h-4 mr-2" />
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Tasks</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-            <SelectItem value="overdue">Overdue</SelectItem>
-            <SelectItem value="today">Due Today</SelectItem>
-          </SelectContent>
-        </Select>
-
         <Select value={sortBy} onValueChange={setSortBy}>
           <SelectTrigger className="w-full md:w-[180px]">
+            <Filter className="w-4 h-4 mr-2" />
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
           <SelectContent>
@@ -283,17 +254,7 @@ export default function TasksPage() {
       </div>
 
       {/* Task Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card className="p-4">
-          <div className="text-sm text-muted-foreground mb-1">Total Tasks</div>
-          <div className="text-2xl font-bold">{tasks?.length || 0}</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-sm text-muted-foreground mb-1">Completed</div>
-          <div className="text-2xl font-bold text-green-600">
-            {tasks?.filter((t) => t.completed).length || 0}
-          </div>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <Card className="p-4">
           <div className="text-sm text-muted-foreground mb-1">Pending</div>
           <div className="text-2xl font-bold text-blue-600">
