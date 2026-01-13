@@ -267,9 +267,9 @@ export default function TasksPage() {
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-4xl font-bold mb-2">All Tasks</h1>
+            <h1 className="text-4xl font-bold mb-2">Cards</h1>
             <p className="text-muted-foreground">
-              View and manage all your tasks across all boards
+              View and manage all your cards across all boards
             </p>
           </div>
           <div className="flex gap-2">
