@@ -267,9 +267,9 @@ export default function TasksPage() {
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-4xl font-bold mb-2">All Tasks</h1>
+            <h1 className="text-4xl font-bold mb-2">Cards</h1>
             <p className="text-muted-foreground">
-              View and manage all your tasks across all boards
+              View and manage all your cards across all boards
             </p>
           </div>
           <div className="flex gap-2">
@@ -369,14 +369,15 @@ export default function TasksPage() {
           />
         </div>
       ) : (
-        <Accordion type="multiple" defaultValue={Array.from(tasksByBoard.keys())} className="space-y-4">
-          {Array.from(tasksByBoard.entries()).map(([boardId, { boardName, tasks: boardTasks }]) => {
+        <div className="max-h-[calc(100vh-24rem)] overflow-auto  pr-2">
+          <Accordion type="multiple" className="space-y-4">
+            {Array.from(tasksByBoard.entries()).map(([boardId, { boardName, tasks: boardTasks }]) => {
             const completedCount = boardTasks.filter((t: TaskCard) => t.completed).length;
             const totalCount = boardTasks.length;
 
             return (
-              <AccordionItem key={boardId} value={boardId} className="border rounded-lg px-4">
-                <AccordionTrigger className="hover:no-underline">
+              <AccordionItem key={boardId} value={boardId} className="border-2 last:border-b-2 rounded-2xl px-4">
+                <AccordionTrigger className="hover:no-underline p-5">
                   <div className="flex items-center justify-between w-full pr-4">
                     <div className="flex items-center gap-3">
                       <Link 
@@ -387,14 +388,14 @@ export default function TasksPage() {
                         <h2 className="text-xl font-semibold">{boardName}</h2>
                       </Link>
                       <Badge variant="secondary" className="text-xs">
-                        {completedCount}/{totalCount} completed
+                        {completedCount}/{totalCount} card
                       </Badge>
                     </div>
                   </div>
                 </AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-3 pt-4">
-                    {boardTasks.map((task: TaskCard) => {
+                <AccordionContent className="pb-2 last:mb-4">
+                    <div className="space-y-4 pt-4">
+                    {boardTasks.map((task: TaskCard, index: number) => {
                       const dueStatus = getDueStatus(task.dueAt, task.dueComplete ?? undefined);
 
                       return (
@@ -516,7 +517,8 @@ export default function TasksPage() {
               </AccordionItem>
             );
           })}
-        </Accordion>
+          </Accordion>
+        </div>
       )}
     </div>
   );
