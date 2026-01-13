@@ -48,7 +48,7 @@ export function KanbanColumn({
   return (
     <KanbanBoardColumn
       key={column.id}
-      className="h-full"
+      className="max-h-full h-auto"
       columnId={column.id}
       onDropOverColumn={onDropOverColumn}
       index={index}
