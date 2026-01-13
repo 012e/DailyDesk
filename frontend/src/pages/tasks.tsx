@@ -4,10 +4,11 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { Calendar, CheckCircle2, Clock, ExternalLink, Filter, Search } from "lucide-react";
+import { Calendar, CheckCircle2, Clock, Filter, Search, List, CalendarDays } from "lucide-react";
 import { Link } from "react-router";
 import { Input } from "@/components/ui/input";
 import { useState, useMemo } from "react";
+import { EventCalendar, type CalendarEvent } from "@/components/event-calendar";
 import {
   Select,
   SelectContent,
@@ -67,6 +68,7 @@ export default function TasksPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("dueDate");
+  const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
   const { mutate: updateCard } = useUpdateCard();
 
   const { data: tasks, isLoading, error, refetch } = useQuery({
@@ -116,7 +118,7 @@ export default function TasksPage() {
   const filteredAndSortedTasks = useMemo(() => {
     if (!tasks) return [];
 
-    let filtered = tasks.filter((task) => {
+    const filtered = tasks.filter((task) => {
       // Search filter
       const matchesSearch = task.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         task.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -129,7 +131,7 @@ export default function TasksPage() {
       if (filterStatus === "completed") return task.completed;
       if (filterStatus === "pending") return !task.completed;
       if (filterStatus === "overdue") {
-        const dueStatus = getDueStatus(task.dueAt, task.dueComplete);
+        const dueStatus = getDueStatus(task.dueAt, task.dueComplete ?? undefined);
         return dueStatus.status === "overdue";
       }
       if (filterStatus === "today") {
@@ -189,6 +191,46 @@ export default function TasksPage() {
     return grouped;
   }, [filteredAndSortedTasks]);
 
+  // Transform tasks to calendar events
+  const calendarEvents = useMemo((): CalendarEvent[] => {
+    if (!filteredAndSortedTasks) return [];
+    
+    return filteredAndSortedTasks
+      .filter(task => task.dueAt || task.startDate) // Only show tasks with dates
+      .map(task => {
+        const startDate = task.startDate ? new Date(task.startDate) : new Date(task.dueAt!);
+        const endDate = task.dueAt ? new Date(task.dueAt) : new Date(task.startDate!);
+        
+        // Determine color based on due status
+        let color: CalendarEvent['color'] = 'sky';
+        const dueStatus = getDueStatus(task.dueAt, task.dueComplete ?? undefined);
+        if (task.completed) {
+          color = 'emerald';
+        } else if (dueStatus.status === 'overdue') {
+          color = 'rose';
+        } else if (dueStatus.status === 'dueSoon') {
+          color = 'amber';
+        }
+        
+        return {
+          id: task.id,
+          title: task.name,
+          description: task.description || undefined,
+          start: startDate,
+          end: endDate,
+          allDay: !task.startDate, // If no start date, treat as all-day
+          color,
+          labels: task.labels?.map(l => ({
+            id: l.id,
+            name: l.name,
+            color: l.color,
+          })),
+          members: task.members || undefined,
+          listId: task.listId,
+        };
+      });
+  }, [filteredAndSortedTasks]);
+
   const handleToggleComplete = (task: TaskCard) => {
     updateCard(
       {
@@ -223,27 +265,33 @@ export default function TasksPage() {
   return (
     <div className="container mx-auto p-6 max-w-7xl">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">All Tasks</h1>
-        <p className="text-muted-foreground">
-          View and manage all your tasks across all boards
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold mb-2">All Tasks</h1>
+            <p className="text-muted-foreground">
+              View and manage all your tasks across all boards
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant={viewMode === "list" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("list")}
+            >
+              <List className="w-4 h-4 mr-2" />
+              List
+            </Button>
+            <Button
+              variant={viewMode === "calendar" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("calendar")}
+            >
+              <CalendarDays className="w-4 h-4 mr-2" />
+              Calendar
+            </Button>
+          </div>
+        </div>
       </div>
-
-      {/* Filters and Search Board} onValueChange={setFilterBoard}>
-          <SelectTrigger className="w-full md:w-[200px]">
-            <SelectValue placeholder="All Boards" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Boards</SelectItem>
-            {uniqueBoards.map((board) => (
-              <SelectItem key={board.id} value={board.id}>
-                {board.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={filter*/}
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -255,22 +303,9 @@ export default function TasksPage() {
           />
         </div>
 
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-full md:w-[180px]">
-            <Filter className="w-4 h-4 mr-2" />
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Tasks</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-            <SelectItem value="overdue">Overdue</SelectItem>
-            <SelectItem value="today">Due Today</SelectItem>
-          </SelectContent>
-        </Select>
-
         <Select value={sortBy} onValueChange={setSortBy}>
           <SelectTrigger className="w-full md:w-[180px]">
+            <Filter className="w-4 h-4 mr-2" />
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
           <SelectContent>
@@ -283,17 +318,7 @@ export default function TasksPage() {
       </div>
 
       {/* Task Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card className="p-4">
-          <div className="text-sm text-muted-foreground mb-1">Total Tasks</div>
-          <div className="text-2xl font-bold">{tasks?.length || 0}</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-sm text-muted-foreground mb-1">Completed</div>
-          <div className="text-2xl font-bold text-green-600">
-            {tasks?.filter((t) => t.completed).length || 0}
-          </div>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <Card className="p-4">
           <div className="text-sm text-muted-foreground mb-1">Pending</div>
           <div className="text-2xl font-bold text-blue-600">
@@ -304,14 +329,14 @@ export default function TasksPage() {
           <div className="text-sm text-muted-foreground mb-1">Overdue</div>
           <div className="text-2xl font-bold text-red-600">
             {tasks?.filter((t) => {
-              const dueStatus = getDueStatus(t.dueAt, t.dueComplete);
+              const dueStatus = getDueStatus(t.dueAt, t.dueComplete ?? undefined);
               return dueStatus.status === "overdue";
             }).length || 0}
           </div>
         </Card>
       </div>
 
-      {/* Task List */}
+      {/* Task List or Calendar View */}
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
           <div className="text-lg">Loading tasks...</div>
@@ -335,10 +360,18 @@ export default function TasksPage() {
             )}
           </div>
         </div>
+      ) : viewMode === "calendar" ? (
+        <div className="mb-6">
+          <EventCalendar
+            events={calendarEvents}
+            initialView="month"
+            className=""
+          />
+        </div>
       ) : (
         <Accordion type="multiple" defaultValue={Array.from(tasksByBoard.keys())} className="space-y-4">
           {Array.from(tasksByBoard.entries()).map(([boardId, { boardName, tasks: boardTasks }]) => {
-            const completedCount = boardTasks.filter(t => t.completed).length;
+            const completedCount = boardTasks.filter((t: TaskCard) => t.completed).length;
             const totalCount = boardTasks.length;
 
             return (
@@ -361,8 +394,8 @@ export default function TasksPage() {
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-3 pt-4">
-                    {boardTasks.map((task) => {
-                      const dueStatus = getDueStatus(task.dueAt, task.dueComplete);
+                    {boardTasks.map((task: TaskCard) => {
+                      const dueStatus = getDueStatus(task.dueAt, task.dueComplete ?? undefined);
 
                       return (
                         <Card
@@ -401,7 +434,7 @@ export default function TasksPage() {
                               {/* Labels */}
                               {task.labels && task.labels.length > 0 && (
                                 <div className="flex flex-wrap gap-1 mb-2">
-                                  {task.labels.map((label) => (
+                                  {task.labels.map((label: { id: string; name: string; color: string }) => (
                                     <Badge
                                       key={label.id}
                                       style={{ backgroundColor: label.color }}
@@ -456,7 +489,7 @@ export default function TasksPage() {
                                 {/* Members */}
                                 {task.members && task.members.length > 0 && (
                                   <div className="flex -space-x-2">
-                                    {task.members.slice(0, 3).map((member) => (
+                                    {task.members.slice(0, 3).map((member: { id: string; name: string; initials: string }) => (
                                       <div
                                         key={member.id}
                                         className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs border-2 border-background"
