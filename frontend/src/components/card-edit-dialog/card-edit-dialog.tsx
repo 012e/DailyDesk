@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import type { Card } from "@/types/card";
 import { CardCoverModeValue } from "@/types/card";
-import { X, Tag, UserPlus, Paperclip, Clock, Wallpaper, Loader2, FileIcon, ExternalLink, Download, ChevronDown } from "lucide-react";
+import { X, Tag, UserPlus, Paperclip, Clock, Wallpaper, Loader2, FileIcon, ExternalLink, Download, ChevronDown, LayoutTemplate } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CardHeader } from "./card-header";
 import { CardDescription } from "./card-description";
@@ -687,6 +687,17 @@ function InnerDialog({
                 </PopoverContent>
               </Popover>
             </div>
+
+            {/* Template Toggle */}
+            <Button
+              variant={localCard.isTemplate ? "default" : "outline"}
+              size="sm"
+              className="h-8"
+              onClick={() => handleUpdate({ isTemplate: !localCard.isTemplate })}
+            >
+              <LayoutTemplate className="h-4 w-4 mr-1" />
+              {localCard.isTemplate ? "Template" : "Make template"}
+            </Button>
 
             {/* Labels display - only show if has labels */}
             {localCard.labels && localCard.labels.length > 0 && (
