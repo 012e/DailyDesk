@@ -323,7 +323,6 @@ export function Kanban({ boardId }: KanbanProps) {
           isOpen={isCardDialogOpen}
           onClose={() => {
             setIsCardDialogOpen(false);
-            setSelectedCard(null);
           }}
           onUpdate={handleUpdateCard}
           onDelete={handleDeleteCard}
