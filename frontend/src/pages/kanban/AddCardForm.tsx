@@ -7,12 +7,13 @@ import { PlusIcon, LayoutTemplate, Loader2 } from "lucide-react";
 import { useAtom, useAtomValue } from "jotai";
 import { addingCardColumnIdAtom } from "./atoms";
 import { boardIdAtom } from "./atoms";
-import { useBoard } from "@/hooks/use-board";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { useCreateCard } from "@/hooks/use-card";
 import { toast } from "sonner";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import api from "@/lib/api";
 
 interface AddCardFormProps {
   columnId: string;
@@ -24,7 +25,29 @@ export function AddCardForm({ columnId, cardsCount }: AddCardFormProps) {
     addingCardColumnIdAtom
   );
   const boardId = useAtomValue(boardIdAtom);
-  const board = useBoard({ boardId: boardId || "" });
+  
+  const { data: board } = useQuery({
+    queryKey: ["board", boardId],
+    queryFn: async () => {
+      if (!boardId) return null;
+      const result = await api.GET("/boards/{id}", {
+        params: {
+          path: {
+            id: boardId,
+          },
+        },
+      });
+      if (result.error) {
+        const errorMessage = typeof result.error === "string" 
+          ? result.error 
+          : (result.error as any).error || JSON.stringify(result.error);
+        throw new Error(errorMessage);
+      }
+      return result.data;
+    },
+    enabled: !!boardId,
+  });
+
   const { mutate: createCard } = useCreateCard();
   const [isCreatingFromTemplate, setIsCreatingFromTemplate] = useState(false);
 
@@ -92,7 +115,7 @@ export function AddCardForm({ columnId, cardsCount }: AddCardFormProps) {
                  )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="end" className="w-64 p-2">
+            <PopoverContent side="right" align="start" className="w-64 p-2">
               <div className="text-sm font-medium mb-2 px-2 text-muted-foreground">Create from template</div>
               <div className="grid gap-1 max-h-[300px] overflow-y-auto">
                 {templates.map(card => (
