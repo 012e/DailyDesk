@@ -1,4 +1,4 @@
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { integer, sqliteTable, text, unique } from "drizzle-orm/sqlite-core";
 import { relations } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
@@ -87,6 +87,7 @@ export const attachmentsTable = sqliteTable("attachments", {
 });
 
 // Labels table - user-specific labels (can be applied to cards across multiple boards)
+// Each user can have unique combinations of (name, color) - same name with different colors allowed
 export const labelsTable = sqliteTable("labels", {
   id: text("id")
     .primaryKey()
@@ -94,7 +95,9 @@ export const labelsTable = sqliteTable("labels", {
   name: text("name").notNull(),
   color: text("color").notNull(), // Hex color code
   userId: text("user_id").notNull(), // Auth0 user ID - labels belong to users, not boards
-});
+}, (table) => ({
+  uniqueUserNameColor: unique().on(table.userId, table.name, table.color)
+}));
 
 // Board members table - maps Clerk users to boards
 export const boardMembersTable = sqliteTable("board_members", {

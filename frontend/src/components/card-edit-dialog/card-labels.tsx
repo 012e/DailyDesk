@@ -14,6 +14,7 @@ import type { Card, Label } from "@/types/card";
 import { cn } from "@/lib/utils";
 import { useBoardLabels, useCreateLabel, useUpdateLabel } from "@/hooks/use-label";
 import { useAuth0 } from "@auth0/auth0-react";
+import { toast } from "sonner";
 
 interface CardLabelsProps {
   card: Card;
@@ -107,6 +108,15 @@ export function CardLabels({ card, onUpdate, boardId, isOpen: controlledIsOpen, 
             setIsCreatingNew(false);
             setEditLabelName("");
             setEditLabelColor(LABEL_COLORS[0].color);
+            toast.success("Label created successfully!");
+          },
+          onError: (error: any) => {
+            const errorMsg = error?.message || "Failed to create label";
+            if (errorMsg.includes("409") || errorMsg.includes("tồn tại") || errorMsg.includes("duplicate")) {
+              toast.error("A label with this name and color already exists");
+            } else {
+              toast.error(errorMsg);
+            }
           },
         }
       );
@@ -147,6 +157,15 @@ export function CardLabels({ card, onUpdate, boardId, isOpen: controlledIsOpen, 
             });
           }
           setEditingLabelId(null);
+          toast.success("Label updated successfully!");
+        },
+        onError: (error: any) => {
+          const errorMsg = error?.message || "Failed to update label";
+          if (errorMsg.includes("409") || errorMsg.includes("tồn tại") || errorMsg.includes("duplicate")) {
+            toast.error("A label with this name and color already exists");
+          } else {
+            toast.error(errorMsg);
+          }
         },
       }
     );
@@ -252,8 +271,10 @@ export function CardLabels({ card, onUpdate, boardId, isOpen: controlledIsOpen, 
       />
 
       {/* Labels list */}
-      <div className="space-y-2 max-h-60 overflow-y-auto">
-        <UILabel className="text-xs">Labels</UILabel>
+      <div className="space-y-2 max-h-60 overflow-y-auto scroll-smooth"   onWheel={(e) => {
+    e.stopPropagation();
+  }}>
+        <UILabel className="text-xs scro">Labels</UILabel>
         {filteredLabels.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-4">
             No labels found
