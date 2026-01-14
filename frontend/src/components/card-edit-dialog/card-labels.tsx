@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Tag, Plus, Check, X, Pencil, ChevronLeft } from "lucide-react";
+import { X, Pencil, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -12,7 +12,8 @@ import { Label as UILabel } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { Card, Label } from "@/types/card";
 import { cn } from "@/lib/utils";
-import { useLabels, useCreateLabel, useUpdateLabel } from "@/hooks/use-label";
+import { useBoardLabels, useCreateLabel, useUpdateLabel } from "@/hooks/use-label";
+import { useAuth0 } from "@auth0/auth0-react";
 
 interface CardLabelsProps {
   card: Card;
@@ -39,15 +40,18 @@ const LABEL_COLORS = [
 
 export function CardLabels({ card, onUpdate, boardId, isOpen: controlledIsOpen, onOpenChange: controlledOnOpenChange, triggerButton }: CardLabelsProps) {
   const [internalIsOpen, setInternalIsOpen] = useState(false);
-  const [newLabelName, setNewLabelName] = useState("");
-  const [selectedColor, setSelectedColor] = useState(LABEL_COLORS[0]);
   const [searchQuery, setSearchQuery] = useState("");
   const [editingLabelId, setEditingLabelId] = useState<string | null>(null);
+  const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [editLabelName, setEditLabelName] = useState("");
   const [editLabelColor, setEditLabelColor] = useState("");
 
-  // Fetch labels from API
-  const { data: availableLabelsData = [] } = useLabels(boardId);
+  // Get current user
+  const { user } = useAuth0();
+  const currentUserId = user?.sub || "";
+
+  // Fetch labels from all board members
+  const { data: availableLabelsData = [] } = useBoardLabels(boardId);
   const { mutate: createLabel } = useCreateLabel();
   const { mutate: updateLabel } = useUpdateLabel();
 
@@ -58,42 +62,6 @@ export function CardLabels({ card, onUpdate, boardId, isOpen: controlledIsOpen, 
   // Use controlled state if provided, otherwise use internal state
   const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen;
   const setIsOpen = controlledOnOpenChange || setInternalIsOpen;
-
-  const handleAddLabel = (label: Label) => {
-    const existingLabel = labels.find((l) => l.id === label.id);
-
-    if (existingLabel) {
-      // Remove label if it exists (toggle)
-      onUpdate({
-        labels: labels.filter((l) => l.id !== label.id),
-      });
-    } else {
-      // Add new label
-      onUpdate({
-        labels: [...labels, label],
-      });
-    }
-  };
-
-  const handleCreateLabel = () => {
-    if (!newLabelName.trim()) return;
-
-    const newLabel: Label = {
-      id: Date.now().toString(),
-      name: newLabelName.trim(),
-      color: selectedColor.color,
-    };
-
-    handleAddLabel(newLabel);
-    setNewLabelName("");
-  };
-
-  const handleRemoveLabel = (labelId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    onUpdate({
-      labels: labels.filter((l) => l.id !== labelId),
-    });
-  };
 
   const handleToggleLabel = (label: Label) => {
     const existingLabel = labels.find((l) => l.id === label.id);
@@ -110,12 +78,50 @@ export function CardLabels({ card, onUpdate, boardId, isOpen: controlledIsOpen, 
 
   const handleStartEdit = (label: Label) => {
     setEditingLabelId(label.id);
+    setIsCreatingNew(false);
     setEditLabelName(label.name);
     setEditLabelColor(label.color);
   };
 
+  const handleStartCreate = () => {
+    setEditingLabelId(null);
+    setIsCreatingNew(true);
+    setEditLabelName("");
+    setEditLabelColor(LABEL_COLORS[0].color);
+  };
+
   const handleSaveEdit = () => {
+    // Handle creating new label
+    if (isCreatingNew) {
+      if (!editLabelName.trim()) {
+        return; // Don't create label without name
+      }
+      createLabel(
+        {
+          userId: currentUserId,
+          name: editLabelName.trim(),
+          color: editLabelColor,
+        },
+        {
+          onSuccess: () => {
+            setIsCreatingNew(false);
+            setEditLabelName("");
+            setEditLabelColor(LABEL_COLORS[0].color);
+          },
+        }
+      );
+      return;
+    }
+
+    // Handle editing existing label
     if (!editingLabelId) {
+      setEditingLabelId(null);
+      return;
+    }
+
+    // Find the label to get its userId
+    const labelToEdit = availableLabels.find(l => l.id === editingLabelId);
+    if (!labelToEdit) {
       setEditingLabelId(null);
       return;
     }
@@ -123,7 +129,7 @@ export function CardLabels({ card, onUpdate, boardId, isOpen: controlledIsOpen, 
     // Update label via API
     updateLabel(
       {
-        boardId,
+        userId: labelToEdit.userId,
         labelId: editingLabelId,
         name: editLabelName.trim(),
         color: editLabelColor,
@@ -148,16 +154,7 @@ export function CardLabels({ card, onUpdate, boardId, isOpen: controlledIsOpen, 
 
   const handleCancelEdit = () => {
     setEditingLabelId(null);
-  };
-
-  // Quick add from predefined colors
-  const quickAddLabel = (colorDef: { name: string; color: string }) => {
-    const newLabel: Label = {
-      id: Date.now().toString(),
-      name: colorDef.name,
-      color: colorDef.color,
-    };
-    handleAddLabel(newLabel);
+    setIsCreatingNew(false);
   };
 
   // Filter labels based on search query from available labels pool
@@ -166,8 +163,8 @@ export function CardLabels({ card, onUpdate, boardId, isOpen: controlledIsOpen, 
   );
 
   // Popover content to be reused
-  const popoverContent = editingLabelId ? (
-    // Edit mode
+  const popoverContent = (editingLabelId || isCreatingNew) ? (
+    // Edit/Create mode
     <div className="space-y-3 p-3 w-80">
       <div className="flex items-center gap-2">
         <Button
@@ -178,7 +175,7 @@ export function CardLabels({ card, onUpdate, boardId, isOpen: controlledIsOpen, 
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        <h4 className="font-semibold flex-1 text-center">Edit Label</h4>
+        <h4 className="font-semibold flex-1 text-center">{isCreatingNew ? "Create Label" : "Edit Label"}</h4>
         <Button
           variant="ghost"
           size="icon"
@@ -196,6 +193,7 @@ export function CardLabels({ card, onUpdate, boardId, isOpen: controlledIsOpen, 
           onChange={(e) => setEditLabelName(e.target.value)}
           placeholder="Label name"
           className="h-8"
+          autoFocus={isCreatingNew}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               handleSaveEdit();
@@ -226,8 +224,8 @@ export function CardLabels({ card, onUpdate, boardId, isOpen: controlledIsOpen, 
         </div>
       </div>
 
-      <Button onClick={handleSaveEdit} size="sm" className="w-full">
-        Save
+      <Button onClick={handleSaveEdit} size="sm" className="w-full" disabled={isCreatingNew && !editLabelName.trim()}>
+        {isCreatingNew ? "Create" : "Save"}
       </Button>
     </div>
   ) : (
@@ -272,7 +270,7 @@ export function CardLabels({ card, onUpdate, boardId, isOpen: controlledIsOpen, 
                 <Checkbox
                   checked={isSelected}
                   onCheckedChange={() => handleToggleLabel(label)}
-                  className="flex-shrink-0"
+                  className="shrink-0"
                 />
                 <div
                   className="flex-1 h-8 rounded px-3 flex items-center text-sm font-medium text-white cursor-pointer min-w-0"
@@ -284,7 +282,7 @@ export function CardLabels({ card, onUpdate, boardId, isOpen: controlledIsOpen, 
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 flex-shrink-0"
+                  className="h-8 w-8 shrink-0"
                   onClick={() => handleStartEdit(label)}
                 >
                   <Pencil className="h-4 w-4" />
@@ -301,24 +299,7 @@ export function CardLabels({ card, onUpdate, boardId, isOpen: controlledIsOpen, 
           variant="outline"
           size="sm"
           className="w-full"
-          onClick={() => {
-            // Create label via API
-            createLabel(
-              {
-                boardId,
-                name: "",
-                color: LABEL_COLORS[0].color,
-              },
-              {
-                onSuccess: (newLabel) => {
-                  // Enter edit mode for the new label
-                  setEditingLabelId(newLabel.id);
-                  setEditLabelName(newLabel.name);
-                  setEditLabelColor(newLabel.color);
-                },
-              }
-            );
-          }}
+          onClick={handleStartCreate}
         >
           Create New Label
         </Button>

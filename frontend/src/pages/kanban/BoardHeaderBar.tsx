@@ -59,6 +59,7 @@ import { toast } from "sonner";
 
 interface Member {
   id: string;
+  userId: string;
   name: string;
   avatar?: string | null;
 }
@@ -68,6 +69,8 @@ interface BoardHeaderBarProps {
   boardName: string;
   members: Member[];
   isOwner: boolean;
+  creatorId: string;
+  currentUserId: string;
   filters: FilterState;
   onFiltersChange: (filters: FilterState) => void;
   onEditBoard: () => void;
@@ -101,6 +104,8 @@ export function BoardHeaderBar({
   boardName,
   members,
   isOwner,
+  creatorId,
+  currentUserId,
   filters,
   onFiltersChange,
   onEditBoard,
@@ -288,7 +293,11 @@ export function BoardHeaderBar({
                     </SheetDescription>
                   </SheetHeader>
                   <div className="py-4">
-                    <LabelManager boardId={boardId} />
+                    <LabelManager 
+                      members={members}
+                      creatorId={creatorId}
+                      currentUserId={currentUserId}
+                    />
                   </div>
                 </SheetContent>
               </Sheet>

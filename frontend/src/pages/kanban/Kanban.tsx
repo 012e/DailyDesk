@@ -241,6 +241,8 @@ export function Kanban({ boardId }: KanbanProps) {
           boardName={board.name}
           members={members}
           isOwner={isOwner}
+          creatorId={board?.userId || ""}
+          currentUserId={currentUser?.sub || ""}
           filters={filters}
           onFiltersChange={setFilters}
           onEditBoard={() => setIsEditBoardOpen(true)}

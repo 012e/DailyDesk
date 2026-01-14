@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import { useLabels } from "@/hooks/use-label";
+import { useBoardLabels } from "@/hooks/use-label";
 import { useMembers } from "@/hooks/use-member";
 import { cn } from "@/lib/utils";
 
@@ -49,7 +49,7 @@ export function BoardFilterPopover({
   triggerClassName,
 }: BoardFilterPopoverProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const { data: labels = [] } = useLabels(boardId);
+  const { data: labels = [] } = useBoardLabels(boardId);
   const { data: members = [] } = useMembers(boardId);
 
   const hasActiveFilters =

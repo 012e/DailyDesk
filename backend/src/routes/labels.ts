@@ -1,5 +1,5 @@
 import db from "@/lib/db";
-import { boardsTable, labelsTable } from "@/lib/db/schema";
+import { labelsTable } from "@/lib/db/schema";
 import { ensureUserAuthenticated } from "@/lib/utils";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { eq } from "drizzle-orm";
@@ -17,27 +17,24 @@ export default function createLabelRoutes() {
   const app = new OpenAPIHono();
   app.use("*", authMiddleware());
 
-  // GET /boards/{boardId}/labels - Get all labels for a board
+  // GET /users/{userId}/labels - Get all labels for a user
   app.openapi(
     createRoute({
       method: "get",
       tags: TAGS,
-      path: "/{boardId}/labels",
+      path: "/users/{userId}/labels",
       security: defaultSecurityScheme(),
       request: {
         params: z.object({
-          boardId: z.uuid(),
+          userId: z.string(),
         }),
       },
       responses: {
         200: successJson(LabelSchema.array(), {
           description: "Lấy danh sách Labels thành công",
         }),
-        404: {
-          description: "Board không tồn tại",
-        },
         403: {
-          description: "Không có quyền truy cập Board này",
+          description: "Không có quyền truy cập Labels của user này",
         },
         500: {
           content: {
@@ -54,43 +51,32 @@ export default function createLabelRoutes() {
 
     async (c) => {
       const user = ensureUserAuthenticated(c);
-      const { boardId } = c.req.valid("param");
+      const { userId } = c.req.valid("param");
 
-      // Check if board exists and user owns it
-      const board = await db
-        .select()
-        .from(boardsTable)
-        .where(eq(boardsTable.id, boardId))
-        .limit(1);
-
-      if (board.length === 0) {
-        return c.json({ error: "Board không tồn tại" }, 404);
-      }
-
-      if (board[0].userId !== user.sub) {
-        return c.json({ error: "Không có quyền truy cập Board này" }, 403);
-      }
-
-      // Get all labels for this board
+      // Users can only access their own labels (for now)
+      // In the future, you might want to allow viewing other users' labels
+      // for collaboration purposes
+      
+      // Get all labels for this user
       const labels = await db
         .select()
         .from(labelsTable)
-        .where(eq(labelsTable.boardId, boardId));
+        .where(eq(labelsTable.userId, userId));
 
       return c.json(labels, 200);
     },
   );
 
-  // POST /boards/{boardId}/labels - Create a new label
+  // POST /users/{userId}/labels - Create a new label
   app.openapi(
     createRoute({
       method: "post",
       tags: TAGS,
-      path: "/{boardId}/labels",
+      path: "/users/{userId}/labels",
       security: defaultSecurityScheme(),
       request: {
         params: z.object({
-          boardId: z.uuid(),
+          userId: z.string(),
         }),
         body: jsonBody(CreateLabelSchema),
       },
@@ -98,11 +84,8 @@ export default function createLabelRoutes() {
         200: successJson(LabelSchema, {
           description: "Tạo Label thành công",
         }),
-        404: {
-          description: "Board không tồn tại",
-        },
         403: {
-          description: "Không có quyền tạo Label trong Board này",
+          description: "Không có quyền tạo Label cho user này",
         },
         500: {
           content: {
@@ -119,22 +102,12 @@ export default function createLabelRoutes() {
 
     async (c) => {
       const user = ensureUserAuthenticated(c);
-      const { boardId } = c.req.valid("param");
+      const { userId } = c.req.valid("param");
       const req = c.req.valid("json");
 
-      // Check if board exists and user owns it
-      const board = await db
-        .select()
-        .from(boardsTable)
-        .where(eq(boardsTable.id, boardId))
-        .limit(1);
-
-      if (board.length === 0) {
-        return c.json({ error: "Board không tồn tại" }, 404);
-      }
-
-      if (board[0].userId !== user.sub) {
-        return c.json({ error: "Không có quyền tạo Label trong Board này" }, 403);
+      // Users can only create labels for themselves
+      if (user.sub !== userId) {
+        return c.json({ error: "Không có quyền tạo Label cho user này" }, 403);
       }
 
       const label = await db
@@ -143,7 +116,7 @@ export default function createLabelRoutes() {
           id: req.id,
           name: req.name,
           color: req.color,
-          boardId: boardId,
+          userId: userId,
         })
         .returning();
 
@@ -151,16 +124,16 @@ export default function createLabelRoutes() {
     },
   );
 
-  // PUT /boards/{boardId}/labels/{id} - Update a label
+  // PUT /users/{userId}/labels/{id} - Update a label
   app.openapi(
     createRoute({
       method: "put",
       tags: TAGS,
-      path: "/{boardId}/labels/{id}",
+      path: "/users/{userId}/labels/{id}",
       security: defaultSecurityScheme(),
       request: {
         params: z.object({
-          boardId: z.uuid(),
+          userId: z.string(),
           id: z.uuid(),
         }),
         body: jsonBody(UpdateLabelSchema),
@@ -170,7 +143,7 @@ export default function createLabelRoutes() {
           description: "Cập nhật Label thành công",
         }),
         404: {
-          description: "Label hoặc Board không tồn tại",
+          description: "Label không tồn tại",
         },
         403: {
           description: "Không có quyền cập nhật Label này",
@@ -190,25 +163,15 @@ export default function createLabelRoutes() {
 
     async (c) => {
       const user = ensureUserAuthenticated(c);
-      const { boardId, id } = c.req.valid("param");
+      const { userId, id } = c.req.valid("param");
       const req = c.req.valid("json");
 
-      // Check if board exists and user owns it
-      const board = await db
-        .select()
-        .from(boardsTable)
-        .where(eq(boardsTable.id, boardId))
-        .limit(1);
-
-      if (board.length === 0) {
-        return c.json({ error: "Board không tồn tại" }, 404);
+      // Users can only update their own labels
+      if (user.sub !== userId) {
+        return c.json({ error: "Không có quyền cập nhật Label này" }, 403);
       }
 
-      if (board[0].userId !== user.sub) {
-        return c.json({ error: "Không có quyền truy cập Board này" }, 403);
-      }
-
-      // Check if label exists and belongs to this board
+      // Check if label exists and belongs to this user
       const existingLabel = await db
         .select()
         .from(labelsTable)
@@ -219,8 +182,8 @@ export default function createLabelRoutes() {
         return c.json({ error: "Label không tồn tại" }, 404);
       }
 
-      if (existingLabel[0].boardId !== boardId) {
-        return c.json({ error: "Label không thuộc Board này" }, 403);
+      if (existingLabel[0].userId !== userId) {
+        return c.json({ error: "Label không thuộc user này" }, 403);
       }
 
       const updatedLabel = await db
@@ -236,16 +199,16 @@ export default function createLabelRoutes() {
     },
   );
 
-  // DELETE /boards/{boardId}/labels/{id} - Delete a label
+  // DELETE /users/{userId}/labels/{id} - Delete a label
   app.openapi(
     createRoute({
       method: "delete",
       tags: TAGS,
-      path: "/{boardId}/labels/{id}",
+      path: "/users/{userId}/labels/{id}",
       security: defaultSecurityScheme(),
       request: {
         params: z.object({
-          boardId: z.uuid(),
+          userId: z.string(),
           id: z.uuid(),
         }),
       },
@@ -261,7 +224,7 @@ export default function createLabelRoutes() {
           },
         },
         404: {
-          description: "Label hoặc Board không tồn tại",
+          description: "Label không tồn tại",
         },
         403: {
           description: "Không có quyền xóa Label này",
@@ -281,24 +244,14 @@ export default function createLabelRoutes() {
 
     async (c) => {
       const user = ensureUserAuthenticated(c);
-      const { boardId, id } = c.req.valid("param");
+      const { userId, id } = c.req.valid("param");
 
-      // Check if board exists and user owns it
-      const board = await db
-        .select()
-        .from(boardsTable)
-        .where(eq(boardsTable.id, boardId))
-        .limit(1);
-
-      if (board.length === 0) {
-        return c.json({ error: "Board không tồn tại" }, 404);
+      // Users can only delete their own labels
+      if (user.sub !== userId) {
+        return c.json({ error: "Không có quyền xóa Label này" }, 403);
       }
 
-      if (board[0].userId !== user.sub) {
-        return c.json({ error: "Không có quyền truy cập Board này" }, 403);
-      }
-
-      // Check if label exists and belongs to this board
+      // Check if label exists and belongs to this user
       const existingLabel = await db
         .select()
         .from(labelsTable)
@@ -309,8 +262,8 @@ export default function createLabelRoutes() {
         return c.json({ error: "Label không tồn tại" }, 404);
       }
 
-      if (existingLabel[0].boardId !== boardId) {
-        return c.json({ error: "Label không thuộc Board này" }, 403);
+      if (existingLabel[0].userId !== userId) {
+        return c.json({ error: "Label không thuộc user này" }, 403);
       }
 
       await db.delete(labelsTable).where(eq(labelsTable.id, id));
