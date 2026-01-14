@@ -20,7 +20,7 @@ import { randomUUID } from "crypto";
 const defaultTemplates = [
   {
     name: "Kanban Board",
-    description: "Classic Kanban workflow for managing tasks",
+    description: "Classic Kanban workflow for managing tasks. Visualize your work with a simple board that moves tasks from backlog to completion. Perfect for teams practicing lean methodology and continuous delivery.",
     category: "business",
     lists: [
       { name: "Backlog", order: 0 },
@@ -48,7 +48,7 @@ const defaultTemplates = [
   },
   {
     name: "Sprint Planning",
-    description: "Agile sprint planning and tracking",
+    description: "Agile sprint planning and tracking for development teams. Organize user stories, track progress through code review and testing, and maintain velocity. Ideal for scrum teams working in 2-week sprints.",
     category: "engineering",
     lists: [
       { name: "Sprint Backlog", order: 0 },
@@ -76,7 +76,7 @@ const defaultTemplates = [
   },
   {
     name: "Project Management",
-    description: "Comprehensive project planning and execution",
+    description: "Comprehensive project planning and execution from start to finish. Track multiple projects, manage resources, and monitor milestones. Great for project managers handling complex initiatives with multiple stakeholders.",
     category: "business",
     lists: [
       { name: "Planning", order: 0 },
@@ -104,7 +104,7 @@ const defaultTemplates = [
   },
   {
     name: "Content Calendar",
-    description: "Plan and organize content creation",
+    description: "Plan and organize content creation across all channels. Manage blog posts, social media, videos, and newsletters from ideation to publication. Essential for content marketers and editorial teams.",
     category: "marketing",
     lists: [
       { name: "Ideas", order: 0 },
@@ -132,7 +132,7 @@ const defaultTemplates = [
   },
   {
     name: "Personal To-Do",
-    description: "Simple personal task management",
+    description: "Simple personal task management for daily life. Keep track of errands, appointments, and personal goals. Perfect for individuals wanting a straightforward task tracker without complexity.",
     category: "personal",
     lists: [
       { name: "To Do", order: 0 },
@@ -158,7 +158,7 @@ const defaultTemplates = [
   },
   {
     name: "Design Project",
-    description: "Creative design workflow",
+    description: "Creative design workflow from concept to final delivery. Manage UI/UX projects, track design iterations, and collect feedback. Built for designers, creative directors, and product teams focused on visual excellence.",
     category: "design",
     lists: [
       { name: "Concepts", order: 0 },
@@ -186,7 +186,7 @@ const defaultTemplates = [
   },
   {
     name: "Course Planning",
-    description: "Organize educational content and lessons",
+    description: "Organize educational content and lessons for online courses. Plan modules, create materials, and manage course production. Perfect for instructors, course creators, and educational content developers.",
     category: "education",
     lists: [
       { name: "Module Planning", order: 0 },
@@ -214,7 +214,7 @@ const defaultTemplates = [
   },
   {
     name: "Event Planning",
-    description: "Plan and coordinate events",
+    description: "Plan and coordinate events of any size. Manage vendors, track RSVPs, coordinate logistics, and ensure nothing falls through the cracks. Ideal for event planners, coordinators, and marketing teams.",
     category: "business",
     lists: [
       { name: "Ideas & Concepts", order: 0 },

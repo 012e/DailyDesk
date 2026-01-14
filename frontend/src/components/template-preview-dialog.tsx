@@ -46,7 +46,7 @@ export default function TemplatePreviewDialog({
       const board = await createBoardFromTemplate(templateId, boardName.trim(), true);
       onClose();
       // Navigate to the new board
-      navigate(`/boards/${board.id}`);
+      navigate(`/board/${board.id}`);
     } catch (error) {
       console.error("Error creating board from template:", error);
     } finally {
