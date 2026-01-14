@@ -324,7 +324,16 @@ export function CardDates({
   };
 
   const popoverContent = (
-    <div className="w-80 max-h-[500px] overflow-y-auto">
+    <div
+      className="w-80 max-h-[500px] overflow-y-auto overscroll-contain"
+      style={{
+        touchAction: 'auto',
+        WebkitOverflowScrolling: 'touch'
+      } as React.CSSProperties}
+      onWheel={(e) => {
+        e.stopPropagation();
+      }}
+    >
       <div className="space-y-3 p-3">
         <div>
           <h4 className="font-semibold mb-1 text-sm">Due Date</h4>
@@ -486,11 +495,21 @@ export function CardDates({
 
     return (
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Dates</DialogTitle>
           </DialogHeader>
 
+          <div
+            className="overflow-y-auto overscroll-contain flex-1"
+            style={{
+              touchAction: 'auto',
+              WebkitOverflowScrolling: 'touch'
+            } as React.CSSProperties}
+            onWheel={(e) => {
+              e.stopPropagation();
+            }}
+          >
           <div className="flex justify-center border-b pb-4">
             <Calendar
               mode="single"
@@ -664,6 +683,7 @@ export function CardDates({
             >
               {clearDueMutation.isPending ? "Removing..." : "Remove"}
             </Button>
+          </div>
           </div>
         </DialogContent>
       </Dialog>
