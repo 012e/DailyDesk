@@ -1,12 +1,14 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, LayoutTemplate } from "lucide-react";
 import { Suspense, useState } from "react";
 import CreateBoardDialog from "@/components/create-board-dialog";
+import TemplateGalleryDialog from "@/components/template-gallery-dialog";
 import { BoardCard } from "@/components/board-card";
 import { DeleteBoardDialog } from "@/components/delete-board-dialog";
 import { EditBoardDialog } from "@/components/edit-board-dialog";
 import { Clipboard } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   useBoards,
   useCreateBoard,
@@ -37,6 +39,7 @@ export default function Home() {
 
   const boards = useBoards();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState<boolean>(false);
+  const [isTemplateGalleryOpen, setIsTemplateGalleryOpen] = useState<boolean>(false);
   const [boardToEdit, setBoardToEdit] = useState<BoardToEdit>(null);
   const [boardToDelete, setBoardToDelete] = useState<BoardToDelete>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -115,6 +118,15 @@ export default function Home() {
                   My Boards
                 </h1>
                 <Clipboard className="w-5" />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsTemplateGalleryOpen(true)}
+                  className="ml-2 flex items-center gap-2"
+                >
+                  <LayoutTemplate className="w-4 h-4" />
+                  Browse Templates
+                </Button>
               </div>
               <p className="mt-1 text-muted-foreground">
                 Organize your work and life
@@ -174,6 +186,12 @@ export default function Home() {
                 />
               ))}
             </div>
+
+          {/* Template Gallery Dialog */}
+          <TemplateGalleryDialog
+            open={isTemplateGalleryOpen}
+            onOpenChange={setIsTemplateGalleryOpen}
+          />
 
           {/* Create Board Dialog */}
           <CreateBoardDialog

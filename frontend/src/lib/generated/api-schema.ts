@@ -54,17 +54,29 @@ export interface paths {
                                     coverMode: string | null;
                                     /** Format: uuid */
                                     listId: string;
-                                    labels: {
+                                    labels?: {
                                         id: string;
                                         name: string;
                                         color: string;
                                     }[] | null;
-                                    members: {
+                                    members?: {
                                         id: string;
                                         name: string;
                                         email: string;
-                                        avatar?: string;
+                                        avatar?: string | null;
                                         initials: string;
+                                    }[] | null;
+                                    attachments?: {
+                                        id: string;
+                                        name: string;
+                                        url: string;
+                                        publicId: string | null;
+                                        type: string;
+                                        size: number;
+                                        /** Format: date-time */
+                                        uploadedAt: string | null;
+                                        uploadedBy: string;
+                                        cardId: string;
                                     }[] | null;
                                     /** Format: date-time */
                                     startDate: string | null;
@@ -220,17 +232,29 @@ export interface paths {
                                     coverMode: string | null;
                                     /** Format: uuid */
                                     listId: string;
-                                    labels: {
+                                    labels?: {
                                         id: string;
                                         name: string;
                                         color: string;
                                     }[] | null;
-                                    members: {
+                                    members?: {
                                         id: string;
                                         name: string;
                                         email: string;
-                                        avatar?: string;
+                                        avatar?: string | null;
                                         initials: string;
+                                    }[] | null;
+                                    attachments?: {
+                                        id: string;
+                                        name: string;
+                                        url: string;
+                                        publicId: string | null;
+                                        type: string;
+                                        size: number;
+                                        /** Format: date-time */
+                                        uploadedAt: string | null;
+                                        uploadedBy: string;
+                                        cardId: string;
                                     }[] | null;
                                     /** Format: date-time */
                                     startDate: string | null;
@@ -507,17 +531,29 @@ export interface paths {
                             coverMode: string | null;
                             /** Format: uuid */
                             listId: string;
-                            labels: {
+                            labels?: {
                                 id: string;
                                 name: string;
                                 color: string;
                             }[] | null;
-                            members: {
+                            members?: {
                                 id: string;
                                 name: string;
                                 email: string;
-                                avatar?: string;
+                                avatar?: string | null;
                                 initials: string;
+                            }[] | null;
+                            attachments?: {
+                                id: string;
+                                name: string;
+                                url: string;
+                                publicId: string | null;
+                                type: string;
+                                size: number;
+                                /** Format: date-time */
+                                uploadedAt: string | null;
+                                uploadedBy: string;
+                                cardId: string;
                             }[] | null;
                             /** Format: date-time */
                             startDate: string | null;
@@ -924,17 +960,29 @@ export interface paths {
                             coverMode: string | null;
                             /** Format: uuid */
                             listId: string;
-                            labels: {
+                            labels?: {
                                 id: string;
                                 name: string;
                                 color: string;
                             }[] | null;
-                            members: {
+                            members?: {
                                 id: string;
                                 name: string;
                                 email: string;
-                                avatar?: string;
+                                avatar?: string | null;
                                 initials: string;
+                            }[] | null;
+                            attachments?: {
+                                id: string;
+                                name: string;
+                                url: string;
+                                publicId: string | null;
+                                type: string;
+                                size: number;
+                                /** Format: date-time */
+                                uploadedAt: string | null;
+                                uploadedBy: string;
+                                cardId: string;
                             }[] | null;
                             /** Format: date-time */
                             startDate: string | null;
@@ -992,6 +1040,8 @@ export interface paths {
                         name: string;
                         description?: string;
                         order: number;
+                        /** Format: uuid */
+                        listId: string;
                         labels?: {
                             id: string;
                             name: string;
@@ -999,10 +1049,6 @@ export interface paths {
                         }[];
                         members?: {
                             id: string;
-                            name: string;
-                            email: string;
-                            avatar?: string;
-                            initials: string;
                         }[];
                         /** Format: date-time */
                         startDate?: string;
@@ -1021,8 +1067,6 @@ export interface paths {
                         coverColor?: string;
                         coverUrl?: string;
                         completed?: boolean;
-                        /** Format: uuid */
-                        listId: string;
                     };
                 };
             };
@@ -1046,17 +1090,29 @@ export interface paths {
                             coverMode: string | null;
                             /** Format: uuid */
                             listId: string;
-                            labels: {
+                            labels?: {
                                 id: string;
                                 name: string;
                                 color: string;
                             }[] | null;
-                            members: {
+                            members?: {
                                 id: string;
                                 name: string;
                                 email: string;
-                                avatar?: string;
+                                avatar?: string | null;
                                 initials: string;
+                            }[] | null;
+                            attachments?: {
+                                id: string;
+                                name: string;
+                                url: string;
+                                publicId: string | null;
+                                type: string;
+                                size: number;
+                                /** Format: date-time */
+                                uploadedAt: string | null;
+                                uploadedBy: string;
+                                cardId: string;
                             }[] | null;
                             /** Format: date-time */
                             startDate: string | null;
@@ -1140,17 +1196,29 @@ export interface paths {
                             coverMode: string | null;
                             /** Format: uuid */
                             listId: string;
-                            labels: {
+                            labels?: {
                                 id: string;
                                 name: string;
                                 color: string;
                             }[] | null;
-                            members: {
+                            members?: {
                                 id: string;
                                 name: string;
                                 email: string;
-                                avatar?: string;
+                                avatar?: string | null;
                                 initials: string;
+                            }[] | null;
+                            attachments?: {
+                                id: string;
+                                name: string;
+                                url: string;
+                                publicId: string | null;
+                                type: string;
+                                size: number;
+                                /** Format: date-time */
+                                uploadedAt: string | null;
+                                uploadedBy: string;
+                                cardId: string;
                             }[] | null;
                             /** Format: date-time */
                             startDate: string | null;
@@ -1206,6 +1274,8 @@ export interface paths {
                         name?: string;
                         description?: string | null;
                         order?: number;
+                        /** Format: uuid */
+                        listId?: string;
                         labels?: {
                             id: string;
                             name: string;
@@ -1213,10 +1283,6 @@ export interface paths {
                         }[] | null;
                         members?: {
                             id: string;
-                            name: string;
-                            email: string;
-                            avatar?: string;
-                            initials: string;
                         }[] | null;
                         /** Format: date-time */
                         startDate?: string | null;
@@ -1236,8 +1302,6 @@ export interface paths {
                         coverUrl?: string | "" | unknown;
                         coverMode?: string | null;
                         completed?: boolean | null;
-                        /** Format: uuid */
-                        listId?: string;
                     };
                 };
             };
@@ -1261,17 +1325,29 @@ export interface paths {
                             coverMode: string | null;
                             /** Format: uuid */
                             listId: string;
-                            labels: {
+                            labels?: {
                                 id: string;
                                 name: string;
                                 color: string;
                             }[] | null;
-                            members: {
+                            members?: {
                                 id: string;
                                 name: string;
                                 email: string;
-                                avatar?: string;
+                                avatar?: string | null;
                                 initials: string;
+                            }[] | null;
+                            attachments?: {
+                                id: string;
+                                name: string;
+                                url: string;
+                                publicId: string | null;
+                                type: string;
+                                size: number;
+                                /** Format: date-time */
+                                uploadedAt: string | null;
+                                uploadedBy: string;
+                                cardId: string;
                             }[] | null;
                             /** Format: date-time */
                             startDate: string | null;
@@ -1450,17 +1526,29 @@ export interface paths {
                             coverMode: string | null;
                             /** Format: uuid */
                             listId: string;
-                            labels: {
+                            labels?: {
                                 id: string;
                                 name: string;
                                 color: string;
                             }[] | null;
-                            members: {
+                            members?: {
                                 id: string;
                                 name: string;
                                 email: string;
-                                avatar?: string;
+                                avatar?: string | null;
                                 initials: string;
+                            }[] | null;
+                            attachments?: {
+                                id: string;
+                                name: string;
+                                url: string;
+                                publicId: string | null;
+                                type: string;
+                                size: number;
+                                /** Format: date-time */
+                                uploadedAt: string | null;
+                                uploadedBy: string;
+                                cardId: string;
                             }[] | null;
                             /** Format: date-time */
                             startDate: string | null;
@@ -2343,6 +2431,104 @@ export interface paths {
                     content?: never;
                 };
                 /** @description Board không tồn tại */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Member đã tồn tại trong Board */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/boards/{boardId}/members/by-user-id": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boardId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @description Auth0 user ID (e.g., auth0|123456) */
+                        userId: string;
+                        /**
+                         * @default member
+                         * @enum {string}
+                         */
+                        role?: "member" | "admin" | "viewer";
+                    };
+                };
+            };
+            responses: {
+                /** @description Thêm Member thành công (tự động lấy thông tin từ Auth0) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            boardId: string;
+                            userId: string;
+                            name: string;
+                            /** Format: email */
+                            email: string;
+                            avatar?: string | null;
+                            /**
+                             * @default member
+                             * @enum {string}
+                             */
+                            role: "member" | "admin" | "viewer";
+                            /** Format: date-time */
+                            addedAt: string | null;
+                        };
+                    };
+                };
+                /** @description Không có quyền thêm Member vào Board này */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Board không tồn tại hoặc User không tìm thấy trong Auth0 */
                 404: {
                     headers: {
                         [name: string]: unknown;
@@ -3304,6 +3490,593 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    category?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Get templates successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            name: string;
+                            description?: string;
+                            category?: string;
+                            userId?: string;
+                            /** @default false */
+                            isPublic: boolean;
+                            backgroundUrl?: string;
+                            backgroundColor?: string;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        }[];
+                    };
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        name: string;
+                        description?: string;
+                        /** @enum {string} */
+                        category?: "business" | "education" | "personal" | "design" | "marketing" | "engineering" | "other";
+                        /** @default false */
+                        isPublic?: boolean;
+                        backgroundUrl?: string;
+                        backgroundColor?: string;
+                        lists: {
+                            name: string;
+                            order: number;
+                            cards?: {
+                                name: string;
+                                description?: string;
+                                order: number;
+                            }[];
+                        }[];
+                        labels?: {
+                            name: string;
+                            color: string;
+                        }[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Template created successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            name: string;
+                            description?: string;
+                            category?: string;
+                            userId?: string;
+                            /** @default false */
+                            isPublic: boolean;
+                            backgroundUrl?: string;
+                            backgroundColor?: string;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                            lists: {
+                                /** Format: uuid */
+                                id: string;
+                                name: string;
+                                order: number;
+                                /** Format: uuid */
+                                templateId: string;
+                                cards?: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    name: string;
+                                    description?: string;
+                                    order: number;
+                                    /** Format: uuid */
+                                    templateListId: string;
+                                }[];
+                            }[];
+                            labels?: {
+                                /** Format: uuid */
+                                id: string;
+                                name: string;
+                                color: string;
+                                /** Format: uuid */
+                                templateId: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Request failed */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/templates/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Get template successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            name: string;
+                            description?: string;
+                            category?: string;
+                            userId?: string;
+                            /** @default false */
+                            isPublic: boolean;
+                            backgroundUrl?: string;
+                            backgroundColor?: string;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                            lists: {
+                                /** Format: uuid */
+                                id: string;
+                                name: string;
+                                order: number;
+                                /** Format: uuid */
+                                templateId: string;
+                                cards?: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    name: string;
+                                    description?: string;
+                                    order: number;
+                                    /** Format: uuid */
+                                    templateListId: string;
+                                }[];
+                            }[];
+                            labels?: {
+                                /** Format: uuid */
+                                id: string;
+                                name: string;
+                                color: string;
+                                /** Format: uuid */
+                                templateId: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Template not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Template deleted successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                        };
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Template not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        name?: string;
+                        description?: string | null;
+                        /** @enum {string|null} */
+                        category?: "business" | "education" | "personal" | "design" | "marketing" | "engineering" | "other" | null;
+                        isPublic?: boolean;
+                        backgroundUrl?: string | null;
+                        backgroundColor?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Template updated successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            name: string;
+                            description?: string;
+                            category?: string;
+                            userId?: string;
+                            /** @default false */
+                            isPublic: boolean;
+                            backgroundUrl?: string;
+                            backgroundColor?: string;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
+                /** @description Request failed */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Template not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/templates/{id}/create-board": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        boardName: string;
+                        /** @default true */
+                        includeCards?: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Board created from template successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            name: string;
+                            userId: string;
+                            backgroundUrl?: string;
+                            backgroundColor?: string;
+                            backgroundPublicId?: string;
+                        };
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Template not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/templates/from-board/{boardId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    boardId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        templateName: string;
+                        templateDescription?: string;
+                        /** @enum {string} */
+                        category?: "business" | "education" | "personal" | "design" | "marketing" | "engineering" | "other";
+                        /** @default false */
+                        isPublic?: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Board saved as template successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            name: string;
+                            description?: string;
+                            category?: string;
+                            userId?: string;
+                            /** @default false */
+                            isPublic: boolean;
+                            backgroundUrl?: string;
+                            backgroundColor?: string;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                            lists: {
+                                /** Format: uuid */
+                                id: string;
+                                name: string;
+                                order: number;
+                                /** Format: uuid */
+                                templateId: string;
+                                cards?: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    name: string;
+                                    description?: string;
+                                    order: number;
+                                    /** Format: uuid */
+                                    templateListId: string;
+                                }[];
+                            }[];
+                            labels?: {
+                                /** Format: uuid */
+                                id: string;
+                                name: string;
+                                color: string;
+                                /** Format: uuid */
+                                templateId: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Board not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;

@@ -78,4 +78,4 @@ const accessTokenInjectMiddleware: Middleware = {
 api.use(accessTokenInjectMiddleware);
 
 export default api;
-export { queryApi };
+export { api, queryApi };
