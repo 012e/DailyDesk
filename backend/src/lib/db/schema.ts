@@ -2,6 +2,59 @@ import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { relations } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
+// Board Templates table
+export const boardTemplatesTable = sqliteTable("board_templates", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  name: text("name").notNull(),
+  description: text("description"),
+  category: text("category"), // e.g., "business", "education", "personal", "design", "marketing"
+  userId: text("user_id"), // null for system templates, userId for user-created templates
+  isPublic: integer("is_public", { mode: "boolean" }).default(false), // Can be shared with others
+  backgroundUrl: text("background_url"),
+  backgroundColor: text("background_color"),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+});
+
+// Template Lists - Lists configuration for templates
+export const templateListsTable = sqliteTable("template_lists", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  name: text("name").notNull(),
+  order: integer("order").notNull(),
+  templateId: text("template_id")
+    .notNull()
+    .references(() => boardTemplatesTable.id, { onDelete: "cascade" }),
+});
+
+// Template Cards - Sample cards for templates (optional)
+export const templateCardsTable = sqliteTable("template_cards", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  name: text("name").notNull(),
+  description: text("description"),
+  order: integer("order").notNull(),
+  templateListId: text("template_list_id")
+    .notNull()
+    .references(() => templateListsTable.id, { onDelete: "cascade" }),
+});
+
+// Template Labels - Pre-configured labels for templates
+export const templateLabelsTable = sqliteTable("template_labels", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  name: text("name").notNull(),
+  color: text("color").notNull(), // Hex color code
+  templateId: text("template_id")
+    .notNull()
+    .references(() => boardTemplatesTable.id, { onDelete: "cascade" }),
+});
+
 // Boards table
 export const boardsTable = sqliteTable("boards", {
   id: text("id")
@@ -291,3 +344,34 @@ export const dueReminderLogTable = sqliteTable("due_reminder_log", {
     .notNull()
     .$defaultFn(() => new Date()),
 });
+
+// Relations - Board Template to Template Lists and Labels (one-to-many)
+export const boardTemplateRelations = relations(boardTemplatesTable, ({ many }) => ({
+  lists: many(templateListsTable),
+  labels: many(templateLabelsTable),
+}));
+
+// Relations - Template List to Template (many-to-one) and Template Cards (one-to-many)
+export const templateListRelations = relations(templateListsTable, ({ one, many }) => ({
+  template: one(boardTemplatesTable, {
+    fields: [templateListsTable.templateId],
+    references: [boardTemplatesTable.id],
+  }),
+  cards: many(templateCardsTable),
+}));
+
+// Relations - Template Card to Template List (many-to-one)
+export const templateCardRelations = relations(templateCardsTable, ({ one }) => ({
+  templateList: one(templateListsTable, {
+    fields: [templateCardsTable.templateListId],
+    references: [templateListsTable.id],
+  }),
+}));
+
+// Relations - Template Label to Template (many-to-one)
+export const templateLabelRelations = relations(templateLabelsTable, ({ one }) => ({
+  template: one(boardTemplatesTable, {
+    fields: [templateLabelsTable.templateId],
+    references: [boardTemplatesTable.id],
+  }),
+}));

@@ -36,6 +36,13 @@
       "when": 1768152473081,
       "tag": "0004_yielding_solo",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1768374526615,
+      "tag": "0005_open_doctor_doom",
+      "breakpoints": true
     }
   ]
 }
