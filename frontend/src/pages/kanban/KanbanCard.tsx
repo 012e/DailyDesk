@@ -11,6 +11,12 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { Card as CardType, Label, Member, Attachment, Comment, ActivityLog, CardCoverMode} from "@/types/card";
 import { useAtom } from "jotai";
 import { isCardDialogOpenAtom, selectedCardAtom } from "./atoms";
@@ -107,7 +113,7 @@ export function KanbanCard({
     }
   };
 
-  const handleToggleComplete = (e: React.PointerEvent) => {
+  const handleToggleComplete = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent opening the card dialog
     e.preventDefault(); // Prevent default button behavior
     updateCard({
@@ -139,25 +145,34 @@ export function KanbanCard({
                 />
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 pt-8">
                   <div className="flex items-center gap-2">
-                    <div
-                      onPointerDown={handleToggleComplete}
-                      className="flex-shrink-0 cursor-pointer"
-                      role="checkbox"
-                      aria-checked={normalizedCard.completed}
-                      tabIndex={-1}
-                    >
-                      <div className={`h-4 w-4 shrink-0 rounded-sm border ${
-                        normalizedCard.completed
-                          ? 'bg-green-500 border-green-500 flex items-center justify-center'
-                          : 'border-white/70'
-                      }`}>
-                        {normalizedCard.completed && (
-                          <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                          </svg>
-                        )}
-                      </div>
-                    </div>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div
+                            onClick={handleToggleComplete}
+                            className="flex-shrink-0 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+                            role="checkbox"
+                            aria-checked={normalizedCard.completed}
+                            tabIndex={-1}
+                          >
+                            <div className={`h-5 w-5 shrink-0 rounded-full border-2 ${
+                              normalizedCard.completed
+                                ? 'bg-green-500 border-green-500 flex items-center justify-center'
+                                : 'border-white/70 hover:border-white'
+                            }`}>
+                              {normalizedCard.completed && (
+                                <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                </svg>
+                              )}
+                            </div>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{normalizedCard.completed ? "Mark incomplete" : "Mark complete"}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     <KanbanBoardCardTitle className={`text-white drop-shadow-md line-clamp-2 ${normalizedCard.completed ? "line-through opacity-75" : ""}`}>
                       {normalizedCard.title}
                     </KanbanBoardCardTitle>
@@ -171,25 +186,34 @@ export function KanbanCard({
               >
                 <div className="w-full bg-gradient-to-t from-black/70 to-transparent p-3 pt-8">
                   <div className="flex items-center gap-2">
-                    <div
-                      onPointerDown={handleToggleComplete}
-                      className="flex-shrink-0 cursor-pointer"
-                      role="checkbox"
-                      aria-checked={normalizedCard.completed}
-                      tabIndex={-1}
-                    >
-                      <div className={`h-4 w-4 shrink-0 rounded-sm border ${
-                        normalizedCard.completed
-                          ? 'bg-green-500 border-green-500 flex items-center justify-center'
-                          : 'border-white/70'
-                      }`}>
-                        {normalizedCard.completed && (
-                          <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                          </svg>
-                        )}
-                      </div>
-                    </div>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div
+                            onClick={handleToggleComplete}
+                            className="flex-shrink-0 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+                            role="checkbox"
+                            aria-checked={normalizedCard.completed}
+                            tabIndex={-1}
+                          >
+                            <div className={`h-5 w-5 shrink-0 rounded-full border-2 ${
+                              normalizedCard.completed
+                                ? 'bg-green-500 border-green-500 flex items-center justify-center'
+                                : 'border-white/70 hover:border-white'
+                            }`}>
+                              {normalizedCard.completed && (
+                                <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                </svg>
+                              )}
+                            </div>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{normalizedCard.completed ? "Mark incomplete" : "Mark complete"}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     <KanbanBoardCardTitle className={`text-white drop-shadow-sm line-clamp-2 ${normalizedCard.completed ? "line-through opacity-75" : ""}`}>
                       {normalizedCard.title}
                     </KanbanBoardCardTitle>
@@ -198,25 +222,34 @@ export function KanbanCard({
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <div
-                  onPointerDown={handleToggleComplete}
-                  className="flex-shrink-0 cursor-pointer"
-                  role="checkbox"
-                  aria-checked={normalizedCard.completed}
-                  tabIndex={-1}
-                >
-                  <div className={`h-4 w-4 shrink-0 rounded-sm border ring-offset-background ${
-                    normalizedCard.completed
-                      ? 'bg-green-500 border-green-500 flex items-center justify-center'
-                      : 'border-primary/50'
-                  }`}>
-                    {normalizedCard.completed && (
-                      <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </div>
-                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div
+                        onClick={handleToggleComplete}
+                        className="flex-shrink-0 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+                        role="checkbox"
+                        aria-checked={normalizedCard.completed}
+                        tabIndex={-1}
+                      >
+                        <div className={`h-5 w-5 shrink-0 rounded-full border-2 ring-offset-background ${
+                          normalizedCard.completed
+                            ? 'bg-green-500 border-green-500 flex items-center justify-center'
+                            : 'border-primary/50 hover:border-primary'
+                        }`}>
+                          {normalizedCard.completed && (
+                            <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{normalizedCard.completed ? "Mark incomplete" : "Mark complete"}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <KanbanBoardCardTitle className={`line-clamp-2 ${normalizedCard.completed ? "line-through text-muted-foreground opacity-50" : ""}`}>
                   {normalizedCard.title}
                 </KanbanBoardCardTitle>
