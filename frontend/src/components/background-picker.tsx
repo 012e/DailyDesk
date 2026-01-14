@@ -13,14 +13,14 @@ export function BackgroundPicker() {
   const [selectedBGIndex, setSelectedBGIndex] = useState<number | null>(null); // State to track selected  pre-Existing background index
 
   const colorPalette = [
-    "#ffffff",
-    "#fde68a",
-    "#fca5a5",
-    "#c7f9cc",
-    "#bfdbfe",
-    "#e9d5ff",
-    "#fef3c7",
-    "#d1fae5",
+    "https://images.unsplash.com/photo-1557683316-973673baf926?w=400&q=80",
+    "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=400&q=80",
+    "https://images.unsplash.com/photo-1557682224-5b8590cd9ec5?w=400&q=80",
+    "https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?w=400&q=80",
+    "https://images.unsplash.com/photo-1557682268-e3955ed5d83f?w=400&q=80",
+    "https://images.unsplash.com/photo-1557682257-2f9c37a3a5f3?w=400&q=80",
+    "https://images.unsplash.com/photo-1579546929662-711aa81148cf?w=400&q=80",
+    "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80",
   ];
   const preExistingImages = [
     "https://res.cloudinary.com/dpqv7ag5w/image/upload/v1765610459/japan-background-digital-art_ftw16m.jpg",
@@ -94,19 +94,21 @@ export function BackgroundPicker() {
               }}
             />
             <div className="grid grid-cols-[repeat(auto-fit,minmax(0.5rem,1fr))] w-[250] ">
-              {colorPalette.map((c) => (
+              {colorPalette.map((c, index) => (
                 <button
                   key={c}
                   type="button"
-                  aria-label={`Select ${c}`}
-                  onClick={() => handleColorPick(c)}
+                  aria-label={`Select background ${index + 1}`}
+                  onClick={async () => {
+                    handleFilePick(await imageUrlToFile(c));
+                  }}
                   className={cn(
-                    "aspect-square w-full rounded-md border transition cursor-pointer select-none",
+                    "aspect-square w-full rounded-md border transition cursor-pointer select-none bg-center bg-cover bg-no-repeat",
                     selectedColor === c
                       ? "border-sky-300 ring-1 ring-sky-200 scale-105 z-10 shadow-lg"
                       : "border-transparent"
                   )}
-                  style={{ backgroundColor: c }}
+                  style={{ backgroundImage: `url(${c})` }}
                 />
               ))}
             </div>

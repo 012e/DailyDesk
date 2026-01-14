@@ -36,7 +36,7 @@ const defaultTemplates = [
       { name: "Documentation", color: "#c377e0" },
       { name: "Urgent", color: "#ff9f1a" },
     ],
-    backgroundColor: "#0079bf",
+    backgroundUrl: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1200&q=80",
   },
   {
     name: "Sprint Planning",
@@ -56,7 +56,7 @@ const defaultTemplates = [
       { name: "Critical", color: "#eb5a46" },
       { name: "Nice to Have", color: "#ff9f1a" },
     ],
-    backgroundColor: "#519839",
+    backgroundUrl: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=1200&q=80",
   },
   {
     name: "Project Management",
@@ -76,7 +76,7 @@ const defaultTemplates = [
       { name: "Blocked", color: "#344563" },
       { name: "Research", color: "#c377e0" },
     ],
-    backgroundColor: "#d29034",
+    backgroundUrl: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&q=80",
   },
   {
     name: "Content Calendar",
@@ -96,7 +96,7 @@ const defaultTemplates = [
       { name: "Newsletter", color: "#c377e0" },
       { name: "SEO", color: "#ff9f1a" },
     ],
-    backgroundColor: "#cd5a91",
+    backgroundUrl: "https://images.unsplash.com/photo-1533750349088-cd871a92f312?w=1200&q=80",
   },
   {
     name: "Personal To-Do",
@@ -114,7 +114,7 @@ const defaultTemplates = [
       { name: "Shopping", color: "#ff9f1a" },
       { name: "Health", color: "#c377e0" },
     ],
-    backgroundColor: "#89609e",
+    backgroundUrl: "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=1200&q=80",
   },
   {
     name: "Design Project",
@@ -134,7 +134,7 @@ const defaultTemplates = [
       { name: "Prototype", color: "#ff9f1a" },
       { name: "Feedback", color: "#eb5a46" },
     ],
-    backgroundColor: "#00c2e0",
+    backgroundUrl: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=1200&q=80",
   },
   {
     name: "Course Planning",
@@ -154,7 +154,7 @@ const defaultTemplates = [
       { name: "Assignment", color: "#ff9f1a" },
       { name: "Discussion", color: "#c377e0" },
     ],
-    backgroundColor: "#b04632",
+    backgroundUrl: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1200&q=80",
   },
   {
     name: "Event Planning",
@@ -174,7 +174,7 @@ const defaultTemplates = [
       { name: "Speakers", color: "#c377e0" },
       { name: "Urgent", color: "#eb5a46" },
     ],
-    backgroundColor: "#51e898",
+    backgroundUrl: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=1200&q=80",
   },
 ];
 
@@ -195,7 +195,7 @@ async function seedTemplates() {
         category: template.category,
         userId: null, // System template
         isPublic: true,
-        backgroundColor: template.backgroundColor,
+        backgroundUrl: template.backgroundUrl,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
