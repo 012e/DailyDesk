@@ -29,6 +29,14 @@ const defaultTemplates = [
       { name: "Review", order: 3 },
       { name: "Done", order: 4 },
     ],
+    cards: [
+      { listName: "Backlog", title: "Research new tools", order: 0, description: "Investigate tools for improving team productivity" },
+      { listName: "To Do", title: "Update documentation", order: 0, description: "Revise user guide with latest features" },
+      { listName: "To Do", title: "Schedule team meeting", order: 1, description: "Plan Q1 objectives discussion" },
+      { listName: "In Progress", title: "Implement user feedback", order: 0, description: "Address top 5 feature requests" },
+      { listName: "Review", title: "Code review for PR #123", order: 0, description: "Review authentication module updates" },
+      { listName: "Done", title: "Deploy v2.1", order: 0, description: "Successfully deployed to production" },
+    ],
     labels: [
       { name: "Bug", color: "#eb5a46" },
       { name: "Feature", color: "#61bd4f" },
@@ -48,6 +56,14 @@ const defaultTemplates = [
       { name: "Code Review", order: 2 },
       { name: "Testing", order: 3 },
       { name: "Completed", order: 4 },
+    ],
+    cards: [
+      { listName: "Sprint Backlog", title: "API endpoint for user profiles", order: 0, description: "Create REST API for user profile management" },
+      { listName: "Sprint Backlog", title: "Fix responsive layout issues", order: 1, description: "Mobile view needs adjustment on smaller screens" },
+      { listName: "In Progress", title: "Implement authentication", order: 0, description: "Add JWT-based authentication system" },
+      { listName: "Code Review", title: "Database migration script", order: 0, description: "Review schema changes for v2.0" },
+      { listName: "Testing", title: "Integration tests for payment", order: 0, description: "Test payment gateway integration" },
+      { listName: "Completed", title: "Setup CI/CD pipeline", order: 0, description: "Automated deployment configured" },
     ],
     labels: [
       { name: "Frontend", color: "#61bd4f" },
@@ -69,6 +85,14 @@ const defaultTemplates = [
       { name: "Review", order: 3 },
       { name: "Completed", order: 4 },
     ],
+    cards: [
+      { listName: "Planning", title: "Q1 Marketing Campaign", order: 0, description: "Plan social media and email marketing strategy" },
+      { listName: "Planning", title: "Budget allocation", order: 1, description: "Allocate resources for Q1 projects" },
+      { listName: "In Progress", title: "Website redesign", order: 0, description: "New homepage and navigation structure" },
+      { listName: "In Progress", title: "Hire new developers", order: 1, description: "Interview and onboard 2 senior developers" },
+      { listName: "Review", title: "Customer feedback analysis", order: 0, description: "Analyze Q4 customer satisfaction surveys" },
+      { listName: "Completed", title: "Product launch event", order: 0, description: "Successfully launched product v3.0" },
+    ],
     labels: [
       { name: "High Priority", color: "#eb5a46" },
       { name: "Medium Priority", color: "#ff9f1a" },
@@ -89,6 +113,14 @@ const defaultTemplates = [
       { name: "Scheduled", order: 3 },
       { name: "Published", order: 4 },
     ],
+    cards: [
+      { listName: "Ideas", title: "10 Tips for Remote Work", order: 0, description: "Blog post idea about productivity" },
+      { listName: "Ideas", title: "Customer success story", order: 1, description: "Interview with top client" },
+      { listName: "Writing", title: "Product announcement", order: 0, description: "Draft blog post for new feature launch" },
+      { listName: "Editing", title: "SEO guide for beginners", order: 0, description: "Final review before publishing" },
+      { listName: "Scheduled", title: "Weekly newsletter #24", order: 0, description: "Scheduled for Monday 9 AM" },
+      { listName: "Published", title: "Year in review 2025", order: 0, description: "Posted on Dec 31, 2025" },
+    ],
     labels: [
       { name: "Blog Post", color: "#61bd4f" },
       { name: "Social Media", color: "#00c2e0" },
@@ -106,6 +138,14 @@ const defaultTemplates = [
       { name: "To Do", order: 0 },
       { name: "In Progress", order: 1 },
       { name: "Done", order: 2 },
+    ],
+    cards: [
+      { listName: "To Do", title: "Buy groceries", order: 0, description: "Milk, eggs, bread, vegetables" },
+      { listName: "To Do", title: "Schedule dentist appointment", order: 1, description: "Need to book cleaning appointment" },
+      { listName: "To Do", title: "Pay utility bills", order: 2, description: "Electric and water bills due this week" },
+      { listName: "In Progress", title: "Plan vacation", order: 0, description: "Research hotels and activities" },
+      { listName: "Done", title: "Morning workout", order: 0, description: "30 minutes cardio completed" },
+      { listName: "Done", title: "Call mom", order: 1, description: "Weekend catch-up call" },
     ],
     labels: [
       { name: "Important", color: "#eb5a46" },
@@ -127,6 +167,14 @@ const defaultTemplates = [
       { name: "Review", order: 3 },
       { name: "Approved", order: 4 },
     ],
+    cards: [
+      { listName: "Concepts", title: "Mobile app icon ideas", order: 0, description: "Brainstorm 5 different icon concepts" },
+      { listName: "Concepts", title: "Brand color palette", order: 1, description: "Research color psychology for fintech" },
+      { listName: "Wireframes", title: "Dashboard layout", order: 0, description: "Low-fidelity wireframes for admin dashboard" },
+      { listName: "Design", title: "Landing page mockup", order: 0, description: "High-fidelity design for homepage" },
+      { listName: "Review", title: "User onboarding flow", order: 0, description: "Review with stakeholders" },
+      { listName: "Approved", title: "Logo redesign", order: 0, description: "New logo approved for implementation" },
+    ],
     labels: [
       { name: "UI Design", color: "#61bd4f" },
       { name: "UX Design", color: "#00c2e0" },
@@ -147,6 +195,14 @@ const defaultTemplates = [
       { name: "Ready to Publish", order: 3 },
       { name: "Live", order: 4 },
     ],
+    cards: [
+      { listName: "Module Planning", title: "Introduction to Python", order: 0, description: "Outline for beginner Python module" },
+      { listName: "Module Planning", title: "Advanced Data Structures", order: 1, description: "Plan lessons on trees and graphs" },
+      { listName: "Content Creation", title: "Variables and Data Types", order: 0, description: "Record video lesson and create slides" },
+      { listName: "Review", title: "Functions and Scope quiz", order: 0, description: "Review quiz questions for accuracy" },
+      { listName: "Ready to Publish", title: "Object-Oriented Programming", order: 0, description: "Final checks before going live" },
+      { listName: "Live", title: "Getting Started with Python", order: 0, description: "Module 1 is now available to students" },
+    ],
     labels: [
       { name: "Video Lesson", color: "#eb5a46" },
       { name: "Reading Material", color: "#61bd4f" },
@@ -166,6 +222,14 @@ const defaultTemplates = [
       { name: "Vendors & Partners", order: 2 },
       { name: "In Progress", order: 3 },
       { name: "Completed", order: 4 },
+    ],
+    cards: [
+      { listName: "Ideas & Concepts", title: "Annual company retreat", order: 0, description: "Team building event for 50 people" },
+      { listName: "Planning", title: "Conference venue selection", order: 0, description: "Compare 3 venue options" },
+      { listName: "Planning", title: "Create event timeline", order: 1, description: "Hour-by-hour schedule for event day" },
+      { listName: "Vendors & Partners", title: "Book keynote speaker", order: 0, description: "Confirm availability and contract" },
+      { listName: "In Progress", title: "Send invitations", order: 0, description: "Email and social media announcements" },
+      { listName: "Completed", title: "Secure event insurance", order: 0, description: "Liability coverage obtained" },
     ],
     labels: [
       { name: "Venue", color: "#61bd4f" },
@@ -208,6 +272,21 @@ async function seedTemplates() {
         order: list.order,
       }));
       await db.insert(templateListsTable).values(listsToInsert);
+
+      // Insert cards
+      if (template.cards) {
+        const cardsToInsert = template.cards.map((card) => {
+          const list = listsToInsert.find((l) => l.name === card.listName);
+          return {
+            id: randomUUID(),
+            name: card.title,
+            description: card.description,
+            order: card.order,
+            templateListId: list!.id,
+          };
+        });
+        await db.insert(templateCardsTable).values(cardsToInsert);
+      }
 
       // Insert labels
       if (template.labels) {
