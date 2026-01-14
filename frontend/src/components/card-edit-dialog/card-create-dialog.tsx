@@ -540,7 +540,16 @@ function InnerCardCreateDialog({
         )}
 
         {/* Main content area */}
-        <div className="flex flex-col flex-1 w-full overflow-y-auto p-6 gap-4">
+        <div
+          className="flex flex-col flex-1 w-full overflow-y-auto overscroll-contain p-6 gap-4"
+          style={{
+            touchAction: 'auto',
+            WebkitOverflowScrolling: 'touch'
+          } as React.CSSProperties}
+          onWheel={(e) => {
+            e.stopPropagation();
+          }}
+        >
           {/* Title */}
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-muted-foreground">Card Title *</label>

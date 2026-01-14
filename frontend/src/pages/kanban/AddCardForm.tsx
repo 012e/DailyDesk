@@ -2,7 +2,7 @@ import {
   KanbanBoardColumnButton,
   KanbanBoardColumnFooter,
 } from "@/components/kanban";
-import { CardEditDialog } from "@/components/card-edit-dialog";
+import { CardCreateDialog } from "@/components/card-edit-dialog/card-create-dialog";
 import { PlusIcon } from "lucide-react";
 import { useAtom, useAtomValue } from "jotai";
 import { addingCardColumnIdAtom } from "./atoms";
@@ -39,7 +39,7 @@ export function AddCardForm({ columnId, cardsCount }: AddCardFormProps) {
       </KanbanBoardColumnFooter>
 
       {boardId && (
-        <CardEditDialog
+        <CardCreateDialog
           boardId={boardId}
           listId={columnId}
           order={cardsCount}
