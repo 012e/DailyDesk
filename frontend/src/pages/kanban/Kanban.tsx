@@ -49,7 +49,7 @@ export function Kanban({ boardId }: KanbanProps) {
   const { mutate: updateCard } = useUpdateCard();
   const { mutate: deleteCard } = useDeleteCard();
 
-  const { ref: scrollRef, ...dragEvents } = useDraggableScroll<HTMLDivElement>();
+  const { ref: scrollRef, isDragging: _isDragging, ...dragEvents } = useDraggableScroll<HTMLDivElement>();
 
   // Auth0 user has 'sub' field for user ID
   const isOwner = currentUser?.sub === board?.userId;

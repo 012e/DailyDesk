@@ -11,7 +11,6 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { Checkbox } from "@/components/ui/checkbox";
 import type { Card as CardType, Label, Member, Attachment, Comment, ActivityLog, CardCoverMode} from "@/types/card";
 import { useAtom } from "jotai";
 import { isCardDialogOpenAtom, selectedCardAtom } from "./atoms";
@@ -108,8 +107,9 @@ export function KanbanCard({
     }
   };
 
-  const handleToggleComplete = (e: React.MouseEvent) => {
+  const handleToggleComplete = (e: React.PointerEvent) => {
     e.stopPropagation(); // Prevent opening the card dialog
+    e.preventDefault(); // Prevent default button behavior
     updateCard({
       boardId,
       cardId: normalizedCard.id,
@@ -139,11 +139,24 @@ export function KanbanCard({
                 />
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 pt-8">
                   <div className="flex items-center gap-2">
-                    <div onClick={handleToggleComplete} className="flex-shrink-0">
-                      <Checkbox 
-                        checked={normalizedCard.completed} 
-                        className="border-white/70 data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
-                      />
+                    <div
+                      onPointerDown={handleToggleComplete}
+                      className="flex-shrink-0 cursor-pointer"
+                      role="checkbox"
+                      aria-checked={normalizedCard.completed}
+                      tabIndex={-1}
+                    >
+                      <div className={`h-4 w-4 shrink-0 rounded-sm border ${
+                        normalizedCard.completed
+                          ? 'bg-green-500 border-green-500 flex items-center justify-center'
+                          : 'border-white/70'
+                      }`}>
+                        {normalizedCard.completed && (
+                          <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </div>
                     </div>
                     <KanbanBoardCardTitle className={`text-white drop-shadow-md line-clamp-2 ${normalizedCard.completed ? "line-through opacity-75" : ""}`}>
                       {normalizedCard.title}
@@ -158,11 +171,24 @@ export function KanbanCard({
               >
                 <div className="w-full bg-gradient-to-t from-black/70 to-transparent p-3 pt-8">
                   <div className="flex items-center gap-2">
-                    <div onClick={handleToggleComplete} className="flex-shrink-0">
-                      <Checkbox 
-                        checked={normalizedCard.completed} 
-                        className="border-white/70 data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
-                      />
+                    <div
+                      onPointerDown={handleToggleComplete}
+                      className="flex-shrink-0 cursor-pointer"
+                      role="checkbox"
+                      aria-checked={normalizedCard.completed}
+                      tabIndex={-1}
+                    >
+                      <div className={`h-4 w-4 shrink-0 rounded-sm border ${
+                        normalizedCard.completed
+                          ? 'bg-green-500 border-green-500 flex items-center justify-center'
+                          : 'border-white/70'
+                      }`}>
+                        {normalizedCard.completed && (
+                          <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </div>
                     </div>
                     <KanbanBoardCardTitle className={`text-white drop-shadow-sm line-clamp-2 ${normalizedCard.completed ? "line-through opacity-75" : ""}`}>
                       {normalizedCard.title}
@@ -172,11 +198,24 @@ export function KanbanCard({
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <div onClick={handleToggleComplete} className="flex-shrink-0">
-                  <Checkbox 
-                    checked={normalizedCard.completed} 
-                    className="border-primary/50 data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
-                  />
+                <div
+                  onPointerDown={handleToggleComplete}
+                  className="flex-shrink-0 cursor-pointer"
+                  role="checkbox"
+                  aria-checked={normalizedCard.completed}
+                  tabIndex={-1}
+                >
+                  <div className={`h-4 w-4 shrink-0 rounded-sm border ring-offset-background ${
+                    normalizedCard.completed
+                      ? 'bg-green-500 border-green-500 flex items-center justify-center'
+                      : 'border-primary/50'
+                  }`}>
+                    {normalizedCard.completed && (
+                      <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
                 </div>
                 <KanbanBoardCardTitle className={`line-clamp-2 ${normalizedCard.completed ? "line-through text-muted-foreground opacity-50" : ""}`}>
                   {normalizedCard.title}
