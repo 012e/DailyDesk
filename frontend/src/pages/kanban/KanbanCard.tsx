@@ -17,10 +17,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { Card as CardType, Label, Member, Attachment, Comment, ActivityLog, CardCoverMode} from "@/types/card";
+import type { Card as CardType, Label, Member, Attachment, Comment, ActivityLog, CardCoverMode, RepeatFrequency } from "@/types/card";
 import { useAtom } from "jotai";
 import { isCardDialogOpenAtom, selectedCardAtom } from "./atoms";
-import { useUpdateCard } from "@/hooks/use-card";
+import { useUpdateDue } from "@/hooks/use-due";
 
 
 type NormalizedCard = CardType & {
@@ -45,6 +45,8 @@ interface KanbanCardProps {
     dueAt?: Date | string | null;
     dueComplete?: boolean;
     reminderMinutes?: number | null;
+    repeatFrequency?: RepeatFrequency | null;
+    repeatInterval?: number | null;
     coverUrl?: string;
     coverColor?: string;
     coverMode?: CardCoverMode;
@@ -74,7 +76,7 @@ export function KanbanCard({
 }: KanbanCardProps) {
   const [, setSelectedCard] = useAtom(selectedCardAtom);
   const [, setIsCardDialogOpen] = useAtom(isCardDialogOpenAtom);
-  const { mutate: updateCard } = useUpdateCard();
+  const updateDueMutation = useUpdateDue();
 
   const normalizedCard: NormalizedCard = {
     id: card.id,
@@ -90,6 +92,8 @@ export function KanbanCard({
     dueAt: card.dueAt,
     dueComplete: card.dueComplete,
     reminderMinutes: card.reminderMinutes,
+    repeatFrequency: card.repeatFrequency ?? null,
+    repeatInterval: card.repeatInterval ?? null,
     coverUrl: card.coverUrl || "",
     coverColor: card.coverColor || "",
     coverMode: card.coverMode,
@@ -116,10 +120,11 @@ export function KanbanCard({
   const handleToggleComplete = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent opening the card dialog
     e.preventDefault(); // Prevent default button behavior
-    updateCard({
+    if (!normalizedCard.dueAt) return;
+    updateDueMutation.mutate({
       boardId,
       cardId: normalizedCard.id,
-      completed: !normalizedCard.completed,
+      dueComplete: !normalizedCard.dueComplete,
     });
   };
 
@@ -152,15 +157,15 @@ export function KanbanCard({
                             onClick={handleToggleComplete}
                             className="flex-shrink-0 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
                             role="checkbox"
-                            aria-checked={normalizedCard.completed}
+                            aria-checked={normalizedCard.dueComplete}
                             tabIndex={-1}
                           >
                             <div className={`h-5 w-5 shrink-0 rounded-full border-2 ${
-                              normalizedCard.completed
+                              normalizedCard.dueComplete
                                 ? 'bg-green-500 border-green-500 flex items-center justify-center'
                                 : 'border-white/70 hover:border-white'
                             }`}>
-                              {normalizedCard.completed && (
+                              {normalizedCard.dueComplete && (
                                 <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                                 </svg>
@@ -169,11 +174,11 @@ export function KanbanCard({
                           </div>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>{normalizedCard.completed ? "Mark incomplete" : "Mark complete"}</p>
+                          <p>{normalizedCard.dueComplete ? "Mark due incomplete" : "Mark due complete"}</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
-                    <KanbanBoardCardTitle className={`text-white drop-shadow-md line-clamp-2 ${normalizedCard.completed ? "line-through opacity-75" : ""}`}>
+                    <KanbanBoardCardTitle className={`text-white drop-shadow-md line-clamp-2 ${normalizedCard.dueComplete ? "line-through opacity-75" : ""}`}>
                       {normalizedCard.title}
                     </KanbanBoardCardTitle>
                   </div>
@@ -193,15 +198,15 @@ export function KanbanCard({
                             onClick={handleToggleComplete}
                             className="flex-shrink-0 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
                             role="checkbox"
-                            aria-checked={normalizedCard.completed}
+                            aria-checked={normalizedCard.dueComplete}
                             tabIndex={-1}
                           >
                             <div className={`h-5 w-5 shrink-0 rounded-full border-2 ${
-                              normalizedCard.completed
+                              normalizedCard.dueComplete
                                 ? 'bg-green-500 border-green-500 flex items-center justify-center'
                                 : 'border-white/70 hover:border-white'
                             }`}>
-                              {normalizedCard.completed && (
+                              {normalizedCard.dueComplete && (
                                 <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                                 </svg>
@@ -210,11 +215,11 @@ export function KanbanCard({
                           </div>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>{normalizedCard.completed ? "Mark incomplete" : "Mark complete"}</p>
+                          <p>{normalizedCard.dueComplete ? "Mark due incomplete" : "Mark due complete"}</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
-                    <KanbanBoardCardTitle className={`text-white drop-shadow-sm line-clamp-2 ${normalizedCard.completed ? "line-through opacity-75" : ""}`}>
+                    <KanbanBoardCardTitle className={`text-white drop-shadow-sm line-clamp-2 ${normalizedCard.dueComplete ? "line-through opacity-75" : ""}`}>
                       {normalizedCard.title}
                     </KanbanBoardCardTitle>
                   </div>
@@ -229,15 +234,15 @@ export function KanbanCard({
                         onClick={handleToggleComplete}
                         className="flex-shrink-0 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
                         role="checkbox"
-                        aria-checked={normalizedCard.completed}
-                        tabIndex={-1}
-                      >
-                        <div className={`h-5 w-5 shrink-0 rounded-full border-2 ring-offset-background ${
-                          normalizedCard.completed
-                            ? 'bg-green-500 border-green-500 flex items-center justify-center'
-                            : 'border-primary/50 hover:border-primary'
+                            aria-checked={normalizedCard.dueComplete}
+                            tabIndex={-1}
+                          >
+                            <div className={`h-5 w-5 shrink-0 rounded-full border-2 ring-offset-background ${
+                              normalizedCard.dueComplete
+                                ? 'bg-green-500 border-green-500 flex items-center justify-center'
+                                : 'border-primary/50 hover:border-primary'
                         }`}>
-                          {normalizedCard.completed && (
+                          {normalizedCard.dueComplete && (
                             <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                             </svg>
@@ -246,11 +251,11 @@ export function KanbanCard({
                       </div>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>{normalizedCard.completed ? "Mark incomplete" : "Mark complete"}</p>
+                      <p>{normalizedCard.dueComplete ? "Mark due incomplete" : "Mark due complete"}</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-                <KanbanBoardCardTitle className={`line-clamp-2 ${normalizedCard.completed ? "line-through text-muted-foreground opacity-50" : ""}`}>
+                <KanbanBoardCardTitle className={`line-clamp-2 ${normalizedCard.dueComplete ? "line-through text-muted-foreground opacity-50" : ""}`}>
                   {normalizedCard.title}
                 </KanbanBoardCardTitle>
               </div>
