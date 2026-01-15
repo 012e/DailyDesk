@@ -55,6 +55,8 @@ export const CardSchema = z.object({
   recurrence: z.enum(["never", "daily_weekdays", "weekly", "monthly_date", "monthly_day"]).nullable(),
   recurrenceDay: z.number().int().min(1).max(5).nullable(), // 1st, 2nd, 3rd, 4th, 5th
   recurrenceWeekday: z.number().int().min(0).max(6).nullable(), // 0=Sunday, 6=Saturday
+  repeatFrequency: z.enum(["daily", "weekly", "monthly"]).nullable(),
+  repeatInterval: z.number().int().min(1).nullable(),
   latitude: z.number().nullable(),
   longitude: z.number().nullable(),
   completed: z.boolean().nullable(),
@@ -78,6 +80,8 @@ export const CreateCardSchema = z.object({
   recurrence: z.enum(["never", "daily_weekdays", "weekly", "monthly_date", "monthly_day"]).optional(),
   recurrenceDay: z.number().int().min(1).max(5).optional(),
   recurrenceWeekday: z.number().int().min(0).max(6).optional(),
+  repeatFrequency: z.enum(["daily", "weekly", "monthly"]).optional(),
+  repeatInterval: z.number().int().min(1).optional(),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
   coverColor: z.string().optional(),
@@ -100,6 +104,8 @@ export const UpdateCardSchema = z.object({
   recurrence: z.enum(["never", "daily_weekdays", "weekly", "monthly_date", "monthly_day"]).nullable().optional(),
   recurrenceDay: z.number().int().min(1).max(5).nullable().optional(),
   recurrenceWeekday: z.number().int().min(0).max(6).nullable().optional(),
+  repeatFrequency: z.enum(["daily", "weekly", "monthly"]).nullable().optional(),
+  repeatInterval: z.number().int().min(1).nullable().optional(),
   latitude: z.number().nullable().optional(),
   longitude: z.number().nullable().optional(),
   coverColor: z.string().nullable().optional(),

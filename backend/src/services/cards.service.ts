@@ -14,6 +14,7 @@ import { ContentfulStatusCode } from "hono/utils/http-status";
 import { randomUUID } from "crypto";
 import { logActivity } from "./activities.service";
 import { publishBoardChanged } from "./events.service";
+import { applyRecurringDueDate } from "./recurring.service";
 import { ensureBoardMembersExist } from "./members.service";
 import { 
   CreateCardSchema, 
@@ -153,6 +154,8 @@ export async function getAllCardsForUser(userSub: string) {
     recurrence: c.card.recurrence,
     recurrenceDay: c.card.recurrenceDay,
     recurrenceWeekday: c.card.recurrenceWeekday,
+    repeatFrequency: c.card.repeatFrequency,
+    repeatInterval: c.card.repeatInterval,
     latitude: c.card.latitude,
     longitude: c.card.longitude,
     coverColor: c.card.coverColor,
@@ -270,6 +273,11 @@ export async function getCardsForBoard(userSub: string, boardId: string) {
     dueAt: c.cards.dueAt,
     dueComplete: c.cards.dueComplete,
     reminderMinutes: c.cards.reminderMinutes,
+    recurrence: c.cards.recurrence,
+    recurrenceDay: c.cards.recurrenceDay,
+    recurrenceWeekday: c.cards.recurrenceWeekday,
+    repeatFrequency: c.cards.repeatFrequency,
+    repeatInterval: c.cards.repeatInterval,
     latitude: c.cards.latitude,
     longitude: c.cards.longitude,
     coverColor: c.cards.coverColor,
@@ -331,6 +339,8 @@ export async function createCard(userSub: string, boardId: string, req: CreateCa
       dueAt: req.dueAt ? new Date(req.dueAt) : null,
       dueComplete: req.dueComplete ?? false,
       reminderMinutes: req.reminderMinutes ?? null,
+      repeatFrequency: req.repeatFrequency ?? null,
+      repeatInterval: req.repeatInterval ?? null,
       latitude: req.latitude,
       longitude: req.longitude,
       coverColor: req.coverColor,
@@ -508,6 +518,11 @@ export async function getCardById(userSub: string, boardId: string, id: string) 
     dueAt: card[0].cards.dueAt,
     dueComplete: card[0].cards.dueComplete,
     reminderMinutes: card[0].cards.reminderMinutes,
+    recurrence: card[0].cards.recurrence,
+    recurrenceDay: card[0].cards.recurrenceDay,
+    recurrenceWeekday: card[0].cards.recurrenceWeekday,
+    repeatFrequency: card[0].cards.repeatFrequency,
+    repeatInterval: card[0].cards.repeatInterval,
     latitude: card[0].cards.latitude,
     longitude: card[0].cards.longitude,
     coverColor: card[0].cards.coverColor,
@@ -933,7 +948,14 @@ export async function updateCardDue(
   userSub: string,
   boardId: string,
   cardId: string,
-  dueData: { startDate?: string | null; dueAt?: string | null; dueComplete?: boolean; reminderMinutes?: number | null }
+  dueData: {
+    startDate?: string | null;
+    dueAt?: string | null;
+    dueComplete?: boolean;
+    reminderMinutes?: number | null;
+    repeatFrequency?: "daily" | "weekly" | "monthly" | null;
+    repeatInterval?: number | null;
+  }
 ) {
   const board = await db
     .select()
@@ -960,6 +982,7 @@ export async function updateCardDue(
     throw new ServiceError("Card không tồn tại", 404);
   }
 
+  const existingCard = card[0].cards;
   const updateData: Partial<typeof cardsTable.$inferInsert> = { updatedAt: new Date() };
 
   if (dueData.startDate !== undefined) {
@@ -978,7 +1001,97 @@ export async function updateCardDue(
     updateData.reminderMinutes = dueData.reminderMinutes;
   }
 
+  if (dueData.repeatFrequency !== undefined) {
+    updateData.repeatFrequency = dueData.repeatFrequency;
+  }
+
+  if (dueData.repeatInterval !== undefined) {
+    updateData.repeatInterval = dueData.repeatInterval;
+  }
+
+  const currentDueAt =
+    dueData.dueAt !== undefined
+      ? (dueData.dueAt ? new Date(dueData.dueAt) : null)
+      : existingCard.dueAt;
+  const currentRepeatFrequency =
+    dueData.repeatFrequency !== undefined
+      ? dueData.repeatFrequency
+      : existingCard.repeatFrequency;
+  const currentRepeatInterval =
+    dueData.repeatInterval !== undefined
+      ? dueData.repeatInterval
+      : existingCard.repeatInterval;
+
   await db.update(cardsTable).set(updateData).where(eq(cardsTable.id, cardId));
+
+  const shouldScheduleRenew =
+    dueData.dueComplete === true &&
+    currentDueAt &&
+    currentRepeatFrequency &&
+    currentRepeatInterval;
+
+  if (shouldScheduleRenew) {
+    const RENEW_DELAY_MS = 2000;
+    setTimeout(async () => {
+      try {
+        const latestCard = await db
+          .select({
+            id: cardsTable.id,
+            dueAt: cardsTable.dueAt,
+            dueComplete: cardsTable.dueComplete,
+            repeatFrequency: cardsTable.repeatFrequency,
+            repeatInterval: cardsTable.repeatInterval,
+            listId: cardsTable.listId,
+          })
+          .from(cardsTable)
+          .innerJoin(listsTable, eq(cardsTable.listId, listsTable.id))
+          .where(and(eq(cardsTable.id, cardId), eq(listsTable.boardId, boardId)))
+          .limit(1);
+
+        if (latestCard.length === 0) return;
+
+        const cardData = latestCard[0];
+        if (
+          !cardData.dueAt ||
+          !cardData.dueComplete ||
+          !cardData.repeatFrequency ||
+          !cardData.repeatInterval
+        ) {
+          return;
+        }
+
+        const result = applyRecurringDueDate({
+          id: cardData.id,
+          dueAt: cardData.dueAt,
+          dueComplete: cardData.dueComplete,
+          repeatFrequency: cardData.repeatFrequency,
+          repeatInterval: cardData.repeatInterval,
+        });
+
+        if (!result) return;
+
+        await db
+          .update(cardsTable)
+          .set({
+            dueAt: result.dueAt,
+            dueComplete: result.dueComplete,
+            updatedAt: new Date(),
+          })
+          .where(eq(cardsTable.id, cardId));
+
+        await logActivity({
+          cardId,
+          userId: userSub,
+          actionType: "card.due.updated",
+          description: "due date changed",
+        });
+
+        publishBoardChanged(boardId, "card", cardId, "updated", userSub);
+      } catch (error) {
+        console.error("Failed to auto-renew due date after delay:", error);
+      }
+    }, RENEW_DELAY_MS);
+  }
 
   try {
     const actionDescription = dueData.dueComplete
@@ -1043,6 +1156,8 @@ export async function clearCardDue(userSub: string, boardId: string, cardId: str
       dueAt: null,
       dueComplete: false,
       reminderMinutes: null,
+      repeatFrequency: null,
+      repeatInterval: null,
       updatedAt: new Date(),
     })
     .where(eq(cardsTable.id, cardId));

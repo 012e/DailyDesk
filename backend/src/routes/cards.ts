@@ -32,6 +32,8 @@ const CardWithBoardSchema = z.object({
   recurrence: z.string().nullable(),
   recurrenceDay: z.number().nullable(),
   recurrenceWeekday: z.number().nullable(),
+  repeatFrequency: z.string().nullable(),
+  repeatInterval: z.number().nullable(),
   latitude: z.number().nullable(),
   longitude: z.number().nullable(),
   completed: z.boolean().nullable(),

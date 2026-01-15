@@ -14,6 +14,8 @@ interface BackendCard {
   name: string;
   order: number;
   listId: string;
+  repeatFrequency?: "daily" | "weekly" | "monthly" | null;
+  repeatInterval?: number | null;
 }
 
 interface KanbanColumnProps {

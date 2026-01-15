@@ -138,6 +138,8 @@ export function useCreateCard() {
       dueAt?: string;
       dueComplete?: boolean;
       reminderMinutes?: number | null;
+      repeatFrequency?: "daily" | "weekly" | "monthly" | null;
+      repeatInterval?: number | null;
       coverColor?: string;
       coverUrl?: string;
     }) => {
@@ -164,6 +166,8 @@ export function useCreateCard() {
             dueAt: params.dueAt,
             dueComplete: params.dueComplete,
             reminderMinutes: params.reminderMinutes ?? undefined,
+            repeatFrequency: params.repeatFrequency ?? undefined,
+            repeatInterval: params.repeatInterval ?? undefined,
           },
         },
       );
