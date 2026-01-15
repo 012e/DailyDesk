@@ -27,11 +27,16 @@ if (!fs.existsSync(currentTestDb)) {
   fs.writeFileSync(currentTestDb, "");
 }
 
+// Generate a proper DB URL (handle Windows paths)
+const dbUrl = process.platform === "win32" 
+  ? `file:///${currentTestDb.replace(/\\/g, "/")}`
+  : `file:${currentTestDb}`;
+
 // Mock the getConfig function before any imports
 vi.mock("@/lib/config", () => {
   return {
     default: () => ({
-      databaseUrl: `file:${currentTestDb}`,
+      databaseUrl: dbUrl,
       isProduction: false,
       authIssuerUrl: "https://test-domain.auth0.com/",
       authAudience: "test-audience",
@@ -63,7 +68,9 @@ beforeAll(async () => {
   // Initialize database connection and run migrations
   testDbInstance = drizzle({
     connection: {
-      url: `file:${currentTestDb}`,
+      url: process.platform === "win32" 
+        ? `file:///${currentTestDb.replace(/\\/g, "/")}`
+        : `file:${currentTestDb}`,
     },
     schema,
   });
