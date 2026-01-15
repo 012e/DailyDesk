@@ -17,6 +17,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Clock, Repeat } from "lucide-react";
 import type { Card as CardType, Label, Member, Attachment, Comment, ActivityLog, CardCoverMode, RepeatFrequency } from "@/types/card";
 import { useAtom } from "jotai";
 import { isCardDialogOpenAtom, selectedCardAtom } from "./atoms";
@@ -128,6 +129,37 @@ export function KanbanCard({
     });
   };
 
+  const formatShortDateVN = (value: Date | string) => {
+    const date = typeof value === "string" ? new Date(value) : value;
+    const day = date.getDate();
+    const month = date.getMonth() + 1;
+    return `${day} thg ${month}`;
+  };
+
+  const getDateRangeLabel = () => {
+    if (normalizedCard.startDate && normalizedCard.dueAt) {
+      return `${formatShortDateVN(normalizedCard.startDate)} - ${formatShortDateVN(normalizedCard.dueAt)}`;
+    }
+    if (normalizedCard.dueAt) {
+      return formatShortDateVN(normalizedCard.dueAt);
+    }
+    if (normalizedCard.startDate) {
+      return formatShortDateVN(normalizedCard.startDate);
+    }
+    return "Repeats";
+  };
+
+  const shouldShowDateRow =
+    !!normalizedCard.startDate || !!normalizedCard.dueAt || !!normalizedCard.repeatFrequency;
+
+  const DateRow = ({ className }: { className: string }) => (
+    <div className={`flex items-center gap-1 text-xs ${className}`}>
+      <Clock className="h-3 w-3" />
+      <span>{getDateRangeLabel()}</span>
+      {normalizedCard.repeatFrequency && <Repeat className="h-3 w-3 opacity-70" />}
+    </div>
+  );
+
   return (
     <KanbanBoardColumnListItem
       key={normalizedCard.id}
@@ -149,7 +181,8 @@ export function KanbanCard({
                   className="w-full h-auto object-contain"
                 />
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 pt-8">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -182,6 +215,8 @@ export function KanbanCard({
                       {normalizedCard.title}
                     </KanbanBoardCardTitle>
                   </div>
+                  {shouldShowDateRow && <DateRow className="text-white/80" />}
+                  </div>
                 </div>
               </div>
             ) : normalizedCard.coverColor ? (
@@ -190,7 +225,8 @@ export function KanbanCard({
                 style={{ backgroundColor: normalizedCard.coverColor }}
               >
                 <div className="w-full bg-gradient-to-t from-black/70 to-transparent p-3 pt-8">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -223,41 +259,46 @@ export function KanbanCard({
                       {normalizedCard.title}
                     </KanbanBoardCardTitle>
                   </div>
+                  {shouldShowDateRow && <DateRow className="text-white/80" />}
+                  </div>
                 </div>
               </div>
             ) : (
-              <div className="flex items-center gap-2">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div
-                        onClick={handleToggleComplete}
-                        className="flex-shrink-0 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
-                        role="checkbox"
-                            aria-checked={normalizedCard.dueComplete}
-                            tabIndex={-1}
-                          >
-                            <div className={`h-5 w-5 shrink-0 rounded-full border-2 ring-offset-background ${
-                              normalizedCard.dueComplete
-                                ? 'bg-green-500 border-green-500 flex items-center justify-center'
-                                : 'border-primary/50 hover:border-primary'
-                        }`}>
-                          {normalizedCard.dueComplete && (
-                            <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                            </svg>
-                          )}
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div
+                          onClick={handleToggleComplete}
+                          className="flex-shrink-0 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+                          role="checkbox"
+                          aria-checked={normalizedCard.dueComplete}
+                          tabIndex={-1}
+                        >
+                          <div className={`h-5 w-5 shrink-0 rounded-full border-2 ring-offset-background ${
+                            normalizedCard.dueComplete
+                              ? 'bg-green-500 border-green-500 flex items-center justify-center'
+                              : 'border-primary/50 hover:border-primary'
+                          }`}>
+                            {normalizedCard.dueComplete && (
+                              <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{normalizedCard.dueComplete ? "Mark due incomplete" : "Mark due complete"}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                <KanbanBoardCardTitle className={`line-clamp-2 ${normalizedCard.dueComplete ? "line-through text-muted-foreground opacity-50" : ""}`}>
-                  {normalizedCard.title}
-                </KanbanBoardCardTitle>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{normalizedCard.dueComplete ? "Mark due incomplete" : "Mark due complete"}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <KanbanBoardCardTitle className={`line-clamp-2 ${normalizedCard.dueComplete ? "line-through text-muted-foreground opacity-50" : ""}`}>
+                    {normalizedCard.title}
+                  </KanbanBoardCardTitle>
+                </div>
+                {shouldShowDateRow && <DateRow className="text-muted-foreground" />}
               </div>
             )}
           </KanbanBoardCard>
