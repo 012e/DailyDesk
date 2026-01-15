@@ -1031,7 +1031,7 @@ export async function updateCardDue(
     currentRepeatInterval;
 
   if (shouldScheduleRenew) {
-    const RENEW_DELAY_MS = 8000;
+    const RENEW_DELAY_MS = 2000;
     setTimeout(async () => {
       try {
         const latestCard = await db
