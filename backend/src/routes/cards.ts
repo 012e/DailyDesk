@@ -8,9 +8,66 @@ import * as cardService from "@/services/cards.service";
 
 const TAGS = ["Cards"];
 
+// Extended card schema with board and list information - more lenient for response
+const CardWithBoardSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string().nullable(),
+  order: z.number().int(),
+  coverUrl: z.string().nullable(),
+  coverPublicId: z.string().nullable(),
+  coverColor: z.string().nullable(),
+  coverMode: z.string().nullable(),
+  listId: z.string(),
+  listName: z.string(),
+  boardId: z.string(),
+  boardName: z.string(),
+  labels: z.any().nullable(),
+  members: z.any().nullable(),
+  startDate: z.any().nullable(),
+  deadline: z.any().nullable(),
+  dueAt: z.any().nullable(),
+  dueComplete: z.boolean().nullable(),
+  reminderMinutes: z.number().nullable(),
+  recurrence: z.string().nullable(),
+  recurrenceDay: z.number().nullable(),
+  recurrenceWeekday: z.number().nullable(),
+  latitude: z.number().nullable(),
+  longitude: z.number().nullable(),
+  completed: z.boolean().nullable(),
+  createdAt: z.any().nullable(),
+  updatedAt: z.any().nullable(),
+});
+
 export default function createCardRoutes() {
   const app = new OpenAPIHono();
   app.use("*", authMiddleware());
+
+  // GET /cards/all - Get all cards across all boards for the user
+  // Using /cards/all instead of /all-cards to avoid conflict with /{boardId}/cards pattern
+  app.get("/cards/all", async (c) => {
+    try {
+      const user = ensureUserAuthenticated(c);
+      console.log("📥 Fetching all cards for user:", user.sub);
+
+      const cards = await cardService.getAllCardsForUser(user.sub);
+      console.log("✅ Found cards:", cards.length);
+
+      const parsedCards = cards.map((card) => ({
+        ...card,
+        labels: card.labels ? JSON.parse(card.labels) : null,
+        members: card.members ? JSON.parse(card.members) : null,
+      }));
+
+      return c.json(parsedCards);
+    } catch (err: any) {
+      console.error("❌ Error fetching all cards:", err);
+      if (err instanceof cardService.ServiceError) {
+        return c.json({ error: err.message }, err.status);
+      }
+      return c.json({ error: err.message || "Failed to fetch cards" }, 500);
+    }
+  });
 
   // GET /boards/{boardId}/cards - Get all cards for a board
   app.openapi(

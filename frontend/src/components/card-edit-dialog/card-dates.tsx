@@ -80,6 +80,20 @@ export function CardDates({
   const [isStartDateEnabled, setIsStartDateEnabled] = useState(!!startDate);
   const [isDueDateEnabled, setIsDueDateEnabled] = useState(!!selectedDate);
 
+  // Checkbox to enable/disable time for both dates
+  // Initialize based on whether card has time set (not 00:00:00)
+  const [isTimeEnabled, setIsTimeEnabled] = useState(() => {
+    if (card.startDate) {
+      const date = new Date(card.startDate);
+      if (date.getHours() !== 0 || date.getMinutes() !== 0) return true;
+    }
+    if (card.dueAt) {
+      const date = new Date(card.dueAt);
+      if (date.getHours() !== 0 || date.getMinutes() !== 0) return true;
+    }
+    return false;
+  });
+
   const updateDueMutation = useUpdateDue();
   const clearDueMutation = useClearDue();
 
@@ -114,6 +128,19 @@ export function CardDates({
       setSelectedTime("17:00");
       setIsDueDateEnabled(false);
     }
+
+    // Sync time enabled state based on whether dates have time set
+    let hasTime = false;
+    if (card.startDate) {
+      const date = new Date(card.startDate);
+      if (date.getHours() !== 0 || date.getMinutes() !== 0) hasTime = true;
+    }
+    if (card.dueAt) {
+      const date = new Date(card.dueAt);
+      if (date.getHours() !== 0 || date.getMinutes() !== 0) hasTime = true;
+    }
+    setIsTimeEnabled(hasTime);
+
     setIsDueComplete(card.dueComplete || false);
     setReminderMinutes(card.reminderMinutes ?? null);
   }, [card.startDate, card.dueAt, card.dueComplete, card.reminderMinutes]);
@@ -122,17 +149,25 @@ export function CardDates({
     // Prepare start date time
     let startDateTime: Date | null = null;
     if (startDate) {
-      const [startHours, startMinutes] = startTime.split(":").map(Number);
       startDateTime = new Date(startDate);
-      startDateTime.setHours(startHours, startMinutes, 0, 0);
+      if (isTimeEnabled) {
+        const [startHours, startMinutes] = startTime.split(":").map(Number);
+        startDateTime.setHours(startHours, startMinutes, 0, 0);
+      } else {
+        startDateTime.setHours(0, 0, 0, 0);
+      }
     }
 
     // Prepare due date time
     let dueDateTime: Date | null = null;
     if (selectedDate) {
-      const [dueHours, dueMinutes] = selectedTime.split(":").map(Number);
       dueDateTime = new Date(selectedDate);
-      dueDateTime.setHours(dueHours, dueMinutes, 0, 0);
+      if (isTimeEnabled) {
+        const [dueHours, dueMinutes] = selectedTime.split(":").map(Number);
+        dueDateTime.setHours(dueHours, dueMinutes, 0, 0);
+      } else {
+        dueDateTime.setHours(0, 0, 0, 0);
+      }
     }
 
     if (createMode) {
@@ -323,38 +358,131 @@ export function CardDates({
     return { before: today };
   };
 
+  // Format date for input (DD/MM/YYYY)
+  const formatDateForInput = (date: Date | undefined) => {
+    if (!date) return "";
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  // Parse date from input (DD/MM/YYYY)
+  const parseDateFromInput = (value: string) => {
+    const parts = value.split("/");
+    if (parts.length === 3) {
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const year = parseInt(parts[2], 10);
+      return new Date(year, month, day);
+    }
+    return undefined;
+  };
+
   const popoverContent = (
-    <div className="w-80 max-h-[500px] overflow-y-auto">
+    <div
+      className="w-80 max-h-[500px] overflow-y-auto overscroll-contain"
+      style={{
+        touchAction: 'auto',
+        WebkitOverflowScrolling: 'touch'
+      } as React.CSSProperties}
+      onWheel={(e) => {
+        e.stopPropagation();
+      }}
+    >
       <div className="space-y-3 p-3">
         <div>
-          <h4 className="font-semibold mb-1 text-sm">Due Date</h4>
+          <h4 className="font-semibold mb-1 text-sm">Dates</h4>
           <p className="text-xs text-muted-foreground">
-            Set a due date with time and reminder
+            Set start and due dates
           </p>
         </div>
 
-        <div className="flex justify-center">
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={handleDateSelect}
-            disabled={getDisabledDatesForPopover()}
-            initialFocus
-            className="scale-95"
-          />
+        {/* Start Date */}
+        <div className="space-y-2">
+          <Label className="text-xs font-medium">Start Date</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full justify-start text-left font-normal h-8 text-xs"
+              >
+                <Clock className="mr-2 h-3 w-3" />
+                {startDate ? formatDateForInput(startDate) : "Pick a date"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={startDate}
+                onSelect={(date) => {
+                  if (date) {
+                    setStartDate(date);
+                    if (selectedDate && date > selectedDate) {
+                      handleDateSelect(date);
+                      toast.success("Due date has been adjusted");
+                    }
+                  }
+                }}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+          {isTimeEnabled && (
+            <Input
+              type="time"
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+              className="w-full h-8"
+            />
+          )}
         </div>
 
+        {/* Due Date */}
         <div className="space-y-2">
-          <Label htmlFor="time-picker" className="text-xs font-medium">
-            Time
-          </Label>
-          <Input
-            id="time-picker"
-            type="time"
-            value={selectedTime}
-            onChange={(e) => setSelectedTime(e.target.value)}
-            className="w-full h-8"
+          <Label className="text-xs font-medium">Due Date</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full justify-start text-left font-normal h-8 text-xs"
+              >
+                <Clock className="mr-2 h-3 w-3" />
+                {selectedDate ? formatDateForInput(selectedDate) : "Pick a date"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={handleDateSelect}
+                disabled={getDisabledDatesForPopover()}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+          {isTimeEnabled && (
+            <Input
+              type="time"
+              value={selectedTime}
+              onChange={(e) => setSelectedTime(e.target.value)}
+              className="w-full h-8"
+            />
+          )}
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="time-enabled-popover"
+            checked={isTimeEnabled}
+            onCheckedChange={(checked) => setIsTimeEnabled(checked as boolean)}
           />
+          <Label
+            htmlFor="time-enabled-popover"
+            className="text-xs font-medium cursor-pointer"
+          >
+            Set time
+          </Label>
         </div>
 
         <div className="flex items-center space-x-2">
@@ -417,27 +545,6 @@ export function CardDates({
     </div>
   );
 
-  // Format date for input (DD/MM/YYYY)
-  const formatDateForInput = (date: Date | undefined) => {
-    if (!date) return "";
-    const day = date.getDate().toString().padStart(2, "0");
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
-  };
-
-  // Parse date from input (DD/MM/YYYY)
-  const parseDateFromInput = (value: string) => {
-    const parts = value.split("/");
-    if (parts.length === 3) {
-      const day = parseInt(parts[0], 10);
-      const month = parseInt(parts[1], 10) - 1;
-      const year = parseInt(parts[2], 10);
-      return new Date(year, month, day);
-    }
-    return undefined;
-  };
-
   if (triggerButton === null) {
     const getDateRangeModifiers = () => {
       if (!startDate || !selectedDate) return {};
@@ -486,48 +593,22 @@ export function CardDates({
 
     return (
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Dates</DialogTitle>
           </DialogHeader>
 
-          <div className="flex justify-center border-b pb-4">
-            <Calendar
-              mode="single"
-              selected={selectedDate || startDate}
-              onSelect={(date) => {
-                if (!date) return;
-
-                if (isDueDateEnabled) {
-                  const today = new Date();
-                  today.setHours(0, 0, 0, 0);
-
-                  if (date < today) {
-                    toast.error("Due date cannot be before today");
-                    return;
-                  }
-
-                  if (isStartDateEnabled && startDate && date < startDate) {
-                    toast.error("Due date cannot be before start date");
-                    return;
-                  }
-                  handleDateSelect(date);
-                } else if (isStartDateEnabled) {
-                  setStartDate(date);
-                  if (isDueDateEnabled && selectedDate && date > selectedDate) {
-                    handleDateSelect(date);
-                    toast.success("Due date has been adjusted");
-                  }
-                }
-              }}
-              modifiers={modifiers}
-              modifiersClassNames={modifiersClassNames}
-              disabled={getDisabledDates()}
-              initialFocus
-            />
-          </div>
-
-          <div className="space-y-2">
+          <div
+            className="overflow-y-auto overscroll-contain flex-1 space-y-4"
+            style={{
+              touchAction: 'auto',
+              WebkitOverflowScrolling: 'touch'
+            } as React.CSSProperties}
+            onWheel={(e) => {
+              e.stopPropagation();
+            }}
+          >
+          <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Checkbox
                 id="start-date-checkbox"
@@ -546,22 +627,43 @@ export function CardDates({
               </Label>
             </div>
             {isStartDateEnabled && (
-              <Input
-                type="text"
-                placeholder="DD/MM/YYYY"
-                value={formatDateForInput(startDate)}
-                onChange={(e) => {
-                  const parsed = parseDateFromInput(e.target.value);
-                  if (parsed) {
-                    setStartDate(parsed);
-                    if (isDueDateEnabled && selectedDate && parsed > selectedDate) {
-                      handleDateSelect(parsed);
-                      toast.success("Due date has been adjusted");
-                    }
-                  }
-                }}
-                className="w-full"
-              />
+              <div className="space-y-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal"
+                    >
+                      <Clock className="mr-2 h-4 w-4" />
+                      {startDate ? formatDateForInput(startDate) : "Pick a date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={startDate}
+                      onSelect={(date) => {
+                        if (date) {
+                          setStartDate(date);
+                          if (isDueDateEnabled && selectedDate && date > selectedDate) {
+                            handleDateSelect(date);
+                            toast.success("Due date has been adjusted");
+                          }
+                        }
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                {isTimeEnabled && (
+                  <Input
+                    type="time"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                    className="w-full"
+                  />
+                )}
+              </div>
             )}
           </div>
 
@@ -584,39 +686,67 @@ export function CardDates({
               </Label>
             </div>
             {isDueDateEnabled && (
-              <div className="flex gap-2">
-                <Input
-                  type="text"
-                  placeholder="DD/MM/YYYY"
-                  value={formatDateForInput(selectedDate)}
-                  onChange={(e) => {
-                    const parsed = parseDateFromInput(e.target.value);
-                    if (parsed) {
-                      const today = new Date();
-                      today.setHours(0, 0, 0, 0);
+              <div className="space-y-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal"
+                    >
+                      <Clock className="mr-2 h-4 w-4" />
+                      {selectedDate ? formatDateForInput(selectedDate) : "Pick a date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={(date) => {
+                        if (date) {
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
 
-                      if (parsed < today) {
-                        toast.error("Due date cannot be before today");
-                        return;
-                      }
+                          if (date < today) {
+                            toast.error("Due date cannot be before today");
+                            return;
+                          }
 
-                      if (isStartDateEnabled && startDate && parsed < startDate) {
-                        toast.error("Due date cannot be before start date");
-                        return;
-                      }
-                      handleDateSelect(parsed);
-                    }
-                  }}
-                  className="flex-1"
-                />
-                <Input
-                  type="time"
-                  value={selectedTime}
-                  onChange={(e) => setSelectedTime(e.target.value)}
-                  className="w-32"
-                />
+                          if (isStartDateEnabled && startDate && date < startDate) {
+                            toast.error("Due date cannot be before start date");
+                            return;
+                          }
+                          handleDateSelect(date);
+                        }
+                      }}
+                      disabled={getDisabledDates()}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                {isTimeEnabled && (
+                  <Input
+                    type="time"
+                    value={selectedTime}
+                    onChange={(e) => setSelectedTime(e.target.value)}
+                    className="w-full"
+                  />
+                )}
               </div>
             )}
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="time-enabled-dialog"
+              checked={isTimeEnabled}
+              onCheckedChange={(checked) => setIsTimeEnabled(checked as boolean)}
+            />
+            <Label
+              htmlFor="time-enabled-dialog"
+              className="text-sm font-medium cursor-pointer"
+            >
+              Set time
+            </Label>
           </div>
 
           {isDueDateEnabled && (
@@ -648,7 +778,7 @@ export function CardDates({
             </p>
           )}
 
-          <div className="flex gap-2 pt-2">
+          <div className="flex gap-2 pt-4 border-t">
             <Button
               onClick={handleSave}
               className="flex-1"
@@ -664,6 +794,7 @@ export function CardDates({
             >
               {clearDueMutation.isPending ? "Removing..." : "Remove"}
             </Button>
+          </div>
           </div>
         </DialogContent>
       </Dialog>

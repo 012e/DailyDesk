@@ -552,8 +552,15 @@ function InnerDialog({
         <div className="flex flex-row h-full w-full overflow-hidden">
           {/* Left column - Main content */}
           <div
-            className="flex-1 space-y-6 p-6 overflow-y-auto max-h-full"
-            style={{ minWidth: "500px" }}
+            className="flex-1 space-y-6 p-6 overflow-y-auto max-h-full overscroll-contain"
+            style={{
+              minWidth: "500px",
+              touchAction: 'auto',
+              WebkitOverflowScrolling: 'touch'
+            } as React.CSSProperties}
+            onWheel={(e) => {
+              e.stopPropagation();
+            }}
           >
             {/* Header with title */}
             <CardHeader card={localCard} onUpdate={handleUpdate} />
@@ -693,18 +700,20 @@ function InnerDialog({
                   </div>
                 </PopoverContent>
               </Popover>
+
+              {/* Template Toggle */}
+              <Button
+                variant={localCard.isTemplate ? "default" : "outline"}
+                size="sm"
+                className="h-8"
+                onClick={() => handleUpdate({ isTemplate: !localCard.isTemplate })}
+              >
+                <LayoutTemplate className="h-4 w-4 mr-1" />
+                {localCard.isTemplate ? "Template" : "Make template"}
+              </Button>
             </div>
 
-            {/* Template Toggle */}
-            <Button
-              variant={localCard.isTemplate ? "default" : "outline"}
-              size="sm"
-              className="h-8"
-              onClick={() => handleUpdate({ isTemplate: !localCard.isTemplate })}
-            >
-              <LayoutTemplate className="h-4 w-4 mr-1" />
-              {localCard.isTemplate ? "Template" : "Make template"}
-            </Button>
+           
 
             {/* Labels display - only show if has labels */}
             {localCard.labels && localCard.labels.length > 0 && (
@@ -835,7 +844,16 @@ function InnerDialog({
           </div>
 
           {/* Right column - Comments and activity */}
-          <div className="w-96 flex-shrink-0 border-l bg-muted/30 p-12 overflow-y-auto">
+          <div
+            className="w-96 flex-shrink-0 border-l bg-muted/30 p-12 overflow-y-auto overscroll-contain"
+            style={{
+              touchAction: 'auto',
+              WebkitOverflowScrolling: 'touch'
+            } as React.CSSProperties}
+            onWheel={(e) => {
+              e.stopPropagation();
+            }}
+          >
             <div className="space-y-4">
               {/* Header */}
               <div className="flex items-center justify-between">
