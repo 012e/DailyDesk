@@ -87,7 +87,6 @@ export function LabelManager({ boardId }: LabelManagerProps) {
       {
         onSuccess: () => {
           closeDialog();
-          toast.success("Label created!");
         },
         onError: () => {
           toast.error("Failed to create label");
