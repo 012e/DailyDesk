@@ -4,6 +4,7 @@ export interface Label {
   id: string;
   name: string;
   color: string;
+  userId?: string; // Labels belong to users, not boards
 }
 
 export interface Member {
