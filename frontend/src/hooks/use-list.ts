@@ -36,7 +36,7 @@ export function useListActions() {
     });
   }
 
-  async function updateList(listId: string, name: string) {
+  async function updateList(listId: string, updates: { name?: string; order?: number }) {
     if (!boardId) throw new Error("board id is undefined");
     await api.PUT("/boards/{boardId}/lists/{id}", {
       params: {
@@ -46,7 +46,8 @@ export function useListActions() {
         },
       },
       body: {
-        name: name,
+        name: updates.name,
+        order: updates.order,
       },
     });
 
