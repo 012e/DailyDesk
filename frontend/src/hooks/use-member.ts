@@ -9,7 +9,7 @@ export interface Member {
   name: string;
   email: string;
   avatar?: string | null;
-  role: "member" | "admin" | "viewer";
+  role: "member" | "admin";
   addedAt: Date;
 }
 
@@ -51,7 +51,7 @@ export function useCreateMember() {
       name: string;
       email: string;
       avatar?: string | null;
-      role?: "member" | "admin" | "viewer";
+      role?: "member" | "admin";
     }) => {
       const memberId = uuidv7();
 
@@ -98,7 +98,7 @@ export function useUpdateMember() {
     mutationFn: async (params: {
       boardId: string;
       memberId: string;
-      role: "member" | "admin" | "viewer";
+      role: "member" | "admin";
     }) => {
       const { data, error } = await api.PUT("/boards/{boardId}/members/{id}", {
         params: {

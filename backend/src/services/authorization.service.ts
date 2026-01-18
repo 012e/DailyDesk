@@ -18,9 +18,8 @@ export class AuthorizationError extends Error {
  * - owner: Full control (inherited from board.userId, not stored in boardMembers)
  * - admin: Can manage members (add/remove/update roles), full content control
  * - member: Can create/edit/delete lists, cards, and their content
- * - viewer: Read-only access to the board
  */
-export type BoardRole = "owner" | "admin" | "member" | "viewer";
+export type BoardRole = "owner" | "admin" | "member";
 
 /**
  * Permission types for board operations
@@ -78,11 +77,6 @@ const ROLE_PERMISSIONS: Record<BoardRole, Permission[]> = {
     "content:create",
     "content:update",
     "content:delete",
-  ],
-  viewer: [
-    "board:read",
-    "member:read",
-    "content:read",
   ],
 };
 
@@ -152,7 +146,7 @@ export async function getBoardAccess(
     isOwner: false,
     isMember: true,
     memberId: member[0].id,
-    permissions: ROLE_PERMISSIONS[memberRole] || ROLE_PERMISSIONS.viewer,
+    permissions: ROLE_PERMISSIONS[memberRole] || ROLE_PERMISSIONS.member,
   };
 }
 
@@ -328,10 +322,9 @@ export async function getBoardIdFromCard(cardId: string): Promise<string | null>
  * Role hierarchy - used to prevent users from assigning roles higher than their own
  */
 const ROLE_HIERARCHY: Record<BoardRole, number> = {
-  owner: 4,
-  admin: 3,
-  member: 2,
-  viewer: 1,
+  owner: 3,
+  admin: 2,
+  member: 1,
 };
 
 /**

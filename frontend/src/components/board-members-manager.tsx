@@ -31,10 +31,11 @@ interface BoardMembersManagerProps {
   boardId: string;
   isOwner: boolean; // Whether current user is board owner
   isAdmin?: boolean; // Whether current user is board admin
-  currentUserRole?: "admin" | "member" | "viewer"; // Current user's role
+  currentUserRole?: "admin" | "member"; // Current user's role
+  ownerInfo?: { userId: string; name: string; email: string; avatar?: string | null }; // Owner info to display
 }
 
-export function BoardMembersManager({ boardId, isOwner, isAdmin = false, currentUserRole }: BoardMembersManagerProps) {
+export function BoardMembersManager({ boardId, isOwner, isAdmin = false, currentUserRole, ownerInfo }: BoardMembersManagerProps) {
   // Owner or Admin can manage members
   const canManageMembers = isOwner || isAdmin;
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -45,7 +46,7 @@ export function BoardMembersManager({ boardId, isOwner, isAdmin = false, current
     email: string;
     avatar?: string;
   } | null>(null);
-  const [role, setRole] = useState<"member" | "admin" | "viewer">("member");
+  const [role, setRole] = useState<"member" | "admin">("member");
 
   const { data: members = [], isLoading } = useMembers(boardId);
   const { data: searchResults = [], isLoading: isSearching } = useUserSearch(
@@ -78,6 +79,12 @@ export function BoardMembersManager({ boardId, isOwner, isAdmin = false, current
   const handleAddMember = () => {
     if (!selectedUser) {
       toast.error("Please select a user to add");
+      return;
+    }
+
+    // Check if user is the owner
+    if (ownerInfo && selectedUser.userId === ownerInfo.userId) {
+      toast.error("Cannot add the board owner as a member");
       return;
     }
 
@@ -121,7 +128,7 @@ export function BoardMembersManager({ boardId, isOwner, isAdmin = false, current
     }
   };
 
-  const handleRoleChange = (memberId: string, newRole: "member" | "admin" | "viewer") => {
+  const handleRoleChange = (memberId: string, newRole: "member" | "admin") => {
     updateMember({
       boardId,
       memberId,
@@ -192,14 +199,13 @@ export function BoardMembersManager({ boardId, isOwner, isAdmin = false, current
                       <Select
                         value={role}
                         onValueChange={(value) =>
-                          setRole(value as "member" | "admin" | "viewer")
+                          setRole(value as "member" | "admin")
                         }
                       >
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="viewer">Viewer (View only)</SelectItem>
                           <SelectItem value="member">Member (Can edit)</SelectItem>
                           {isOwner && <SelectItem value="admin">Admin (Full access)</SelectItem>}
                         </SelectContent>
@@ -301,7 +307,35 @@ export function BoardMembersManager({ boardId, isOwner, isAdmin = false, current
 
       {/* Members List */}
       <div className="space-y-2">
-        {members.length === 0 ? (
+        {/* Owner Display */}
+        {ownerInfo && (
+          <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/30">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <Avatar>
+                <AvatarImage src={ownerInfo.avatar || undefined} alt={ownerInfo.name} />
+                <AvatarFallback>
+                  {ownerInfo.name
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                    .toUpperCase()
+                    .slice(0, 2)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium truncate">{ownerInfo.name}</p>
+                <p className="text-sm text-muted-foreground truncate">
+                  {ownerInfo.email}
+                </p>
+              </div>
+            </div>
+            <span className="text-sm font-medium text-primary px-3">
+              Owner
+            </span>
+          </div>
+        )}
+
+        {members.length === 0 && !ownerInfo ? (
           <div className="text-center py-8 text-muted-foreground">
             <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
             <p>No members yet</p>
@@ -343,7 +377,7 @@ export function BoardMembersManager({ boardId, isOwner, isAdmin = false, current
                     <Select
                       value={member.role}
                       onValueChange={(value) =>
-                        handleRoleChange(member.id, value as "member" | "admin" | "viewer")
+                        handleRoleChange(member.id, value as "member" | "admin")
                       }
                       disabled={!isOwner && member.role === "admin"}
                     >
@@ -351,7 +385,6 @@ export function BoardMembersManager({ boardId, isOwner, isAdmin = false, current
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="viewer">Viewer</SelectItem>
                         <SelectItem value="member">Member</SelectItem>
                         {isOwner && <SelectItem value="admin">Admin</SelectItem>}
                       </SelectContent>

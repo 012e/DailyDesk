@@ -56,8 +56,22 @@ export function Kanban({ boardId }: KanbanProps) {
   
   // Get current user's role from members list
   const currentUserMember = members.find(m => m.userId === currentUser?.sub);
-  const currentUserRole = currentUserMember?.role;
+  const currentUserRole = currentUserMember?.role as "admin" | "member" | undefined;
   const isAdmin = currentUserRole === "admin";
+
+  // Get owner info - if current user is owner, use their info
+  // Otherwise, we'll need to pass the userId for now (owner display in members list)
+  const ownerInfo = isOwner && currentUser ? {
+    userId: currentUser.sub!,
+    name: currentUser.name || currentUser.nickname || currentUser.email || "Owner",
+    email: currentUser.email || "",
+    avatar: currentUser.picture || null,
+  } : board?.userId ? {
+    userId: board.userId,
+    name: "Board Owner",
+    email: "",
+    avatar: null,
+  } : undefined;
 
   // Filter and sort lists' cards based on active filters
   const filteredLists = useMemo(() => {
@@ -299,6 +313,7 @@ export function Kanban({ boardId }: KanbanProps) {
           currentUserRole={currentUserRole}
           creatorId={board?.userId || ""}
           currentUserId={currentUser?.sub || ""}
+          ownerInfo={ownerInfo}
           filters={filters}
           onFiltersChange={setFilters}
           onEditBoard={() => setIsEditBoardOpen(true)}

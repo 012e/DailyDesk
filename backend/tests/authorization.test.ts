@@ -23,7 +23,6 @@ describe("Authorization Tests", () => {
   const ownerUserId = "test-owner-user-id";
   const adminUserId = "test-admin-user-id";
   const memberUserId = "test-member-user-id";
-  const viewerUserId = "test-viewer-user-id";
   const outsiderUserId = "test-outsider-user-id";
 
   beforeEach(async () => {
@@ -53,16 +52,6 @@ describe("Authorization Tests", () => {
       name: "Member User",
       email: "member@test.com",
       role: "member",
-    });
-
-    // Add viewer
-    await db.insert(boardMembersTable).values({
-      id: crypto.randomUUID(),
-      boardId: testBoardId,
-      userId: viewerUserId,
-      name: "Viewer User",
-      email: "viewer@test.com",
-      role: "viewer",
     });
 
     // Create a test list
@@ -105,11 +94,6 @@ describe("Authorization Tests", () => {
       expect(access).toMatchObject({ role: "member", isOwner: false, isMember: true });
     });
 
-    it("returns 'viewer' for viewer member", async () => {
-      const access = await getBoardAccess(testBoardId, viewerUserId);
-      expect(access).toMatchObject({ role: "viewer", isOwner: false, isMember: true });
-    });
-
     it("returns null for outsider", async () => {
       const access = await getBoardAccess(testBoardId, outsiderUserId);
       expect(access).toBeNull();
@@ -143,10 +127,6 @@ describe("Authorization Tests", () => {
       await expect(checkPermission(testBoardId, memberUserId, "board:read")).resolves.not.toThrow();
     });
 
-    it("viewer can read board", async () => {
-      await expect(checkPermission(testBoardId, viewerUserId, "board:read")).resolves.not.toThrow();
-    });
-
     it("outsider cannot read board", async () => {
       await expect(checkPermission(testBoardId, outsiderUserId, "board:read")).rejects.toThrow(AuthorizationError);
     });
@@ -163,10 +143,6 @@ describe("Authorization Tests", () => {
 
     it("member cannot update board", async () => {
       await expect(checkPermission(testBoardId, memberUserId, "board:update")).rejects.toThrow(AuthorizationError);
-    });
-
-    it("viewer cannot update board", async () => {
-      await expect(checkPermission(testBoardId, viewerUserId, "board:update")).rejects.toThrow(AuthorizationError);
     });
   });
 
@@ -196,15 +172,11 @@ describe("Authorization Tests", () => {
     it("member can create content", async () => {
       await expect(checkPermission(testBoardId, memberUserId, "content:create")).resolves.not.toThrow();
     });
-
-    it("viewer cannot create content", async () => {
-      await expect(checkPermission(testBoardId, viewerUserId, "content:create")).rejects.toThrow(AuthorizationError);
-    });
   });
 
   describe("checkPermission - content:read", () => {
-    it("viewer can read content", async () => {
-      await expect(checkPermission(testBoardId, viewerUserId, "content:read")).resolves.not.toThrow();
+    it("member can read content", async () => {
+      await expect(checkPermission(testBoardId, memberUserId, "content:read")).resolves.not.toThrow();
     });
   });
 
@@ -233,10 +205,6 @@ describe("Authorization Tests", () => {
 
     it("member cannot manage members", async () => {
       await expect(requireMemberManagement(testBoardId, memberUserId)).rejects.toThrow(AuthorizationError);
-    });
-
-    it("viewer cannot manage members", async () => {
-      await expect(requireMemberManagement(testBoardId, viewerUserId)).rejects.toThrow(AuthorizationError);
     });
   });
 
@@ -270,12 +238,10 @@ describe("Authorization Tests", () => {
     it("owner can assign any role", () => {
       expect(canAssignRole("owner", "admin")).toBe(true);
       expect(canAssignRole("owner", "member")).toBe(true);
-      expect(canAssignRole("owner", "viewer")).toBe(true);
     });
 
-    it("admin can assign member and viewer roles", () => {
+    it("admin can assign member role", () => {
       expect(canAssignRole("admin", "member")).toBe(true);
-      expect(canAssignRole("admin", "viewer")).toBe(true);
     });
 
     it("admin cannot assign admin role", () => {
@@ -285,13 +251,6 @@ describe("Authorization Tests", () => {
     it("member cannot assign any role", () => {
       expect(canAssignRole("member", "admin")).toBe(false);
       expect(canAssignRole("member", "member")).toBe(false);
-      expect(canAssignRole("member", "viewer")).toBe(false);
-    });
-
-    it("viewer cannot assign any role", () => {
-      expect(canAssignRole("viewer", "admin")).toBe(false);
-      expect(canAssignRole("viewer", "member")).toBe(false);
-      expect(canAssignRole("viewer", "viewer")).toBe(false);
     });
   });
 });
