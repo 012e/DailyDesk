@@ -1,1 +1,0 @@
-ALTER TABLE `cards` ADD `is_template` integer DEFAULT false;
