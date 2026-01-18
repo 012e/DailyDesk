@@ -2,7 +2,7 @@ import {
   KanbanBoardColumnButton,
   KanbanBoardColumnFooter,
 } from "@/components/kanban";
-import { CardEditDialog } from "@/components/card-edit-dialog";
+import { CardCreateDialog } from "@/components/card-edit-dialog";
 import { PlusIcon, LayoutTemplate, Loader2 } from "lucide-react";
 import { useAtom, useAtomValue } from "jotai";
 import { addingCardColumnIdAtom } from "./atoms";
@@ -50,7 +50,6 @@ export function AddCardForm({ columnId, cardsCount }: AddCardFormProps) {
 
   const { mutate: createCard } = useCreateCard();
   const [isCreatingFromTemplate, setIsCreatingFromTemplate] = useState(false);
-  const [isCreatingTemplate, setIsCreatingTemplate] = useState(false);
 
   const isDialogOpen = addingCardColumnId === columnId;
 
@@ -60,7 +59,6 @@ export function AddCardForm({ columnId, cardsCount }: AddCardFormProps) {
 
   const closeDialog = () => {
     setAddingCardColumnId(null);
-    setIsCreatingTemplate(false);
   };
 
   // Filter templates from all cards in the board
@@ -118,15 +116,6 @@ export function AddCardForm({ columnId, cardsCount }: AddCardFormProps) {
             <PopoverContent side="right" align="start" className="w-64 p-2">
               <div className="text-sm font-medium mb-2 px-2 text-muted-foreground">Templates</div>
               <div className="space-y-1">
-                 <Button 
-                    variant="ghost" 
-                    className="w-full justify-start font-medium text-primary hover:text-primary hover:bg-primary/10"
-                    onClick={() => setIsCreatingTemplate(true)}
-                 >
-                    <PlusIcon className="mr-2 h-4 w-4" />
-                    Create new template
-                 </Button>
-                 
                  {templates.length > 0 && <div className="h-px bg-border my-1" />}
 
                  <div className="grid gap-1 max-h-[300px] overflow-y-auto">
@@ -161,13 +150,12 @@ export function AddCardForm({ columnId, cardsCount }: AddCardFormProps) {
       </KanbanBoardColumnFooter>
 
       {boardId && (
-        <CardEditDialog
+        <CardCreateDialog
           boardId={boardId}
           listId={columnId}
           order={cardsCount}
-          isOpen={isDialogOpen || isCreatingTemplate}
+          isOpen={isDialogOpen}
           onClose={closeDialog}
-          defaultIsTemplate={isCreatingTemplate}
         />
       )}
     </>
