@@ -9,7 +9,7 @@ export const UpdateDueSchema = z.object({
   startDate: z.string().datetime().optional().nullable(),
   dueAt: z.string().datetime().optional().nullable(),
   dueComplete: z.boolean().optional(),
-  reminderMinutes: z.enum(["5", "10", "15", "30", "60", "120", "1440"]).transform(Number).optional().nullable(),
+  reminderMinutes: z.enum(["1", "5", "10", "15", "30", "60", "120", "1440"]).transform(Number).optional().nullable(),
   repeatFrequency: RepeatFrequencyEnum.optional().nullable(),
   repeatInterval: z.coerce.number().int().min(1).optional().nullable(),
 });

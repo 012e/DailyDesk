@@ -90,6 +90,7 @@ export function formatDueDate(dueAt: Date | string | null | undefined): string {
 
 export const REMINDER_OPTIONS = [
   { value: null, label: "None" },
+  { value: 1, label: "1 minute before" },
   { value: 5, label: "5 minutes before" },
   { value: 10, label: "10 minutes before" },
   { value: 15, label: "15 minutes before" },

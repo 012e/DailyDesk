@@ -291,6 +291,22 @@ export async function getCommentsForCard(userSub: string, cardId: string) {
     })
   );
 
+  // Ensure board owner shows up even if not in board_members
+  const boardOwner = await db
+    .select({ userId: boardsTable.userId })
+    .from(boardsTable)
+    .where(eq(boardsTable.id, boardId))
+    .limit(1);
+
+  if (boardOwner.length > 0 && !userMap.has(boardOwner[0].userId)) {
+    userMap.set(boardOwner[0].userId, {
+      id: boardOwner[0].userId,
+      name: "Board Owner",
+      email: "",
+      initials: "BO",
+    });
+  }
+
   // Combine comments with user info
   return comments.map((c) => ({
     id: c.id,

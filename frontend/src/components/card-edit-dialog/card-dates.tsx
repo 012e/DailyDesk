@@ -522,7 +522,7 @@ export function CardDates({
             <SelectTrigger id="reminder" className="w-full h-8">
               <SelectValue placeholder="Select reminder" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-60 overflow-y-auto">
               {REMINDER_OPTIONS.map((option) => (
                 <SelectItem key={option.value?.toString() || "null"} value={option.value?.toString() || "null"}>
                   {option.label}
@@ -820,7 +820,7 @@ export function CardDates({
                 <SelectTrigger id="reminder-dialog" className="w-full">
                   <SelectValue placeholder="None" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-60 overflow-y-auto">
                   {REMINDER_OPTIONS.map((option) => (
                     <SelectItem key={option.value?.toString() || "null"} value={option.value?.toString() || "null"}>
                       {option.label}

@@ -213,6 +213,15 @@ export async function getActivitiesForCard(userSub: string, cardId: string) {
     })
   );
 
+  if (!userMap.has(result[0].boardUserId)) {
+    userMap.set(result[0].boardUserId, {
+      id: result[0].boardUserId,
+      name: "Board Owner",
+      email: "",
+      initials: "BO",
+    });
+  }
+
   // Combine activities with user info
   return activities.map((a) => ({
     id: a.id,
