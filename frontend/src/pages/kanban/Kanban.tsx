@@ -26,12 +26,14 @@ import { EditBoardDialog } from "@/components/edit-board-dialog";
 import { cardMatchesFilters, emptyFilterState, type FilterState } from "@/components/board-filter-popover";
 import { useAuth0 } from "@auth0/auth0-react";
 import { toast } from "sonner";
+import { useSearchParams } from "react-router";
 
 interface KanbanProps {
   boardId?: string;
 }
 
 export function Kanban({ boardId }: KanbanProps) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const setBoardId = useSetAtom(boardIdAtom);
   const { createList, updateList, deleteList } = useListActions();
   const board = useBoard({ boardId: boardId! });
@@ -72,6 +74,49 @@ export function Kanban({ boardId }: KanbanProps) {
     email: "",
     avatar: null,
   } : undefined;
+
+  // Handle URL query parameters for deep linking
+  useEffect(() => {
+    if (lists.length > 0) {
+      const cardId = searchParams.get("cardId");
+      if (cardId) {
+        for (const list of lists) {
+          const card = list.cards.find((c) => c.id === cardId);
+          if (card) {
+            setSelectedCard(card);
+            setIsCardDialogOpen(true);
+            
+            // Remove the query param to prevent re-opening or conflicting state
+            const newParams = new URLSearchParams(searchParams);
+            newParams.delete("cardId");
+            setSearchParams(newParams, { replace: true });
+            return; // Exit after handling cardId
+          }
+        }
+      }
+
+      const listId = searchParams.get("listId");
+      if (listId) {
+        // Find the list exists in board
+        const listExists = lists.some(l => l.id === listId);
+        if (listExists) {
+           // We need to wait for DOM to be ready or assume it is.
+           // Since lists > 0, they should be rendered.
+           requestAnimationFrame(() => {
+             const listElement = document.getElementById(`list-${listId}`);
+             if (listElement) {
+                listElement.scrollIntoView({ behavior: "smooth", inline: "center" });
+             }
+           });
+
+           // Remove listId param
+           const newParams = new URLSearchParams(searchParams);
+           newParams.delete("listId");
+           setSearchParams(newParams, { replace: true });
+        }
+      }
+    }
+  }, [searchParams, lists, setSelectedCard, setIsCardDialogOpen, setSearchParams]);
 
   // Filter and sort lists' cards based on active filters
   const filteredLists = useMemo(() => {
