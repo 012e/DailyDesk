@@ -370,7 +370,7 @@ export default function TasksPage() {
           />
         </div>
       ) : (
-        <div className="max-h-[calc(100vh-24rem)] overflow-auto  pr-2">
+        <div className="pb-12 overflow-auto pr-2">
           <Accordion type="multiple" className="space-y-4">
             {Array.from(tasksByBoard.entries()).map(([boardId, { boardName, tasks: boardTasks }]) => {
             const completedCount = boardTasks.filter((t: TaskCard) => t.completed).length;

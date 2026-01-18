@@ -119,7 +119,7 @@ function DialogForm({
         </DialogDescription>
       </DialogHeader>
 
-      <form onSubmit={handleSubmit} className="grid gap-8 pb-8">
+      <form onSubmit={handleSubmit} className="grid gap-8 ">
         <div className="grid gap-4">
           <Label htmlFor="board-title">Board Title</Label>
           <Input

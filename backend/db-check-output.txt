@@ -1,0 +1,49 @@
+=== Checking board_members table ===
+
+All board members:
+[
+  {
+    "id": "019bc66f-a481-763e-ad62-1f8a63654c53",
+    "boardId": "019ba215-0709-7b4f-aa1b-ef48fcfd09b0",
+    "userId": "auth0|693bd377a1bffbec1d2789de",
+    "name": "honguyentailoi05@gmail.com",
+    "email": "honguyentailoi05@gmail.com",
+    "avatar": "https://s.gravatar.com/avatar/5e11baffc917b7499a3fe8487644b41b?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Fho.png",
+    "role": "member",
+    "addedAt": "2026-01-16T10:52:44.000Z"
+  },
+  {
+    "id": "019bd0e3-de9e-7028-bf9a-06a5657a6694",
+    "boardId": "019b85b8-b4f3-7d5b-8852-a05cf7751ac0",
+    "userId": "google-oauth2|102869193968520170561",
+    "name": "Hoài Trần Thị Thu",
+    "email": "23520509@gm.uit.edu.vn",
+    "avatar": "https://lh3.googleusercontent.com/a/ACg8ocJVQVqI3qSWHmBoM4vJMTbuNqzBBnND8o5w6y6Qq5VNWWETWQ=s96-c",
+    "role": "member",
+    "addedAt": "2026-01-18T11:35:53.000Z"
+  }
+]
+
+Total members: 2
+
+=== Checking boards table (with IDs) ===
+
+All boards:
+- ID: 019b85b8-b4f3-7d5b-8852-a05cf7751ac0 | Name: dcdsaf | Owner: google-oauth2|112962941854795359546
+- ID: 019b99ea-db94-7e2a-a71c-58112634d91f | Name: Test Board | Owner: auth0|695eb2b4bd9509a108b5a43d
+- ID: 019ba0c9-266e-7b41-8edf-a4b4f8d72a56 | Name: saqxdsaxsa | Owner: google-oauth2|112962941854795359546
+- ID: 019ba0c9-2ea5-78af-887a-5dc3dd39ad90 | Name: ẫ | Owner: google-oauth2|112962941854795359546
+- ID: 019ba0c9-34d5-76b8-b87b-99f3f2f98440 | Name: ẫ | Owner: google-oauth2|112962941854795359546
+- ID: 019ba0c9-39fd-792d-998b-b52a8957ad89 | Name: ã | Owner: google-oauth2|112962941854795359546
+- ID: 019ba215-0709-7b4f-aa1b-ef48fcfd09b0 | Name: sdfdsfsd | Owner: google-oauth2|112962941854795359546
+- ID: 019bc137-5049-703e-8cd7-615df00f775a | Name: meooo | Owner: google-oauth2|112962941854795359546
+- ID: 019bc137-630a-726a-9eb6-03f8af72a52e | Name: meoooo | Owner: google-oauth2|112962941854795359546
+- ID: 019bc151-4c23-79fb-aa69-30fb5ddd7143 | Name: hehe | Owner: google-oauth2|112962941854795359546
+- ID: 019bc171-5989-79b2-bde0-778502e7488f | Name: hehehe | Owner: google-oauth2|102869193968520170561
+- ID: 019bc172-0850-7809-9405-c149112bd24e | Name: hrhrh | Owner: google-oauth2|112962941854795359546
+- ID: 019bd0e9-f5a2-7e46-a858-1bd4d95dfdd6 | Name: èvdsfvdsfv | Owner: google-oauth2|106873785506919843472
+
+=== Cross-reference check ===
+
+Member honguyentailoi05@gmail.com -> Board 019ba215-0709-7b4f-aa1b-ef48fcfd09b0 exists: true
+Member 23520509@gm.uit.edu.vn -> Board 019b85b8-b4f3-7d5b-8852-a05cf7751ac0 exists: true

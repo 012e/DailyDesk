@@ -26,12 +26,14 @@ import { EditBoardDialog } from "@/components/edit-board-dialog";
 import { cardMatchesFilters, emptyFilterState, type FilterState } from "@/components/board-filter-popover";
 import { useAuth0 } from "@auth0/auth0-react";
 import { toast } from "sonner";
+import { useSearchParams } from "react-router";
 
 interface KanbanProps {
   boardId?: string;
 }
 
 export function Kanban({ boardId }: KanbanProps) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const setBoardId = useSetAtom(boardIdAtom);
   const { createList, updateList, deleteList } = useListActions();
   const board = useBoard({ boardId: boardId! });
@@ -53,6 +55,68 @@ export function Kanban({ boardId }: KanbanProps) {
 
   // Auth0 user has 'sub' field for user ID
   const isOwner = currentUser?.sub === board?.userId;
+  
+  // Get current user's role from members list
+  const currentUserMember = members.find(m => m.userId === currentUser?.sub);
+  const currentUserRole = currentUserMember?.role as "admin" | "member" | undefined;
+  const isAdmin = currentUserRole === "admin";
+
+  // Get owner info - if current user is owner, use their info
+  // Otherwise, we'll need to pass the userId for now (owner display in members list)
+  const ownerInfo = isOwner && currentUser ? {
+    userId: currentUser.sub!,
+    name: currentUser.name || currentUser.nickname || currentUser.email || "Owner",
+    email: currentUser.email || "",
+    avatar: currentUser.picture || null,
+  } : board?.userId ? {
+    userId: board.userId,
+    name: "Board Owner",
+    email: "",
+    avatar: null,
+  } : undefined;
+
+  // Handle URL query parameters for deep linking
+  useEffect(() => {
+    if (lists.length > 0) {
+      const cardId = searchParams.get("cardId");
+      if (cardId) {
+        for (const list of lists) {
+          const card = list.cards.find((c) => c.id === cardId);
+          if (card) {
+            setSelectedCard(card);
+            setIsCardDialogOpen(true);
+            
+            // Remove the query param to prevent re-opening or conflicting state
+            const newParams = new URLSearchParams(searchParams);
+            newParams.delete("cardId");
+            setSearchParams(newParams, { replace: true });
+            return; // Exit after handling cardId
+          }
+        }
+      }
+
+      const listId = searchParams.get("listId");
+      if (listId) {
+        // Find the list exists in board
+        const listExists = lists.some(l => l.id === listId);
+        if (listExists) {
+           // We need to wait for DOM to be ready or assume it is.
+           // Since lists > 0, they should be rendered.
+           requestAnimationFrame(() => {
+             const listElement = document.getElementById(`list-${listId}`);
+             if (listElement) {
+                listElement.scrollIntoView({ behavior: "smooth", inline: "center" });
+             }
+           });
+
+           // Remove listId param
+           const newParams = new URLSearchParams(searchParams);
+           newParams.delete("listId");
+           setSearchParams(newParams, { replace: true });
+        }
+      }
+    }
+  }, [searchParams, lists, setSelectedCard, setIsCardDialogOpen, setSearchParams]);
 
   // Filter and sort lists' cards based on active filters
   const filteredLists = useMemo(() => {
@@ -142,10 +206,18 @@ export function Kanban({ boardId }: KanbanProps) {
 
   const handleDropOverColumn = (
     columnId: string,
-    dataTransferData: string
+    dataTransferData: string,
+    type: "card" | "column"
   ) => {
     if (!boardId) return;
 
+    if (type === "column") {
+      // Handle column reordering
+      handleDropColumnOverColumn(columnId, dataTransferData);
+      return;
+    }
+
+    // Handle card drop
     let cardId: string;
     try {
       const cardData = JSON.parse(dataTransferData);
@@ -166,6 +238,50 @@ export function Kanban({ boardId }: KanbanProps) {
       listId: columnId,
       order: newOrder,
     });
+  };
+
+  const handleDropColumnOverColumn = async (
+    targetColumnId: string,
+    dataTransferData: string
+  ) => {
+    try {
+      const draggedData = JSON.parse(dataTransferData);
+      const draggedColumnId = draggedData.id;
+      
+      if (draggedColumnId === targetColumnId) return;
+      
+      // Find the dragged and target columns
+      const sortedLists = [...lists].sort((a, b) => (a.order || 0) - (b.order || 0));
+      const draggedIndex = sortedLists.findIndex((l) => l.id === draggedColumnId);
+      const targetIndex = sortedLists.findIndex((l) => l.id === targetColumnId);
+      
+      if (draggedIndex === -1 || targetIndex === -1) return;
+      
+      // Calculate new order for the dragged column
+      let newOrder: number;
+      if (targetIndex === 0) {
+        // Moving to the beginning
+        newOrder = (sortedLists[0].order || 0) - 10000;
+      } else if (targetIndex === sortedLists.length - 1) {
+        // Moving to the end
+        newOrder = (sortedLists[sortedLists.length - 1].order || 0) + 10000;
+      } else if (draggedIndex < targetIndex) {
+        // Moving right: place after target
+        const afterOrder = sortedLists[targetIndex].order || 0;
+        const nextOrder = sortedLists[targetIndex + 1]?.order || afterOrder + 20000;
+        newOrder = Math.floor((afterOrder + nextOrder) / 2);
+      } else {
+        // Moving left: place before target
+        const beforeOrder = sortedLists[targetIndex].order || 0;
+        const prevOrder = sortedLists[targetIndex - 1]?.order || beforeOrder - 20000;
+        newOrder = Math.floor((prevOrder + beforeOrder) / 2);
+      }
+      
+      await updateList(draggedColumnId, { order: newOrder });
+    } catch (e) {
+      console.error("Failed to reorder column:", e);
+      toast.error("Failed to reorder list", { position: "bottom-left" });
+    }
   };
 
   const handleDropOverListItem = (
@@ -223,7 +339,7 @@ export function Kanban({ boardId }: KanbanProps) {
 
   const handleSaveColumnEdit = async (columnId: string, newName: string) => {
     try {
-      await updateList(columnId, newName);
+      await updateList(columnId, { name: newName });
       toast.success("List updated!", { position: "bottom-left" });
     } catch (error) {
       console.error("Failed to update list:", error);
@@ -290,8 +406,11 @@ export function Kanban({ boardId }: KanbanProps) {
           boardName={board.name}
           members={members}
           isOwner={isOwner}
+          isAdmin={isAdmin}
+          currentUserRole={currentUserRole}
           creatorId={board?.userId || ""}
           currentUserId={currentUser?.sub || ""}
+          ownerInfo={ownerInfo}
           filters={filters}
           onFiltersChange={setFilters}
           onEditBoard={() => setIsEditBoardOpen(true)}
@@ -303,7 +422,7 @@ export function Kanban({ boardId }: KanbanProps) {
               key={column.id}
               column={column}
               boardId={boardId || ""}
-              onDropOverColumn={(data) => handleDropOverColumn(column.id, data)}
+              onDropOverColumn={(data, type) => handleDropOverColumn(column.id, data, type)}
               onDropOverListItem={(targetCardId, data, direction) =>
                 handleDropOverListItem(column.id, targetCardId, data, direction)
               }

@@ -7,6 +7,7 @@ import {
   LayoutTemplate,
   Search,
   Settings,
+  User,
 } from "lucide-react";
 import { Link } from "react-router";
 import { useState } from "react";
@@ -36,24 +37,19 @@ const items = [
     icon: CheckSquare,
   },
   {
-    title: "Inbox",
-    url: "#",
-    icon: Inbox,
-  },
-  {
     title: "Calendar",
     url: "#",
     icon: Calendar,
   },
   {
-    title: "Search",
-    url: "#",
-    icon: Search,
-  },
-  {
     title: "API",
     url: "/doc",
     icon: BookOpen,
+  },
+  {
+    title: "Profile",
+    url: "/profile",
+    icon: User,
   },
   {
     title: "Settings",

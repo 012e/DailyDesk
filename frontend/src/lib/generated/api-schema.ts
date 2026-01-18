@@ -27,79 +27,165 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            /** Format: uuid */
-                            id: string;
-                            name: string;
-                            userId: string;
-                            backgroundUrl?: string;
-                            backgroundColor?: string;
-                            backgroundPublicId?: string;
-                            lists: {
+                            ownedBoards: {
                                 /** Format: uuid */
                                 id: string;
                                 name: string;
-                                order: number;
-                                /** Format: uuid */
-                                boardId: string;
-                                cards: {
+                                userId: string;
+                                backgroundUrl?: string;
+                                backgroundColor?: string;
+                                backgroundPublicId?: string;
+                                lists: {
                                     /** Format: uuid */
                                     id: string;
                                     name: string;
-                                    description: string | null;
                                     order: number;
-                                    /** Format: uri */
-                                    coverUrl: string | null;
-                                    coverPublicId: string | null;
-                                    coverColor: string | null;
-                                    coverMode: string | null;
                                     /** Format: uuid */
-                                    listId: string;
-                                    labels?: {
+                                    boardId: string;
+                                    cards: {
+                                        /** Format: uuid */
                                         id: string;
                                         name: string;
-                                        color: string;
-                                    }[] | null;
-                                    members?: {
-                                        id: string;
-                                        name: string;
-                                        email: string;
-                                        avatar?: string | null;
-                                        initials: string;
-                                    }[] | null;
-                                    attachments?: {
-                                        id: string;
-                                        name: string;
-                                        url: string;
-                                        publicId: string | null;
-                                        type: string;
-                                        size: number;
+                                        description: string | null;
+                                        order: number;
+                                        /** Format: uri */
+                                        coverUrl: string | null;
+                                        coverPublicId: string | null;
+                                        coverColor: string | null;
+                                        coverMode: string | null;
+                                        /** Format: uuid */
+                                        listId: string;
+                                        labels?: {
+                                            id: string;
+                                            name: string;
+                                            color: string;
+                                        }[] | null;
+                                        members?: {
+                                            id: string;
+                                            name: string;
+                                            email: string;
+                                            avatar?: string | null;
+                                            initials: string;
+                                        }[] | null;
+                                        attachments?: {
+                                            id: string;
+                                            name: string;
+                                            url: string;
+                                            publicId: string | null;
+                                            type: string;
+                                            size: number;
+                                            /** Format: date-time */
+                                            uploadedAt: string | null;
+                                            uploadedBy: string;
+                                            cardId: string;
+                                        }[] | null;
                                         /** Format: date-time */
-                                        uploadedAt: string | null;
-                                        uploadedBy: string;
-                                        cardId: string;
-                                    }[] | null;
-                                    /** Format: date-time */
-                                    startDate: string | null;
-                                    /** Format: date-time */
-                                    deadline: string | null;
-                                    /** Format: date-time */
-                                    dueAt: string | null;
-                                    dueComplete: boolean | null;
-                                    reminderMinutes: number | null;
-                                    /** @enum {string|null} */
-                                    recurrence: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day" | null;
-                                    recurrenceDay: number | null;
-                                    recurrenceWeekday: number | null;
-                                    latitude: number | null;
-                                    longitude: number | null;
-                                    completed: boolean | null;
-                                    /** Format: date-time */
-                                    createdAt: string | null;
-                                    /** Format: date-time */
-                                    updatedAt: string | null;
+                                        startDate: string | null;
+                                        /** Format: date-time */
+                                        deadline: string | null;
+                                        /** Format: date-time */
+                                        dueAt: string | null;
+                                        dueComplete: boolean | null;
+                                        reminderMinutes: number | null;
+                                        /** @enum {string|null} */
+                                        recurrence: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day" | null;
+                                        recurrenceDay: number | null;
+                                        recurrenceWeekday: number | null;
+                                        /** @enum {string|null} */
+                                        repeatFrequency: "daily" | "weekly" | "monthly" | null;
+                                        repeatInterval: number | null;
+                                        latitude: number | null;
+                                        longitude: number | null;
+                                        completed: boolean | null;
+                                        isTemplate: boolean | null;
+                                        /** Format: date-time */
+                                        createdAt: string | null;
+                                        /** Format: date-time */
+                                        updatedAt: string | null;
+                                    }[];
                                 }[];
                             }[];
-                        }[];
+                            invitedBoards: {
+                                /** Format: uuid */
+                                id: string;
+                                name: string;
+                                userId: string;
+                                backgroundUrl?: string;
+                                backgroundColor?: string;
+                                backgroundPublicId?: string;
+                                lists: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    name: string;
+                                    order: number;
+                                    /** Format: uuid */
+                                    boardId: string;
+                                    cards: {
+                                        /** Format: uuid */
+                                        id: string;
+                                        name: string;
+                                        description: string | null;
+                                        order: number;
+                                        /** Format: uri */
+                                        coverUrl: string | null;
+                                        coverPublicId: string | null;
+                                        coverColor: string | null;
+                                        coverMode: string | null;
+                                        /** Format: uuid */
+                                        listId: string;
+                                        labels?: {
+                                            id: string;
+                                            name: string;
+                                            color: string;
+                                        }[] | null;
+                                        members?: {
+                                            id: string;
+                                            name: string;
+                                            email: string;
+                                            avatar?: string | null;
+                                            initials: string;
+                                        }[] | null;
+                                        attachments?: {
+                                            id: string;
+                                            name: string;
+                                            url: string;
+                                            publicId: string | null;
+                                            type: string;
+                                            size: number;
+                                            /** Format: date-time */
+                                            uploadedAt: string | null;
+                                            uploadedBy: string;
+                                            cardId: string;
+                                        }[] | null;
+                                        /** Format: date-time */
+                                        startDate: string | null;
+                                        /** Format: date-time */
+                                        deadline: string | null;
+                                        /** Format: date-time */
+                                        dueAt: string | null;
+                                        dueComplete: boolean | null;
+                                        reminderMinutes: number | null;
+                                        /** @enum {string|null} */
+                                        recurrence: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day" | null;
+                                        recurrenceDay: number | null;
+                                        recurrenceWeekday: number | null;
+                                        /** @enum {string|null} */
+                                        repeatFrequency: "daily" | "weekly" | "monthly" | null;
+                                        repeatInterval: number | null;
+                                        latitude: number | null;
+                                        longitude: number | null;
+                                        completed: boolean | null;
+                                        isTemplate: boolean | null;
+                                        /** Format: date-time */
+                                        createdAt: string | null;
+                                        /** Format: date-time */
+                                        updatedAt: string | null;
+                                    }[];
+                                }[];
+                                /** @enum {string} */
+                                role: "admin" | "member" | "viewer";
+                            }[];
+                        };
                     };
                 };
                 /** @description Internal server error */
@@ -268,9 +354,13 @@ export interface paths {
                                     recurrence: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day" | null;
                                     recurrenceDay: number | null;
                                     recurrenceWeekday: number | null;
+                                    /** @enum {string|null} */
+                                    repeatFrequency: "daily" | "weekly" | "monthly" | null;
+                                    repeatInterval: number | null;
                                     latitude: number | null;
                                     longitude: number | null;
                                     completed: boolean | null;
+                                    isTemplate: boolean | null;
                                     /** Format: date-time */
                                     createdAt: string | null;
                                     /** Format: date-time */
@@ -567,9 +657,13 @@ export interface paths {
                             recurrence: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day" | null;
                             recurrenceDay: number | null;
                             recurrenceWeekday: number | null;
+                            /** @enum {string|null} */
+                            repeatFrequency: "daily" | "weekly" | "monthly" | null;
+                            repeatInterval: number | null;
                             latitude: number | null;
                             longitude: number | null;
                             completed: boolean | null;
+                            isTemplate: boolean | null;
                             /** Format: date-time */
                             createdAt: string | null;
                             /** Format: date-time */
@@ -996,9 +1090,13 @@ export interface paths {
                             recurrence: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day" | null;
                             recurrenceDay: number | null;
                             recurrenceWeekday: number | null;
+                            /** @enum {string|null} */
+                            repeatFrequency: "daily" | "weekly" | "monthly" | null;
+                            repeatInterval: number | null;
                             latitude: number | null;
                             longitude: number | null;
                             completed: boolean | null;
+                            isTemplate: boolean | null;
                             /** Format: date-time */
                             createdAt: string | null;
                             /** Format: date-time */
@@ -1062,11 +1160,15 @@ export interface paths {
                         recurrence?: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day";
                         recurrenceDay?: number;
                         recurrenceWeekday?: number;
+                        /** @enum {string} */
+                        repeatFrequency?: "daily" | "weekly" | "monthly";
+                        repeatInterval?: number;
                         latitude?: number;
                         longitude?: number;
                         coverColor?: string;
                         coverUrl?: string;
                         completed?: boolean;
+                        isTemplate?: boolean;
                     };
                 };
             };
@@ -1126,9 +1228,13 @@ export interface paths {
                             recurrence: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day" | null;
                             recurrenceDay: number | null;
                             recurrenceWeekday: number | null;
+                            /** @enum {string|null} */
+                            repeatFrequency: "daily" | "weekly" | "monthly" | null;
+                            repeatInterval: number | null;
                             latitude: number | null;
                             longitude: number | null;
                             completed: boolean | null;
+                            isTemplate: boolean | null;
                             /** Format: date-time */
                             createdAt: string | null;
                             /** Format: date-time */
@@ -1232,9 +1338,13 @@ export interface paths {
                             recurrence: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day" | null;
                             recurrenceDay: number | null;
                             recurrenceWeekday: number | null;
+                            /** @enum {string|null} */
+                            repeatFrequency: "daily" | "weekly" | "monthly" | null;
+                            repeatInterval: number | null;
                             latitude: number | null;
                             longitude: number | null;
                             completed: boolean | null;
+                            isTemplate: boolean | null;
                             /** Format: date-time */
                             createdAt: string | null;
                             /** Format: date-time */
@@ -1296,12 +1406,16 @@ export interface paths {
                         recurrence?: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day" | null;
                         recurrenceDay?: number | null;
                         recurrenceWeekday?: number | null;
+                        /** @enum {string|null} */
+                        repeatFrequency?: "daily" | "weekly" | "monthly" | null;
+                        repeatInterval?: number | null;
                         latitude?: number | null;
                         longitude?: number | null;
                         coverColor?: string | null;
                         coverUrl?: string | "" | unknown;
                         coverMode?: string | null;
                         completed?: boolean | null;
+                        isTemplate?: boolean | null;
                     };
                 };
             };
@@ -1361,9 +1475,13 @@ export interface paths {
                             recurrence: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day" | null;
                             recurrenceDay: number | null;
                             recurrenceWeekday: number | null;
+                            /** @enum {string|null} */
+                            repeatFrequency: "daily" | "weekly" | "monthly" | null;
+                            repeatInterval: number | null;
                             latitude: number | null;
                             longitude: number | null;
                             completed: boolean | null;
+                            isTemplate: boolean | null;
                             /** Format: date-time */
                             createdAt: string | null;
                             /** Format: date-time */
@@ -1503,6 +1621,9 @@ export interface paths {
                         dueComplete?: boolean;
                         /** @enum {string|null} */
                         reminderMinutes?: "5" | "10" | "15" | "30" | "60" | "120" | "1440" | null;
+                        /** @enum {string|null} */
+                        repeatFrequency?: "daily" | "weekly" | "monthly" | null;
+                        repeatInterval?: number | null;
                     };
                 };
             };
@@ -1562,9 +1683,13 @@ export interface paths {
                             recurrence: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day" | null;
                             recurrenceDay: number | null;
                             recurrenceWeekday: number | null;
+                            /** @enum {string|null} */
+                            repeatFrequency: "daily" | "weekly" | "monthly" | null;
+                            repeatInterval: number | null;
                             latitude: number | null;
                             longitude: number | null;
                             completed: boolean | null;
+                            isTemplate: boolean | null;
                             /** Format: date-time */
                             createdAt: string | null;
                             /** Format: date-time */
@@ -2040,7 +2165,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/boards/{boardId}/labels": {
+    "/users/{userId}/labels": {
         parameters: {
             query?: never;
             header?: never;
@@ -2052,7 +2177,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    boardId: string;
+                    userId: string;
                 };
                 cookie?: never;
             };
@@ -2069,20 +2194,12 @@ export interface paths {
                             id: string;
                             name: string;
                             color: string;
-                            /** Format: uuid */
-                            boardId: string;
+                            userId: string;
                         }[];
                     };
                 };
-                /** @description Không có quyền truy cập Board này */
+                /** @description Không có quyền truy cập Labels của user này */
                 403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Board không tồn tại */
-                404: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -2107,7 +2224,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    boardId: string;
+                    userId: string;
                 };
                 cookie?: never;
             };
@@ -2133,24 +2250,27 @@ export interface paths {
                             id: string;
                             name: string;
                             color: string;
-                            /** Format: uuid */
-                            boardId: string;
+                            userId: string;
                         };
                     };
                 };
-                /** @description Không có quyền tạo Label trong Board này */
+                /** @description Không có quyền tạo Label cho user này */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                /** @description Board không tồn tại */
-                404: {
+                /** @description Label với tên và màu này đã tồn tại */
+                409: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
                 };
                 /** @description Internal server error */
                 500: {
@@ -2171,7 +2291,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/boards/{boardId}/labels/{id}": {
+    "/users/{userId}/labels/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -2184,7 +2304,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    boardId: string;
+                    userId: string;
                     id: string;
                 };
                 cookie?: never;
@@ -2209,8 +2329,7 @@ export interface paths {
                             id: string;
                             name: string;
                             color: string;
-                            /** Format: uuid */
-                            boardId: string;
+                            userId: string;
                         };
                     };
                 };
@@ -2221,12 +2340,23 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Label hoặc Board không tồn tại */
+                /** @description Label không tồn tại */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
+                };
+                /** @description Label với tên và màu này đã tồn tại */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
                 };
                 /** @description Internal server error */
                 500: {
@@ -2247,7 +2377,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    boardId: string;
+                    userId: string;
                     id: string;
                 };
                 cookie?: never;
@@ -2272,7 +2402,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Label hoặc Board không tồn tại */
+                /** @description Label không tồn tại */
                 404: {
                     headers: {
                         [name: string]: unknown;
@@ -2335,7 +2465,7 @@ export interface paths {
                              * @default member
                              * @enum {string}
                              */
-                            role: "member" | "admin" | "viewer";
+                            role: "member" | "admin";
                             /** Format: date-time */
                             addedAt: string | null;
                         }[];
@@ -2392,7 +2522,7 @@ export interface paths {
                          * @default member
                          * @enum {string}
                          */
-                        role?: "member" | "admin" | "viewer";
+                        role?: "member" | "admin";
                     };
                 };
             };
@@ -2417,7 +2547,7 @@ export interface paths {
                              * @default member
                              * @enum {string}
                              */
-                            role: "member" | "admin" | "viewer";
+                            role: "member" | "admin";
                             /** Format: date-time */
                             addedAt: string | null;
                         };
@@ -2490,7 +2620,7 @@ export interface paths {
                          * @default member
                          * @enum {string}
                          */
-                        role?: "member" | "admin" | "viewer";
+                        role?: "member" | "admin";
                     };
                 };
             };
@@ -2515,7 +2645,7 @@ export interface paths {
                              * @default member
                              * @enum {string}
                              */
-                            role: "member" | "admin" | "viewer";
+                            role: "member" | "admin";
                             /** Format: date-time */
                             addedAt: string | null;
                         };
@@ -2583,7 +2713,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         /** @enum {string} */
-                        role?: "member" | "admin" | "viewer";
+                        role?: "member" | "admin";
                     };
                 };
             };
@@ -2608,7 +2738,7 @@ export interface paths {
                              * @default member
                              * @enum {string}
                              */
-                            role: "member" | "admin" | "viewer";
+                            role: "member" | "admin";
                             /** Format: date-time */
                             addedAt: string | null;
                         };
@@ -4077,6 +4207,148 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Tìm kiếm đa dạng
+         * @description Tìm kiếm trên nhiều loại đối tượng: boards, cards, lists, comments, labels, và checklist items
+         */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Từ khóa tìm kiếm */
+                    q: string;
+                    /** @description Các loại đối tượng cần tìm kiếm. Nếu không chỉ định sẽ tìm tất cả */
+                    types?: ("board" | "card" | "list" | "comment" | "label" | "checklist")[];
+                    /** @description ID của board để giới hạn phạm vi tìm kiếm */
+                    boardId?: string;
+                    /** @description Số lượng kết quả tối đa mỗi loại */
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Kết quả tìm kiếm */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            results: ({
+                                /** @enum {string} */
+                                type: "board";
+                                id: string;
+                                name: string;
+                                description: string | null;
+                                isFavorite: boolean;
+                                background: string | null;
+                                createdAt: string;
+                            } | {
+                                /** @enum {string} */
+                                type: "card";
+                                id: string;
+                                title: string;
+                                description: string | null;
+                                boardId: string;
+                                boardName: string;
+                                listId: string;
+                                listName: string;
+                                position: number;
+                                dueDate: string | null;
+                                isCompleted: boolean;
+                                labels: {
+                                    id: string;
+                                    name: string;
+                                    color: string;
+                                }[];
+                            } | {
+                                /** @enum {string} */
+                                type: "list";
+                                id: string;
+                                name: string;
+                                boardId: string;
+                                boardName: string;
+                                position: number;
+                                cardCount: number;
+                            } | {
+                                /** @enum {string} */
+                                type: "comment";
+                                id: string;
+                                content: string;
+                                cardId: string;
+                                cardTitle: string;
+                                boardId: string;
+                                boardName: string;
+                                authorId: string;
+                                authorName: string | null;
+                                authorAvatar: string | null;
+                                createdAt: string;
+                            } | {
+                                /** @enum {string} */
+                                type: "label";
+                                id: string;
+                                name: string;
+                                color: string;
+                                boardId: string;
+                                boardName: string;
+                                cardCount: number;
+                            } | {
+                                /** @enum {string} */
+                                type: "checklist";
+                                id: string;
+                                text: string;
+                                isChecked: boolean;
+                                cardId: string;
+                                cardTitle: string;
+                                boardId: string;
+                                boardName: string;
+                            })[];
+                            total: number;
+                            query: string;
+                        };
+                    };
+                };
+                /** @description Yêu cầu không hợp lệ */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Không có quyền truy cập */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;

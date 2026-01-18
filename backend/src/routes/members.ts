@@ -15,6 +15,14 @@ import getConfig from "@/lib/config";
 import { HTTPException } from "hono/http-exception";
 import { ContentfulStatusCode } from "hono/utils/http-status";
 import { ensureBoardMemberExists } from "@/services/members.service";
+import {
+  checkPermission,
+  requireMemberManagement,
+  checkBoardAccess,
+  validateRoleAssignment,
+  type BoardRole,
+  AuthorizationError,
+} from "@/services/authorization.service";
 
 const TAGS = ["Members"];
 
@@ -175,41 +183,23 @@ export default function createMemberRoutes() {
       const user = ensureUserAuthenticated(c);
       const { boardId } = c.req.valid("param");
 
-      // Check if board exists and user owns it or is a member
-      const board = await db
-        .select()
-        .from(boardsTable)
-        .where(eq(boardsTable.id, boardId))
-        .limit(1);
+      try {
+        // Check authorization - need member:read permission (any role can read members)
+        await checkPermission(boardId, user.sub, "member:read");
 
-      if (board.length === 0) {
-        return c.json({ error: "Board không tồn tại" }, 404);
+        // Get all members for this board
+        const members = await db
+          .select()
+          .from(boardMembersTable)
+          .where(eq(boardMembersTable.boardId, boardId));
+
+        return c.json(members, 200);
+      } catch (error: any) {
+        if (error instanceof AuthorizationError) {
+          return c.json({ error: error.message }, error.status);
+        }
+        return c.json({ error: "Internal server error" }, 500);
       }
-
-      // Check if user is owner or member of the board
-      const isOwner = board[0].userId === user.sub;
-      const isMember = await db
-        .select()
-        .from(boardMembersTable)
-        .where(
-          and(
-            eq(boardMembersTable.boardId, boardId),
-            eq(boardMembersTable.userId, user.sub)
-          )
-        )
-        .limit(1);
-
-      if (!isOwner && isMember.length === 0) {
-        return c.json({ error: "Không có quyền truy cập Board này" }, 403);
-      }
-
-      // Get all members for this board
-      const members = await db
-        .select()
-        .from(boardMembersTable)
-        .where(eq(boardMembersTable.boardId, boardId));
-
-      return c.json(members, 200);
     }
   );
 
@@ -257,53 +247,51 @@ export default function createMemberRoutes() {
       const { boardId } = c.req.valid("param");
       const req = c.req.valid("json");
 
-      // Check if board exists and user owns it
-      const board = await db
-        .select()
-        .from(boardsTable)
-        .where(eq(boardsTable.id, boardId))
-        .limit(1);
+      try {
+        // Check authorization - need member:add permission (admin or owner)
+        await requireMemberManagement(boardId, user.sub);
 
-      if (board.length === 0) {
-        return c.json({ error: "Board không tồn tại" }, 404);
-      }
+        // Validate role assignment (can't assign role equal or higher than own)
+        const targetRole = (req.role || "member") as BoardRole;
+        await validateRoleAssignment(boardId, user.sub, targetRole);
 
-      // Only board owner can add members
-      if (board[0].userId !== user.sub) {
-        return c.json({ error: "Chỉ chủ board mới có thể thêm member" }, 403);
-      }
-
-      // Check if member already exists
-      const existingMember = await db
-        .select()
-        .from(boardMembersTable)
-        .where(
-          and(
-            eq(boardMembersTable.boardId, boardId),
-            eq(boardMembersTable.userId, req.userId)
+        // Check if member already exists
+        const existingMember = await db
+          .select()
+          .from(boardMembersTable)
+          .where(
+            and(
+              eq(boardMembersTable.boardId, boardId),
+              eq(boardMembersTable.userId, req.userId)
+            )
           )
-        )
-        .limit(1);
+          .limit(1);
 
-      if (existingMember.length > 0) {
-        return c.json({ error: "Member đã tồn tại trong Board" }, 409);
+        if (existingMember.length > 0) {
+          return c.json({ error: "Member đã tồn tại trong Board" }, 409);
+        }
+
+        // Add member
+        const member = await db
+          .insert(boardMembersTable)
+          .values({
+            id: req.id,
+            boardId,
+            userId: req.userId,
+            name: req.name,
+            email: req.email,
+            avatar: req.avatar || null,
+            role: req.role || "member",
+          })
+          .returning();
+
+        return c.json(member[0], 200);
+      } catch (error: any) {
+        if (error instanceof AuthorizationError) {
+          return c.json({ error: error.message }, error.status);
+        }
+        return c.json({ error: "Internal server error" }, 500);
       }
-
-      // Add member
-      const member = await db
-        .insert(boardMembersTable)
-        .values({
-          id: req.id,
-          boardId,
-          userId: req.userId,
-          name: req.name,
-          email: req.email,
-          avatar: req.avatar || null,
-          role: req.role || "member",
-        })
-        .returning();
-
-      return c.json(member[0], 200);
     }
   );
 
@@ -352,21 +340,12 @@ export default function createMemberRoutes() {
       const req = c.req.valid("json");
 
       try {
-        // Check if board exists and user owns it
-        const board = await db
-          .select()
-          .from(boardsTable)
-          .where(eq(boardsTable.id, boardId))
-          .limit(1);
+        // Check authorization - need member:add permission (admin or owner)
+        await requireMemberManagement(boardId, user.sub);
 
-        if (board.length === 0) {
-          return c.json({ error: "Board không tồn tại" }, 404);
-        }
-
-        // Only board owner can add members
-        if (board[0].userId !== user.sub) {
-          return c.json({ error: "Chỉ chủ board mới có thể thêm member" }, 403);
-        }
+        // Validate role assignment (can't assign role equal or higher than own)
+        const targetRole = (req.role || "member") as BoardRole;
+        await validateRoleAssignment(boardId, user.sub, targetRole);
 
         // Check if member already exists
         const existingMember = await db
@@ -391,7 +370,7 @@ export default function createMemberRoutes() {
       } catch (error: any) {
         console.error("Error adding member by userId:", error);
         
-        if (error.status) {
+        if (error instanceof AuthorizationError || error.status) {
           return c.json({ error: error.message }, error.status);
         }
         
@@ -442,48 +421,53 @@ export default function createMemberRoutes() {
       const { boardId, id } = c.req.valid("param");
       const req = c.req.valid("json");
 
-      // Check if board exists and user owns it
-      const board = await db
-        .select()
-        .from(boardsTable)
-        .where(eq(boardsTable.id, boardId))
-        .limit(1);
+      try {
+        // Check authorization - need member:update permission (admin or owner)
+        const access = await requireMemberManagement(boardId, user.sub);
 
-      if (board.length === 0) {
-        return c.json({ error: "Board không tồn tại" }, 404);
-      }
+        // Validate role assignment if role is being updated
+        if (req.role) {
+          await validateRoleAssignment(boardId, user.sub, req.role as BoardRole);
+        }
 
-      // Only board owner can update members
-      if (board[0].userId !== user.sub) {
-        return c.json({ error: "Chỉ chủ board mới có thể cập nhật member" }, 403);
-      }
-
-      // Check if member exists
-      const existingMember = await db
-        .select()
-        .from(boardMembersTable)
-        .where(
-          and(
-            eq(boardMembersTable.id, id),
-            eq(boardMembersTable.boardId, boardId)
+        // Check if member exists
+        const existingMember = await db
+          .select()
+          .from(boardMembersTable)
+          .where(
+            and(
+              eq(boardMembersTable.id, id),
+              eq(boardMembersTable.boardId, boardId)
+            )
           )
-        )
-        .limit(1);
+          .limit(1);
 
-      if (existingMember.length === 0) {
-        return c.json({ error: "Member không tồn tại" }, 404);
+        if (existingMember.length === 0) {
+          return c.json({ error: "Member không tồn tại" }, 404);
+        }
+
+        // Prevent modifying users with higher or equal roles (unless owner)
+        const targetMemberRole = existingMember[0].role as BoardRole;
+        if (!access.isOwner && targetMemberRole === "admin") {
+          return c.json({ error: "Không thể cập nhật admin khác" }, 403);
+        }
+
+        // Update member
+        const updatedMember = await db
+          .update(boardMembersTable)
+          .set({
+            role: req.role,
+          })
+          .where(eq(boardMembersTable.id, id))
+          .returning();
+
+        return c.json(updatedMember[0], 200);
+      } catch (error: any) {
+        if (error instanceof AuthorizationError) {
+          return c.json({ error: error.message }, error.status);
+        }
+        return c.json({ error: "Internal server error" }, 500);
       }
-
-      // Update member
-      const updatedMember = await db
-        .update(boardMembersTable)
-        .set({
-          role: req.role,
-        })
-        .where(eq(boardMembersTable.id, id))
-        .returning();
-
-      return c.json(updatedMember[0], 200);
     }
   );
 
@@ -534,47 +518,49 @@ export default function createMemberRoutes() {
       const user = ensureUserAuthenticated(c);
       const { boardId, id } = c.req.valid("param");
 
-      // Check if board exists
-      const board = await db
-        .select()
-        .from(boardsTable)
-        .where(eq(boardsTable.id, boardId))
-        .limit(1);
-
-      if (board.length === 0) {
-        return c.json({ error: "Board không tồn tại" }, 404);
-      }
-
-      // Check if member exists
-      const existingMember = await db
-        .select()
-        .from(boardMembersTable)
-        .where(
-          and(
-            eq(boardMembersTable.id, id),
-            eq(boardMembersTable.boardId, boardId)
+      try {
+        // Check if member exists
+        const existingMember = await db
+          .select()
+          .from(boardMembersTable)
+          .where(
+            and(
+              eq(boardMembersTable.id, id),
+              eq(boardMembersTable.boardId, boardId)
+            )
           )
-        )
-        .limit(1);
+          .limit(1);
 
-      if (existingMember.length === 0) {
-        return c.json({ error: "Member không tồn tại" }, 404);
+        if (existingMember.length === 0) {
+          return c.json({ error: "Member không tồn tại" }, 404);
+        }
+
+        // Check if user is removing themselves (always allowed)
+        const isSelf = existingMember[0].userId === user.sub;
+
+        if (!isSelf) {
+          // Need member:remove permission (admin or owner) to remove others
+          const access = await requireMemberManagement(boardId, user.sub);
+
+          // Prevent admins from removing other admins (only owner can)
+          const targetMemberRole = existingMember[0].role as BoardRole;
+          if (!access.isOwner && targetMemberRole === "admin") {
+            return c.json({ error: "Không thể xóa admin khác" }, 403);
+          }
+        }
+
+        // Remove member
+        await db
+          .delete(boardMembersTable)
+          .where(eq(boardMembersTable.id, id));
+
+        return c.json({ message: "Xóa Member thành công" }, 200);
+      } catch (error: any) {
+        if (error instanceof AuthorizationError) {
+          return c.json({ error: error.message }, error.status);
+        }
+        return c.json({ error: "Internal server error" }, 500);
       }
-
-      // Only board owner or the member themselves can remove the member
-      const isOwner = board[0].userId === user.sub;
-      const isSelf = existingMember[0].userId === user.sub;
-
-      if (!isOwner && !isSelf) {
-        return c.json({ error: "Không có quyền xóa Member này" }, 403);
-      }
-
-      // Remove member
-      await db
-        .delete(boardMembersTable)
-        .where(eq(boardMembersTable.id, id));
-
-      return c.json({ message: "Xóa Member thành công" }, 200);
     }
   );
 

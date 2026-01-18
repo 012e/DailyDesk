@@ -16,6 +16,7 @@ import { logActivity } from "./activities.service";
 import { publishBoardChanged } from "./events.service";
 import { applyRecurringDueDate } from "./recurring.service";
 import { ensureBoardMembersExist } from "./members.service";
+import { checkPermission, AuthorizationError } from "./authorization.service";
 import { 
   CreateCardSchema, 
   UpdateCardSchema,
@@ -41,6 +42,9 @@ export class ServiceError extends Error {
     this.name = "ServiceError";
   }
 }
+
+// Re-export AuthorizationError for backwards compatibility
+export { AuthorizationError };
 
 // Get all cards across all boards for a user
 export async function getAllCardsForUser(userSub: string) {
@@ -170,19 +174,8 @@ export async function getAllCardsForUser(userSub: string) {
 
 // Note: `userSub` is the authenticated user's subject (user id)
 export async function getCardsForBoard(userSub: string, boardId: string) {
-  const board = await db
-    .select()
-    .from(boardsTable)
-    .where(eq(boardsTable.id, boardId))
-    .limit(1);
-
-  if (board.length === 0) {
-    throw new ServiceError("Board không tồn tại", 404);
-  }
-
-  if (board[0].userId !== userSub) {
-    throw new ServiceError("Không có quyền truy cập Board này", 403);
-  }
+  // Check authorization - only need content:read permission
+  await checkPermission(boardId, userSub, "content:read");
 
   const cards = await db
     .select()
@@ -288,19 +281,8 @@ export async function getCardsForBoard(userSub: string, boardId: string) {
 }
 
 export async function createCard(userSub: string, boardId: string, req: CreateCardRequest) {
-  const board = await db
-    .select()
-    .from(boardsTable)
-    .where(eq(boardsTable.id, boardId))
-    .limit(1);
-
-  if (board.length === 0) {
-    throw new ServiceError("Board không tồn tại", 404);
-  }
-
-  if (board[0].userId !== userSub) {
-    throw new ServiceError("Không có quyền tạo Card trong Board này", 403);
-  }
+  // Check authorization - need content:create permission (member, admin, owner)
+  await checkPermission(boardId, userSub, "content:create");
 
   const list = await db
     .select()
@@ -442,19 +424,8 @@ export async function createCard(userSub: string, boardId: string, req: CreateCa
 }
 
 export async function getCardById(userSub: string, boardId: string, id: string) {
-  const board = await db
-    .select()
-    .from(boardsTable)
-    .where(eq(boardsTable.id, boardId))
-    .limit(1);
-
-  if (board.length === 0) {
-    throw new ServiceError("Board không tồn tại", 404);
-  }
-
-  if (board[0].userId !== userSub) {
-    throw new ServiceError("Không có quyền truy cập Board này", 403);
-  }
+  // Check authorization - only need content:read permission
+  await checkPermission(boardId, userSub, "content:read");
 
   const card = await db
     .select()
@@ -549,19 +520,8 @@ export async function getCardById(userSub: string, boardId: string, id: string) 
 }
 
 export async function updateCard(userSub: string, boardId: string, id: string, req: UpdateCardRequest) {
-  const board = await db
-    .select()
-    .from(boardsTable)
-    .where(eq(boardsTable.id, boardId))
-    .limit(1);
-
-  if (board.length === 0) {
-    throw new ServiceError("Board không tồn tại", 404);
-  }
-
-  if (board[0].userId !== userSub) {
-    throw new ServiceError("Không có quyền truy cập Board này", 403);
-  }
+  // Check authorization - need content:update permission (member, admin, owner)
+  await checkPermission(boardId, userSub, "content:update");
 
   const existingCard = await db
     .select()
@@ -921,19 +881,8 @@ export async function updateCard(userSub: string, boardId: string, id: string, r
 }
 
 export async function deleteCard(userSub: string, boardId: string, id: string) {
-  const board = await db
-    .select()
-    .from(boardsTable)
-    .where(eq(boardsTable.id, boardId))
-    .limit(1);
-
-  if (board.length === 0) {
-    throw new ServiceError("Board không tồn tại", 404);
-  }
-
-  if (board[0].userId !== userSub) {
-    throw new ServiceError("Không có quyền truy cập Board này", 403);
-  }
+  // Check authorization - need content:delete permission (member, admin, owner)
+  await checkPermission(boardId, userSub, "content:delete");
 
   const existingCard = await db
     .select()
@@ -991,19 +940,8 @@ export async function updateCardDue(
     repeatInterval?: number | null;
   }
 ) {
-  const board = await db
-    .select()
-    .from(boardsTable)
-    .where(eq(boardsTable.id, boardId))
-    .limit(1);
-
-  if (board.length === 0) {
-    throw new ServiceError("Board không tồn tại", 404);
-  }
-
-  if (board[0].userId !== userSub) {
-    throw new ServiceError("Không có quyền truy cập Board này", 403);
-  }
+  // Check authorization - need content:update permission (member, admin, owner)
+  await checkPermission(boardId, userSub, "content:update");
 
   const card = await db
     .select()
@@ -1158,19 +1096,8 @@ export async function updateCardDue(
 }
 
 export async function clearCardDue(userSub: string, boardId: string, cardId: string) {
-  const board = await db
-    .select()
-    .from(boardsTable)
-    .where(eq(boardsTable.id, boardId))
-    .limit(1);
-
-  if (board.length === 0) {
-    throw new ServiceError("Board không tồn tại", 404);
-  }
-
-  if (board[0].userId !== userSub) {
-    throw new ServiceError("Không có quyền truy cập Board này", 403);
-  }
+  // Check authorization - need content:update permission (member, admin, owner)
+  await checkPermission(boardId, userSub, "content:update");
 
   const card = await db
     .select()
