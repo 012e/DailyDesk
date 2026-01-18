@@ -220,6 +220,7 @@ export default function TasksPage() {
           end: endDate,
           allDay: !task.startDate, // If no start date, treat as all-day
           color,
+          isDone: !!task.completed || !!task.dueComplete,
           labels: task.labels?.map(l => ({
             id: l.id,
             name: l.name,

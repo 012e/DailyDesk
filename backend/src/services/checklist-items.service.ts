@@ -2,6 +2,7 @@ import db from "@/lib/db";
 import { boardsTable, listsTable, cardsTable, checklistItemsTable } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { ContentfulStatusCode } from "hono/utils/http-status";
+import { checkPermission, AuthorizationError } from "./authorization.service";
 
 export class ServiceError extends Error {
   status: ContentfulStatusCode;
@@ -13,20 +14,12 @@ export class ServiceError extends Error {
   }
 }
 
+// Re-export AuthorizationError for backwards compatibility
+export { AuthorizationError };
+
 export async function getChecklistItemsForCard(userSub: string, boardId: string, cardId: string) {
-  const board = await db
-    .select()
-    .from(boardsTable)
-    .where(eq(boardsTable.id, boardId))
-    .limit(1);
-
-  if (board.length === 0) {
-    throw new ServiceError("Board không tồn tại", 404);
-  }
-
-  if (board[0].userId !== userSub) {
-    throw new ServiceError("Không có quyền truy cập Board này", 403);
-  }
+  // Check authorization - only need content:read permission
+  await checkPermission(boardId, userSub, "content:read");
 
   const card = await db
     .select()
@@ -58,19 +51,8 @@ export async function getChecklistItemsForCard(userSub: string, boardId: string,
 }
 
 export async function createChecklistItem(userSub: string, boardId: string, cardId: string, req: any) {
-  const board = await db
-    .select()
-    .from(boardsTable)
-    .where(eq(boardsTable.id, boardId))
-    .limit(1);
-
-  if (board.length === 0) {
-    throw new ServiceError("Board không tồn tại", 404);
-  }
-
-  if (board[0].userId !== userSub) {
-    throw new ServiceError("Không có quyền tạo Checklist Item trong Board này", 403);
-  }
+  // Check authorization - need content:create permission (member, admin, owner)
+  await checkPermission(boardId, userSub, "content:create");
 
   const card = await db
     .select()
@@ -102,19 +84,8 @@ export async function createChecklistItem(userSub: string, boardId: string, card
 }
 
 export async function getChecklistItemById(userSub: string, boardId: string, cardId: string, id: string) {
-  const board = await db
-    .select()
-    .from(boardsTable)
-    .where(eq(boardsTable.id, boardId))
-    .limit(1);
-
-  if (board.length === 0) {
-    throw new ServiceError("Board không tồn tại", 404);
-  }
-
-  if (board[0].userId !== userSub) {
-    throw new ServiceError("Không có quyền truy cập Board này", 403);
-  }
+  // Check authorization - only need content:read permission
+  await checkPermission(boardId, userSub, "content:read");
 
   const card = await db
     .select()
@@ -155,19 +126,8 @@ export async function getChecklistItemById(userSub: string, boardId: string, car
 }
 
 export async function updateChecklistItem(userSub: string, boardId: string, cardId: string, id: string, req: any) {
-  const board = await db
-    .select()
-    .from(boardsTable)
-    .where(eq(boardsTable.id, boardId))
-    .limit(1);
-
-  if (board.length === 0) {
-    throw new ServiceError("Board không tồn tại", 404);
-  }
-
-  if (board[0].userId !== userSub) {
-    throw new ServiceError("Không có quyền truy cập Board này", 403);
-  }
+  // Check authorization - need content:update permission (member, admin, owner)
+  await checkPermission(boardId, userSub, "content:update");
 
   const card = await db
     .select()
@@ -212,19 +172,8 @@ export async function updateChecklistItem(userSub: string, boardId: string, card
 }
 
 export async function deleteChecklistItem(userSub: string, boardId: string, cardId: string, id: string) {
-  const board = await db
-    .select()
-    .from(boardsTable)
-    .where(eq(boardsTable.id, boardId))
-    .limit(1);
-
-  if (board.length === 0) {
-    throw new ServiceError("Board không tồn tại", 404);
-  }
-
-  if (board[0].userId !== userSub) {
-    throw new ServiceError("Không có quyền truy cập Board này", 403);
-  }
+  // Check authorization - need content:delete permission (member, admin, owner)
+  await checkPermission(boardId, userSub, "content:delete");
 
   const card = await db
     .select()

@@ -2465,7 +2465,7 @@ export interface paths {
                              * @default member
                              * @enum {string}
                              */
-                            role: "member" | "admin" | "viewer";
+                            role: "member" | "admin";
                             /** Format: date-time */
                             addedAt: string | null;
                         }[];
@@ -2522,7 +2522,7 @@ export interface paths {
                          * @default member
                          * @enum {string}
                          */
-                        role?: "member" | "admin" | "viewer";
+                        role?: "member" | "admin";
                     };
                 };
             };
@@ -2547,7 +2547,7 @@ export interface paths {
                              * @default member
                              * @enum {string}
                              */
-                            role: "member" | "admin" | "viewer";
+                            role: "member" | "admin";
                             /** Format: date-time */
                             addedAt: string | null;
                         };
@@ -2620,7 +2620,7 @@ export interface paths {
                          * @default member
                          * @enum {string}
                          */
-                        role?: "member" | "admin" | "viewer";
+                        role?: "member" | "admin";
                     };
                 };
             };
@@ -2645,7 +2645,7 @@ export interface paths {
                              * @default member
                              * @enum {string}
                              */
-                            role: "member" | "admin" | "viewer";
+                            role: "member" | "admin";
                             /** Format: date-time */
                             addedAt: string | null;
                         };
@@ -2713,7 +2713,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         /** @enum {string} */
-                        role?: "member" | "admin" | "viewer";
+                        role?: "member" | "admin";
                     };
                 };
             };
@@ -2738,7 +2738,7 @@ export interface paths {
                              * @default member
                              * @enum {string}
                              */
-                            role: "member" | "admin" | "viewer";
+                            role: "member" | "admin";
                             /** Format: date-time */
                             addedAt: string | null;
                         };

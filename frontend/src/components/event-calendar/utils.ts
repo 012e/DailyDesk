@@ -4,6 +4,20 @@ import type { CalendarEvent, EventColor, Label, Member } from "@/components/even
 import type { Card, RecurrenceType } from "@/types/card";
 import { generateRecurringInstances, getCalendarRange } from "@/lib/recurring-calendar-utils";
 
+function getEventStartEnd(dueDate: Date): { start: Date; end: Date } {
+  // If due date is exactly midnight, keep event on the same day.
+  if (
+    dueDate.getHours() === 0 &&
+    dueDate.getMinutes() === 0 &&
+    dueDate.getSeconds() === 0 &&
+    dueDate.getMilliseconds() === 0
+  ) {
+    return { start: dueDate, end: addHours(dueDate, 1) };
+  }
+
+  return { start: addHours(dueDate, -1), end: dueDate };
+}
+
 /**
  * API card type - what the backend actually returns
  * Different from frontend Card type (uses 'name' instead of 'title', 'deadline' instead of 'dueDate')
@@ -13,6 +27,9 @@ type ApiCard = {
   name: string;
   description?: string | null;
   deadline?: Date | string | null;
+  dueAt?: Date | string | null;
+  dueComplete?: boolean | null;
+  completed?: boolean | null;
   recurrence?: RecurrenceType;
   recurrenceDay?: number;
   recurrenceWeekday?: number;
@@ -242,8 +259,11 @@ function mapLabelColorToEventColor(labelColor?: string): EventColor {
  * // }
  */
 export function cardToCalendarEvent(card: CardInput, listName?: string, listId?: string): CalendarEvent | null {
-  // Handle both 'deadline' (backend) and 'dueDate' (frontend) fields
-  const dueDateValue = ('dueDate' in card && card.dueDate) || ('deadline' in card && card.deadline);
+  // Handle 'dueAt' (backend) first, then 'dueDate' (frontend), then 'deadline' (backend)
+  const dueDateValue =
+    ('dueAt' in card && card.dueAt) ||
+    ('dueDate' in card && card.dueDate) ||
+    ('deadline' in card && card.deadline);
   
   if (!dueDateValue) {
     return null; // Only cards with due dates should appear in calendar
@@ -260,8 +280,7 @@ export function cardToCalendarEvent(card: CardInput, listName?: string, listId?:
     ? mapLabelColorToEventColor(card.labels[0].color)
     : "sky";
 
-  // Create a 1-hour event ending at the due date
-  const start = addHours(dueDate, -1);
+  const { start, end } = getEventStartEnd(dueDate);
   
   // Get description - handle null/undefined
   const description = 'description' in card ? card.description : undefined;
@@ -269,19 +288,24 @@ export function cardToCalendarEvent(card: CardInput, listName?: string, listId?:
   // Get labels and members from card
   const labels = 'labels' in card ? card.labels : undefined;
   const members = 'members' in card ? card.members : undefined;
+  const isDone =
+    ('dueComplete' in card && card.dueComplete) ||
+    ('completed' in card && card.completed) ||
+    false;
   
   return {
     id: card.id,
     title: title,
     description: description ?? undefined,
     start: start,
-    end: dueDate,
+    end: end,
     allDay: false,
     color: color,
     location: listName, // Use list name as location
     listId: listId || ('listId' in card ? card.listId : undefined),
     labels: labels as unknown as Label[] | undefined,
     members: members as unknown as Member[] | undefined,
+    isDone,
   };
 }
 
@@ -343,8 +367,7 @@ export function listsCardsToCalendarEvents(
         
         // Create an event for each instance
         instances.forEach((instance, index) => {
-          const eventStart = addHours(instance.instanceDate, -1);
-          const eventEnd = instance.instanceDate;
+          const { start: eventStart, end: eventEnd } = getEventStartEnd(instance.instanceDate);
           
           allEvents.push({
             ...baseEvent,

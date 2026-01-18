@@ -3,6 +3,13 @@ import { boardsTable, listsTable, cardsTable, cardLabelsTable, cardMembersTable,
 import { eq, asc, sql, or } from "drizzle-orm";
 import { ContentfulStatusCode } from "hono/utils/http-status";
 import { publishBoardChanged } from "./events.service";
+import { 
+  checkBoardAccess as authCheckBoardAccess,
+  checkPermission,
+  requireBoardOwner,
+  AuthorizationError,
+  type BoardAccess 
+} from "./authorization.service";
 
 export class ServiceError extends Error {
   status: ContentfulStatusCode;
@@ -14,44 +21,8 @@ export class ServiceError extends Error {
   }
 }
 
-/**
- * Helper function to check if a user has access to a board (owner or member)
- */
-async function checkBoardAccess(boardId: string, userSub: string, requireOwner: boolean = false): Promise<{ isOwner: boolean; isMember: boolean }> {
-  const board = await db
-    .select()
-    .from(boardsTable)
-    .where(eq(boardsTable.id, boardId))
-    .limit(1);
-
-  if (board.length === 0) {
-    throw new ServiceError("Board không tồn tại", 404);
-  }
-
-  const isOwner = board[0].userId === userSub;
-  
-  let isMember = false;
-  if (!isOwner) {
-    const memberCheck = await db
-      .select()
-      .from(boardMembersTable)
-      .where(
-        sql`${boardMembersTable.boardId} = ${boardId} AND ${boardMembersTable.userId} = ${userSub}`
-      )
-      .limit(1);
-    isMember = memberCheck.length > 0;
-  }
-
-  if (requireOwner && !isOwner) {
-    throw new ServiceError("Chỉ chủ board mới có thể thực hiện thao tác này", 403);
-  }
-
-  if (!isOwner && !isMember) {
-    throw new ServiceError("Không có quyền truy cập Board này", 403);
-  }
-
-  return { isOwner, isMember };
-}
+// Re-export AuthorizationError for backwards compatibility
+export { AuthorizationError };
 
 
 export async function getBoardsForUser(userSub: string) {
@@ -227,6 +198,9 @@ export async function createBoard(userSub: string, req: any) {
 }
 
 export async function getBoardById(userSub: string, id: string) {
+  // Check authorization - only need read permission
+  await checkPermission(id, userSub, "board:read");
+
   const board = await db.query.boardsTable.findFirst({
     where: eq(boardsTable.id, id),
     with: {
@@ -242,20 +216,6 @@ export async function getBoardById(userSub: string, id: string) {
   });
 
   if (!board) throw new ServiceError("Board không tồn tại", 404);
-  
-  // Check if user is owner or member
-  const isOwner = board.userId === userSub;
-  const isMember = await db
-    .select()
-    .from(boardMembersTable)
-    .where(
-      sql`${boardMembersTable.boardId} = ${id} AND ${boardMembersTable.userId} = ${userSub}`
-    )
-    .limit(1);
-
-  if (!isOwner && isMember.length === 0) {
-    throw new ServiceError("Không có quyền truy cập Board này", 403);
-  }
 
   // Get all card IDs from the board
   const cardIds = board.lists.flatMap(list => list.cards.map(card => card.id));
@@ -348,8 +308,8 @@ export async function getBoardById(userSub: string, id: string) {
 }
 
 export async function updateBoard(userSub: string, id: string, req: any) {
-  // Check if board exists and user is the owner (only owner can update)
-  await checkBoardAccess(id, userSub, true);
+  // Check authorization - need board:update permission (admin or owner)
+  await checkPermission(id, userSub, "board:update");
 
   const updateData: {
     name?: string;
@@ -374,8 +334,8 @@ export async function updateBoard(userSub: string, id: string, req: any) {
 }
 
 export async function deleteBoard(userSub: string, id: string) {
-  // Check if board exists and user is the owner (only owner can delete)
-  await checkBoardAccess(id, userSub, true);
+  // Check authorization - only owner can delete
+  await requireBoardOwner(id, userSub);
 
   await db.delete(boardsTable).where(eq(boardsTable.id, id));
 
@@ -386,8 +346,8 @@ export async function deleteBoard(userSub: string, id: string) {
 }
 
 export async function getListsForBoard(userSub: string, id: string) {
-  // Check if board exists and user has access
-  await checkBoardAccess(id, userSub);
+  // Check authorization - only need content:read permission
+  await checkPermission(id, userSub, "content:read");
 
   const lists = await db
     .select()
@@ -398,8 +358,8 @@ export async function getListsForBoard(userSub: string, id: string) {
 }
 
 export async function getCardsForBoard(userSub: string, id: string) {
-  // Check if board exists and user has access
-  await checkBoardAccess(id, userSub);
+  // Check authorization - only need content:read permission
+  await checkPermission(id, userSub, "content:read");
 
   const cards = await db
     .select()

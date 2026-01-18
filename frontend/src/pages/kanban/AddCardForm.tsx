@@ -38,10 +38,11 @@ export function AddCardForm({ columnId, cardsCount }: AddCardFormProps) {
         },
       });
       if (result.error) {
-        const errorMessage = typeof result.error === "string" 
-          ? result.error 
-          : (result.error as any).error || JSON.stringify(result.error);
-        throw new Error(errorMessage);
+        const error = result.error as unknown;
+        const errorMessage = typeof error === "string" 
+          ? error 
+          : (error as Record<string, unknown>)?.error || JSON.stringify(error);
+        throw new Error(String(errorMessage));
       }
       return result.data;
     },
@@ -96,6 +97,7 @@ export function AddCardForm({ columnId, cardsCount }: AddCardFormProps) {
       }
     );
   };
+
 
   return (
     <>

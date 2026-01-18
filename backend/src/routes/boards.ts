@@ -12,6 +12,7 @@ import {
 import { ListSchema } from "@/types/lists";
 import { CardSchema } from "@/types/cards";
 import * as boardService from "@/services/boards.service";
+import { AuthorizationError } from "@/services/authorization.service";
 
 const TAGS = ["Boards"];
 export default function createBoardRoutes() {
@@ -141,6 +142,9 @@ export default function createBoardRoutes() {
         if (err instanceof boardService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
+        if (err instanceof AuthorizationError) {
+          return c.json({ error: err.message }, err.status);
+        }
         console.error("Error in boards GET by ID route:", err);
         return c.json({ error: "Internal server error" }, 500);
       }
@@ -191,6 +195,9 @@ export default function createBoardRoutes() {
         return c.json(updated, 200);
       } catch (err: any) {
         if (err instanceof boardService.ServiceError) {
+          return c.json({ error: err.message }, err.status);
+        }
+        if (err instanceof AuthorizationError) {
           return c.json({ error: err.message }, err.status);
         }
         console.error("Error in boards PUT route:", err);
@@ -250,6 +257,9 @@ export default function createBoardRoutes() {
         if (err instanceof boardService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
+        if (err instanceof AuthorizationError) {
+          return c.json({ error: err.message }, err.status);
+        }
         console.error("Error in boards DELETE route:", err);
         return c.json({ error: "Internal server error" }, 500);
       }
@@ -300,6 +310,9 @@ export default function createBoardRoutes() {
         if (err instanceof boardService.ServiceError) {
           return c.json({ error: err.message }, err.status);
         }
+        if (err instanceof AuthorizationError) {
+          return c.json({ error: err.message }, err.status);
+        }
         console.error("Error in boards GET lists route:", err);
         return c.json({ error: "Internal server error" }, 500);
       }
@@ -348,6 +361,9 @@ export default function createBoardRoutes() {
         return c.json(cards, 200);
       } catch (err: any) {
         if (err instanceof boardService.ServiceError) {
+          return c.json({ error: err.message }, err.status);
+        }
+        if (err instanceof AuthorizationError) {
           return c.json({ error: err.message }, err.status);
         }
         console.error("Error in boards GET cards route:", err);

@@ -239,6 +239,12 @@ export function KanbanCard({
           >
             {normalizedCard.coverUrl ? (
               <div className="relative w-full">
+                {normalizedCard.isTemplate && (
+                  <div className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-blue-500/90 text-[10px] font-medium text-white pointer-events-none shadow-sm">
+                    <LayoutTemplate className="h-3 w-3" />
+                    Template
+                  </div>
+                )}
                 <img
                   src={normalizedCard.coverUrl}
                   alt=""
@@ -275,12 +281,6 @@ export function KanbanCard({
                       </Tooltip>
                     </TooltipProvider>
                     <div className="flex flex-col gap-1 min-w-0">
-                      {normalizedCard.isTemplate && (
-                        <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-blue-500/80 text-[10px] font-medium text-white max-w-fit pointer-events-none">
-                          <LayoutTemplate className="h-3 w-3" />
-                          Template
-                        </div>
-                      )}
                       <KanbanBoardCardTitle className={`text-white drop-shadow-md line-clamp-2 ${normalizedCard.completed ? "line-through opacity-75" : ""}`}>
                         {normalizedCard.title}
                       </KanbanBoardCardTitle>
@@ -294,6 +294,12 @@ export function KanbanCard({
                 className="relative w-full min-h-[100px] flex items-end"
                 style={{ backgroundColor: normalizedCard.coverColor }}
               >
+                {normalizedCard.isTemplate && (
+                  <div className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-blue-500/90 text-[10px] font-medium text-white pointer-events-none shadow-sm">
+                    <LayoutTemplate className="h-3 w-3" />
+                    Template
+                  </div>
+                )}
                 <div className="w-full bg-gradient-to-t from-black/70 to-transparent p-3 pt-8">
                   <div className="flex items-center gap-2">
                     <TooltipProvider>
@@ -325,12 +331,6 @@ export function KanbanCard({
                       </Tooltip>
                     </TooltipProvider>
                     <div className="flex flex-col gap-1 min-w-0">
-                      {normalizedCard.isTemplate && (
-                        <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-black/20 text-[10px] font-medium text-white max-w-fit pointer-events-none">
-                          <LayoutTemplate className="h-3 w-3" />
-                          Template
-                        </div>
-                      )}
                       <KanbanBoardCardTitle className={`text-white drop-shadow-sm line-clamp-2 ${normalizedCard.completed ? "line-through opacity-75" : ""}`}>
                         {normalizedCard.title}
                       </KanbanBoardCardTitle>
@@ -340,7 +340,13 @@ export function KanbanCard({
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col gap-1">
+              <div className="relative flex flex-col gap-1">
+                {normalizedCard.isTemplate && (
+                  <div className="absolute -top-1 -right-1 z-10 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-blue-500 text-[10px] font-medium text-white pointer-events-none shadow-sm">
+                    <LayoutTemplate className="h-3 w-3" />
+                    Template
+                  </div>
+                )}
                 <div className="flex items-center gap-2">
                   <TooltipProvider>
                     <Tooltip>
@@ -374,7 +380,7 @@ export function KanbanCard({
                     {normalizedCard.title}
                   </KanbanBoardCardTitle>
                 </div>
-                {shouldShowDateRow && <DateRow className="text-muted-foreground" />}
+                {shouldShowDateRow && <DateRow className="pl-6 text-muted-foreground" />}
               </div>
             )}
           </KanbanBoardCard>

@@ -83,7 +83,7 @@ async function fetchAuth0UserById(userId: string): Promise<Auth0User | null> {
 export async function ensureBoardMemberExists(
   boardId: string,
   userId: string,
-  role: "member" | "admin" | "viewer" = "member"
+  role: "member" | "admin" = "member"
 ): Promise<typeof boardMembersTable.$inferSelect> {
   // Check if member already exists
   const existingMember = await db

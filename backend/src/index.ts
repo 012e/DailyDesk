@@ -39,6 +39,17 @@ app.onError((error, c) => {
       error.status,
     );
   }
+  
+  // Handle AuthorizationError
+  if (error.name === "AuthorizationError" && "status" in error) {
+    return c.json(
+      {
+        message: error.message,
+      },
+      (error as { status: number }).status as Parameters<typeof c.json>[1],
+    );
+  }
+  
   return c.json(
     {
       message:
