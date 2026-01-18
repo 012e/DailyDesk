@@ -180,6 +180,7 @@ export const boardMembersTable = sqliteTable("board_members", {
   name: text("name").notNull(), // User's full name from Clerk
   email: text("email").notNull(), // User's email from Clerk
   avatar: text("avatar"), // User's avatar URL from Clerk
+  timezone: text("timezone"), // IANA time zone, e.g., "Asia/Ho_Chi_Minh"
   role: text("role").notNull().default("member"), // member, admin, viewer
   addedAt: integer("added_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
@@ -370,6 +371,72 @@ export const dueReminderLogTable = sqliteTable("due_reminder_log", {
     .notNull()
     .$defaultFn(() => new Date()),
 });
+
+// Reminder jobs table - lightweight DB-backed queue for email reminders
+export const reminderJobsTable = sqliteTable(
+  "reminder_jobs",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => randomUUID()),
+    cardId: text("card_id")
+      .notNull()
+      .references(() => cardsTable.id, { onDelete: "cascade" }),
+    boardId: text("board_id")
+      .notNull()
+      .references(() => boardsTable.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull(),
+    reminderType: text("reminder_type").notNull(), // due_soon | overdue
+    dueAtSnapshot: integer("due_at_snapshot", { mode: "timestamp" }).notNull(),
+    reminderMinutes: integer("reminder_minutes"),
+    runAt: integer("run_at", { mode: "timestamp" }).notNull(),
+    status: text("status").notNull().default("pending"), // pending | running | sent | failed | skipped
+    attempts: integer("attempts").notNull().default(0),
+    maxAttempts: integer("max_attempts").notNull().default(5),
+    lastError: text("last_error"),
+    createdAt: integer("created_at", { mode: "timestamp" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+    updatedAt: integer("updated_at", { mode: "timestamp" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (table) => ({
+    uniqueJob: unique().on(
+      table.cardId,
+      table.userId,
+      table.reminderType,
+      table.dueAtSnapshot,
+    ),
+  }),
+);
+
+// Email reminders sent table - idempotency for reminders
+export const emailRemindersSentTable = sqliteTable(
+  "email_reminders_sent",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => randomUUID()),
+    cardId: text("card_id")
+      .notNull()
+      .references(() => cardsTable.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull(),
+    reminderType: text("reminder_type").notNull(), // due_soon | overdue
+    dueAtSnapshot: integer("due_at_snapshot", { mode: "timestamp" }).notNull(),
+    sentAt: integer("sent_at", { mode: "timestamp" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (table) => ({
+    uniqueReminder: unique().on(
+      table.cardId,
+      table.userId,
+      table.reminderType,
+      table.dueAtSnapshot,
+    ),
+  }),
+);
 
 // Relations - Board Template to Template Lists and Labels (one-to-many)
 export const boardTemplateRelations = relations(boardTemplatesTable, ({ many }) => ({
