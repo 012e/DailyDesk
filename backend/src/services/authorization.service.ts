@@ -367,3 +367,27 @@ export async function validateRoleAssignment(
 
   return access;
 }
+
+/**
+ * Get all board IDs that a user has access to (as owner or member)
+ */
+export async function getBoardIdsForUser(userSub: string): Promise<string[]> {
+  // Get boards where user is owner
+  const ownedBoards = await db
+    .select({ id: boardsTable.id })
+    .from(boardsTable)
+    .where(eq(boardsTable.userId, userSub));
+
+  // Get boards where user is a member
+  const memberBoards = await db
+    .select({ boardId: boardMembersTable.boardId })
+    .from(boardMembersTable)
+    .where(eq(boardMembersTable.userId, userSub));
+
+  const boardIds = [
+    ...ownedBoards.map(b => b.id),
+    ...memberBoards.map(m => m.boardId),
+  ];
+
+  return [...new Set(boardIds)]; // Remove duplicates
+}

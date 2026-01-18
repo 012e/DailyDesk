@@ -96,6 +96,7 @@ export interface paths {
                                     latitude: number | null;
                                     longitude: number | null;
                                     completed: boolean | null;
+                                    isTemplate: boolean | null;
                                     /** Format: date-time */
                                     createdAt: string | null;
                                     /** Format: date-time */
@@ -277,6 +278,7 @@ export interface paths {
                                     latitude: number | null;
                                     longitude: number | null;
                                     completed: boolean | null;
+                                    isTemplate: boolean | null;
                                     /** Format: date-time */
                                     createdAt: string | null;
                                     /** Format: date-time */
@@ -579,6 +581,7 @@ export interface paths {
                             latitude: number | null;
                             longitude: number | null;
                             completed: boolean | null;
+                            isTemplate: boolean | null;
                             /** Format: date-time */
                             createdAt: string | null;
                             /** Format: date-time */
@@ -1011,6 +1014,7 @@ export interface paths {
                             latitude: number | null;
                             longitude: number | null;
                             completed: boolean | null;
+                            isTemplate: boolean | null;
                             /** Format: date-time */
                             createdAt: string | null;
                             /** Format: date-time */
@@ -1082,6 +1086,7 @@ export interface paths {
                         coverColor?: string;
                         coverUrl?: string;
                         completed?: boolean;
+                        isTemplate?: boolean;
                     };
                 };
             };
@@ -1147,6 +1152,7 @@ export interface paths {
                             latitude: number | null;
                             longitude: number | null;
                             completed: boolean | null;
+                            isTemplate: boolean | null;
                             /** Format: date-time */
                             createdAt: string | null;
                             /** Format: date-time */
@@ -1256,6 +1262,7 @@ export interface paths {
                             latitude: number | null;
                             longitude: number | null;
                             completed: boolean | null;
+                            isTemplate: boolean | null;
                             /** Format: date-time */
                             createdAt: string | null;
                             /** Format: date-time */
@@ -1326,6 +1333,7 @@ export interface paths {
                         coverUrl?: string | "" | unknown;
                         coverMode?: string | null;
                         completed?: boolean | null;
+                        isTemplate?: boolean | null;
                     };
                 };
             };
@@ -1391,6 +1399,7 @@ export interface paths {
                             latitude: number | null;
                             longitude: number | null;
                             completed: boolean | null;
+                            isTemplate: boolean | null;
                             /** Format: date-time */
                             createdAt: string | null;
                             /** Format: date-time */
@@ -1598,6 +1607,7 @@ export interface paths {
                             latitude: number | null;
                             longitude: number | null;
                             completed: boolean | null;
+                            isTemplate: boolean | null;
                             /** Format: date-time */
                             createdAt: string | null;
                             /** Format: date-time */
@@ -4115,6 +4125,148 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Tìm kiếm đa dạng
+         * @description Tìm kiếm trên nhiều loại đối tượng: boards, cards, lists, comments, labels, và checklist items
+         */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Từ khóa tìm kiếm */
+                    q: string;
+                    /** @description Các loại đối tượng cần tìm kiếm. Nếu không chỉ định sẽ tìm tất cả */
+                    types?: ("board" | "card" | "list" | "comment" | "label" | "checklist")[];
+                    /** @description ID của board để giới hạn phạm vi tìm kiếm */
+                    boardId?: string;
+                    /** @description Số lượng kết quả tối đa mỗi loại */
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Kết quả tìm kiếm */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            results: ({
+                                /** @enum {string} */
+                                type: "board";
+                                id: string;
+                                name: string;
+                                description: string | null;
+                                isFavorite: boolean;
+                                background: string | null;
+                                createdAt: string;
+                            } | {
+                                /** @enum {string} */
+                                type: "card";
+                                id: string;
+                                title: string;
+                                description: string | null;
+                                boardId: string;
+                                boardName: string;
+                                listId: string;
+                                listName: string;
+                                position: number;
+                                dueDate: string | null;
+                                isCompleted: boolean;
+                                labels: {
+                                    id: string;
+                                    name: string;
+                                    color: string;
+                                }[];
+                            } | {
+                                /** @enum {string} */
+                                type: "list";
+                                id: string;
+                                name: string;
+                                boardId: string;
+                                boardName: string;
+                                position: number;
+                                cardCount: number;
+                            } | {
+                                /** @enum {string} */
+                                type: "comment";
+                                id: string;
+                                content: string;
+                                cardId: string;
+                                cardTitle: string;
+                                boardId: string;
+                                boardName: string;
+                                authorId: string;
+                                authorName: string | null;
+                                authorAvatar: string | null;
+                                createdAt: string;
+                            } | {
+                                /** @enum {string} */
+                                type: "label";
+                                id: string;
+                                name: string;
+                                color: string;
+                                boardId: string;
+                                boardName: string;
+                                cardCount: number;
+                            } | {
+                                /** @enum {string} */
+                                type: "checklist";
+                                id: string;
+                                text: string;
+                                isChecked: boolean;
+                                cardId: string;
+                                cardTitle: string;
+                                boardId: string;
+                                boardName: string;
+                            })[];
+                            total: number;
+                            query: string;
+                        };
+                    };
+                };
+                /** @description Yêu cầu không hợp lệ */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
+                };
+                /** @description Không có quyền truy cập */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;

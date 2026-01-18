@@ -11,6 +11,7 @@ import createAttachmentRoutes from "./attachments";
 import createCommentRoutes from "./comments";
 import createSSERoutes from "./sse";
 import createTemplateRoutes from "./templates";
+import createSearchRoutes from "./search";
 
 export default function setupRoutes(app: OpenAPIHono) {
   app.route("/boards", createSSERoutes());
@@ -26,6 +27,7 @@ export default function setupRoutes(app: OpenAPIHono) {
   app.route("/chat", createChatRoutes());
   app.route("/members", createUserSearchRoutes());
   app.route("/templates", createTemplateRoutes());
+  app.route("/search", createSearchRoutes());
 
   return app;
 }
