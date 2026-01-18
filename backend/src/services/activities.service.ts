@@ -218,6 +218,7 @@ export async function getActivitiesForCard(userSub: string, cardId: string) {
       id: result[0].boardUserId,
       name: "Board Owner",
       email: "",
+      avatar: undefined,
       initials: "BO",
     });
   }
@@ -236,6 +237,7 @@ export async function getActivitiesForCard(userSub: string, cardId: string) {
         id: a.userId,
         name: "Unknown User",
         email: "",
+        avatar: undefined,
         initials: "??",
       },
     createdAt: a.createdAt,

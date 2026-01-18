@@ -303,6 +303,7 @@ export async function getCommentsForCard(userSub: string, cardId: string) {
       id: boardOwner[0].userId,
       name: "Board Owner",
       email: "",
+      avatar: undefined,
       initials: "BO",
     });
   }
@@ -319,6 +320,7 @@ export async function getCommentsForCard(userSub: string, cardId: string) {
         id: c.userId,
         name: "Unknown User",
         email: "",
+        avatar: undefined,
         initials: "??",
       },
     createdAt: c.createdAt,
