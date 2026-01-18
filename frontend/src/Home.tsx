@@ -7,6 +7,7 @@ import { DeleteBoardDialog } from "@/components/delete-board-dialog";
 import { EditBoardDialog } from "@/components/edit-board-dialog";
 import { Clipboard } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   useBoards,
   useCreateBoard,
@@ -115,6 +116,7 @@ export default function Home() {
                   My Boards
                 </h1>
                 <Clipboard className="w-5" />
+
               </div>
               <p className="mt-1 text-muted-foreground">
                 Organize your work and life

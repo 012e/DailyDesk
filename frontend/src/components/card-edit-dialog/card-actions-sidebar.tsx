@@ -8,6 +8,7 @@ import {
   Copy,
   Archive,
   Trash2,
+  LayoutTemplate,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -22,6 +23,8 @@ interface CardActionsSidebarProps {
   onCopyClick?: () => void;
   onArchiveClick?: () => void;
   onDeleteClick?: () => void;
+  onMakeTemplateClick?: () => void;
+  isTemplate?: boolean;
 }
 
 export function CardActionsSidebar({
@@ -34,6 +37,8 @@ export function CardActionsSidebar({
   onCopyClick,
   onArchiveClick,
   onDeleteClick,
+  onMakeTemplateClick,
+  isTemplate,
 }: CardActionsSidebarProps) {
   return (
     <div className="space-y-4">
@@ -107,6 +112,16 @@ export function CardActionsSidebar({
         <p className="text-xs font-semibold text-muted-foreground">Actions</p>
 
         <div className="space-y-1">
+          <Button
+             variant={isTemplate ? "secondary" : "ghost"}
+             size="sm"
+             className="w-full justify-start"
+             onClick={onMakeTemplateClick}
+          >
+            <LayoutTemplate className="w-4 h-4 mr-2" />
+            {isTemplate ? "Template" : "Make template"}
+          </Button>
+
           <Button
             variant="ghost"
             size="sm"

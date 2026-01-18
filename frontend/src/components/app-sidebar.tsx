@@ -4,10 +4,12 @@ import {
   CheckSquare,
   Home,
   Inbox,
+  LayoutTemplate,
   Search,
   Settings,
 } from "lucide-react";
 import { Link } from "react-router";
+import { useState } from "react";
 
 import {
   Sidebar,
@@ -19,6 +21,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import TemplateGalleryDialog from "@/components/template-gallery-dialog";
 
 // Menu items.
 const items = [
@@ -60,6 +63,8 @@ const items = [
 ];
 
 export function AppSidebar() {
+  const [isTemplateGalleryOpen, setIsTemplateGalleryOpen] = useState(false);
+
   return (
     <Sidebar>
       <SidebarContent>
@@ -77,10 +82,21 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={() => setIsTemplateGalleryOpen(true)}>
+                  <LayoutTemplate />
+                  <span>Browse Templates</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      <TemplateGalleryDialog
+        open={isTemplateGalleryOpen}
+        onOpenChange={setIsTemplateGalleryOpen}
+      />
     </Sidebar>
   );
 }

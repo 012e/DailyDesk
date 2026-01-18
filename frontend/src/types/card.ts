@@ -99,6 +99,7 @@ export interface Card {
   updatedAt: Date;
   order: number;
   completed?: boolean;
+  isTemplate?: boolean;
 }
 
 export type DueStatus = "none" | "complete" | "overdue" | "dueSoon" | "dueLater";

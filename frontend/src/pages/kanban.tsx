@@ -56,10 +56,6 @@ export default function KanbanPage() {
       },
       {
         onSuccess: () => {
-          toast.success("Card created from event", {
-            description: `Added to ${targetList.name}`,
-            position: "bottom-left",
-          });
         },
         onError: () => {
           toast.error("Failed to create card from event");

@@ -10,6 +10,7 @@ import createChatRoutes from "./chat";
 import createAttachmentRoutes from "./attachments";
 import createCommentRoutes from "./comments";
 import createSSERoutes from "./sse";
+import createTemplateRoutes from "./templates";
 
 export default function setupRoutes(app: OpenAPIHono) {
   app.route("/boards", createSSERoutes());
@@ -24,6 +25,7 @@ export default function setupRoutes(app: OpenAPIHono) {
   app.route("/boards", createCommentRoutes());
   app.route("/chat", createChatRoutes());
   app.route("/members", createUserSearchRoutes());
+  app.route("/templates", createTemplateRoutes());
 
   return app;
 }
