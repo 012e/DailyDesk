@@ -95,10 +95,10 @@ export default function Home() {
   // Combine all boards for search
   const allBoards = [...ownedBoards, ...invitedBoards];
 
-  // Filter boards by search term
-  const filteredOwnedBoards = ownedBoards.filter((board) =>
-    board.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter boards by search term and sort by ID descending (newest first)
+  const filteredOwnedBoards = ownedBoards
+    .filter((board) => board.name.toLowerCase().includes(searchTerm.toLowerCase()))
+    .sort((a, b) => b.id.localeCompare(a.id));
 
   const filteredInvitedBoards = invitedBoards.filter((board) =>
     board.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -180,11 +180,11 @@ export default function Home() {
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case "admin":
-        return "bg-red-500/20 text-red-400 border-red-500/30";
+        return "bg-green-500/20 text-green-400 border-green-500/30";
       case "member":
-        return "bg-blue-500/20 text-blue-400 border-blue-500/30";
+        return "bg-sky-400/20 text-sky-600 border-sky-600/30";
       case "viewer":
-        return "bg-gray-500/20 text-gray-300 border-gray-300/30";
+        return "bg-gray-500/20 text-gray-900 border-gray-700/30";
       default:
         return "bg-gray-500/20 text-gray-400";
     }
