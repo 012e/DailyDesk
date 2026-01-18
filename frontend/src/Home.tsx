@@ -79,9 +79,6 @@ export default function Home() {
   const userId = user?.sub || "";
 
   // Debug logging
-  console.log("DEBUG - userId:", userId);
-  console.log("DEBUG - ownedBoards:", ownedBoards);
-  console.log("DEBUG - invitedBoards:", invitedBoards);
 
   // Load recent boards from localStorage on mount and when userId changes
   useEffect(() => {
