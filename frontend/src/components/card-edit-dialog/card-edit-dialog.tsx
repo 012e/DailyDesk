@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import type { Card } from "@/types/card";
 import { CardCoverModeValue } from "@/types/card";
-import { X, Tag, UserPlus, Paperclip, Clock, Wallpaper, Loader2, FileIcon, ExternalLink, Download, ChevronDown, LayoutTemplate } from "lucide-react";
+import { X, Tag, UserPlus, Paperclip, Clock, Wallpaper, Loader2, FileIcon, ExternalLink, Download, ChevronDown, Repeat , LayoutTemplate } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CardHeader } from "./card-header";
 import { CardDescription } from "./card-description";
@@ -750,6 +750,7 @@ function InnerDialog({
                     >
                       <Clock className="h-3.5 w-3.5" />
                       <span className="text-sm">Due: {formatDueDateVN(card.dueAt)}</span>
+                      {card.repeatFrequency && <Repeat className="h-3.5 w-3.5 opacity-70" />}
                       <ChevronDown className="h-3.5 w-3.5 ml-1" />
                     </Button>
                   )}

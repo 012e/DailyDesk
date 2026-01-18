@@ -28,6 +28,7 @@ export interface CalendarEvent {
   listId?: string;
   isRecurring?: boolean;
   isRecurringInstance?: boolean;
+  isDone?: boolean;
 }
 
 export type EventColor =

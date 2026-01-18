@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Clock, X, CheckCircle2 } from "lucide-react";
+import { Clock, X, CheckCircle2, Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -18,7 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
-import type { Card } from "@/types/card";
+import type { Card, RepeatFrequency } from "@/types/card";
 import { cn } from "@/lib/utils";
 import { getDueStatus, formatDueDate, REMINDER_OPTIONS } from "@/lib/due-status";
 import { useUpdateDue, useClearDue } from "@/hooks/use-due";
@@ -75,6 +75,11 @@ export function CardDates({
 
   const [isDueComplete, setIsDueComplete] = useState(card.dueComplete || false);
   const [reminderMinutes, setReminderMinutes] = useState<number | null>(card.reminderMinutes ?? null);
+
+  // Repeat state
+  const [isRepeatEnabled, setIsRepeatEnabled] = useState(!!card.repeatFrequency);
+  const [repeatFrequency, setRepeatFrequency] = useState<RepeatFrequency>(card.repeatFrequency || "weekly");
+  const [repeatInterval, setRepeatInterval] = useState(card.repeatInterval || 1);
 
   // Checkboxes to enable/disable dates
   const [isStartDateEnabled, setIsStartDateEnabled] = useState(!!startDate);
@@ -143,7 +148,12 @@ export function CardDates({
 
     setIsDueComplete(card.dueComplete || false);
     setReminderMinutes(card.reminderMinutes ?? null);
-  }, [card.startDate, card.dueAt, card.dueComplete, card.reminderMinutes]);
+
+    // Sync repeat
+    setIsRepeatEnabled(!!card.repeatFrequency);
+    setRepeatFrequency(card.repeatFrequency || "weekly");
+    setRepeatInterval(card.repeatInterval || 1);
+  }, [card.startDate, card.dueAt, card.dueComplete, card.reminderMinutes, card.repeatFrequency, card.repeatInterval]);
 
   const handleSave = async () => {
     // Prepare start date time
@@ -176,6 +186,8 @@ export function CardDates({
         dueAt: dueDateTime,
         dueComplete: isDueComplete,
         reminderMinutes,
+        repeatFrequency: isRepeatEnabled ? repeatFrequency : null,
+        repeatInterval: isRepeatEnabled ? repeatInterval : null,
       });
       setIsOpen(false);
       return;
@@ -195,6 +207,8 @@ export function CardDates({
         dueAt: dueDateTime ? dueDateTime.toISOString() : null,
         dueComplete: isDueComplete,
         reminderMinutes,
+        repeatFrequency: isRepeatEnabled ? repeatFrequency : null,
+        repeatInterval: isRepeatEnabled ? repeatInterval : null,
       });
 
       // Update parent component state
@@ -203,6 +217,8 @@ export function CardDates({
         dueAt: dueDateTime,
         dueComplete: isDueComplete,
         reminderMinutes,
+        repeatFrequency: isRepeatEnabled ? repeatFrequency : null,
+        repeatInterval: isRepeatEnabled ? repeatInterval : null,
       });
 
       toast.success("Dates updated");
@@ -220,6 +236,8 @@ export function CardDates({
         dueAt: null,
         dueComplete: false,
         reminderMinutes: null,
+        repeatFrequency: null,
+        repeatInterval: null,
       });
 
       setStartDate(undefined);
@@ -228,6 +246,9 @@ export function CardDates({
       setSelectedTime("17:00");
       setIsDueComplete(false);
       setReminderMinutes(null);
+      setIsRepeatEnabled(false);
+      setRepeatFrequency("weekly");
+      setRepeatInterval(1);
       setIsOpen(false);
       return;
     }
@@ -248,6 +269,8 @@ export function CardDates({
         dueAt: null,
         dueComplete: false,
         reminderMinutes: null,
+        repeatFrequency: null,
+        repeatInterval: null,
       });
 
       setStartDate(undefined);
@@ -256,6 +279,9 @@ export function CardDates({
       setSelectedTime("17:00");
       setIsDueComplete(false);
       setReminderMinutes(null);
+      setIsRepeatEnabled(false);
+      setRepeatFrequency("weekly");
+      setRepeatInterval(1);
 
       toast.success("Dates removed");
       setIsOpen(false);
@@ -485,20 +511,6 @@ export function CardDates({
           </Label>
         </div>
 
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="mark-complete"
-            checked={isDueComplete}
-            onCheckedChange={(checked) => setIsDueComplete(checked as boolean)}
-          />
-          <Label
-            htmlFor="mark-complete"
-            className="text-xs font-medium leading-none cursor-pointer"
-          >
-            Mark as complete
-          </Label>
-        </div>
-
         <div className="space-y-2">
           <Label htmlFor="reminder" className="text-xs font-medium">
             Reminder
@@ -518,6 +530,53 @@ export function CardDates({
               ))}
             </SelectContent>
           </Select>
+        </div>
+
+        {/* Repeat Section */}
+        <div className="space-y-2">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="repeat-enabled-popover"
+              checked={isRepeatEnabled}
+              onCheckedChange={(checked) => setIsRepeatEnabled(checked as boolean)}
+            />
+            <Label
+              htmlFor="repeat-enabled-popover"
+              className="text-xs font-medium cursor-pointer"
+            >
+              Repeat
+            </Label>
+          </div>
+          {isRepeatEnabled && (
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <Input
+                  type="number"
+                  min={1}
+                  max={99}
+                  value={repeatInterval}
+                  onChange={(e) => setRepeatInterval(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="w-16 h-8 text-xs"
+                />
+                <Select
+                  value={repeatFrequency}
+                  onValueChange={(value) => setRepeatFrequency(value as RepeatFrequency)}
+                >
+                  <SelectTrigger className="flex-1 h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="daily">{repeatInterval === 1 ? "day" : "days"}</SelectItem>
+                    <SelectItem value="weekly">{repeatInterval === 1 ? "week" : "weeks"}</SelectItem>
+                    <SelectItem value="monthly">{repeatInterval === 1 ? "month" : "months"}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Repeats every {repeatInterval} {repeatFrequency === "daily" ? (repeatInterval === 1 ? "day" : "days") : repeatFrequency === "weekly" ? (repeatInterval === 1 ? "week" : "weeks") : (repeatInterval === 1 ? "month" : "months")}
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-2 pt-2 border-t">
@@ -778,6 +837,55 @@ export function CardDates({
             </p>
           )}
 
+          {/* Repeat Section in Dialog */}
+          {isDueDateEnabled && (
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="repeat-enabled-dialog"
+                  checked={isRepeatEnabled}
+                  onCheckedChange={(checked) => setIsRepeatEnabled(checked as boolean)}
+                />
+                <Label
+                  htmlFor="repeat-enabled-dialog"
+                  className="text-sm font-medium cursor-pointer"
+                >
+                  Repeat
+                </Label>
+              </div>
+              {isRepeatEnabled && (
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      min={1}
+                      max={99}
+                      value={repeatInterval}
+                      onChange={(e) => setRepeatInterval(Math.max(1, parseInt(e.target.value) || 1))}
+                      className="w-20"
+                    />
+                    <Select
+                      value={repeatFrequency}
+                      onValueChange={(value) => setRepeatFrequency(value as RepeatFrequency)}
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="daily">{repeatInterval === 1 ? "day" : "days"}</SelectItem>
+                        <SelectItem value="weekly">{repeatInterval === 1 ? "week" : "weeks"}</SelectItem>
+                        <SelectItem value="monthly">{repeatInterval === 1 ? "month" : "months"}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Repeats every {repeatInterval} {repeatFrequency === "daily" ? (repeatInterval === 1 ? "day" : "days") : repeatFrequency === "weekly" ? (repeatInterval === 1 ? "week" : "weeks") : (repeatInterval === 1 ? "month" : "months")}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="flex gap-2 pt-4 border-t">
             <Button
               onClick={handleSave}
@@ -825,6 +933,9 @@ export function CardDates({
                   <span>{label || formattedDate}</span>
                   {label && formattedDate && (
                     <span className="ml-1 opacity-80">{formattedDate}</span>
+                  )}
+                  {card.repeatFrequency && (
+                    <Repeat className="w-3 h-3 ml-1 opacity-70" />
                   )}
                   <button
                     onClick={(e) => {

@@ -7,6 +7,7 @@ import { logger } from "hono/logger";
 import { poweredBy } from "hono/powered-by";
 import { HTTPException } from "hono/http-exception";
 import { startReminderCron } from "@/services/reminder.service";
+import { startRecurringCron } from "@/services/recurring.service";
 
 import dotenv from "dotenv";
 dotenv.config({ path: [".env", ".env.local"] });
@@ -50,8 +51,9 @@ app.onError((error, c) => {
 
 serve(app);
 
-// Start reminder cron job (only in non-test environment)
+// Start cron jobs (only in non-test environment)
 if (process.env.NODE_ENV !== "test") {
   startReminderCron();
+  startRecurringCron();
 }
 
