@@ -750,6 +750,7 @@ function InnerDialog({
                     >
                       <Clock className="h-3.5 w-3.5" />
                       <span className="text-sm">Due: {formatDueDateVN(card.dueAt)}</span>
+                      {card.repeatFrequency && <Repeat className="h-3.5 w-3.5 opacity-70" />}
                       <ChevronDown className="h-3.5 w-3.5 ml-1" />
                     </Button>
                   )}

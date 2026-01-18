@@ -102,6 +102,8 @@ export const cardsTable = sqliteTable("cards", {
   recurrence: text("recurrence"), // never, daily_weekdays, weekly, monthly_date, monthly_day
   recurrenceDay: integer("recurrence_day"), // for monthly_day (e.g., 2 for 2nd Sunday)
   recurrenceWeekday: integer("recurrence_weekday"), // for monthly_day (0=Sunday, 6=Saturday)
+  repeatFrequency: text("repeat_frequency"), // daily, weekly, monthly
+  repeatInterval: integer("repeat_interval"), // e.g., 2 for "every 2 weeks"
   latitude: integer("latitude"),
   longitude: integer("longitude"),
   completed: integer("completed", { mode: "boolean" }).default(false),

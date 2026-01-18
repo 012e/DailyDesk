@@ -1,0 +1,210 @@
+@startuml
+
+' Layout ngang để vừa 1 trang doc
+left to right direction
+scale 3
+skinparam dpi 300
+
+skinparam packageStyle rectangle
+skinparam actorStyle hollow
+skinparam usecase {
+  BackgroundColor White
+  BorderColor Black
+  FontSize 9
+}
+skinparam package {
+  BackgroundColor White
+  BorderColor Black
+  FontSize 10
+}
+
+' ==========================================
+' ACTORS
+' ==========================================
+actor Visitor
+actor User
+actor "Board\nMember" as Member
+actor "Board\nAdmin" as Admin
+
+actor System
+
+' Kế thừa Actor
+Visitor <|-- User
+User <|-- Member  
+Member <|-- Admin
+
+' ==========================================
+' HỆ THỐNG DAILYDESK
+' ==========================================
+
+package "Authentication" {
+    usecase "Register" as UC1
+    usecase "Login" as UC2
+    usecase "Manage Profile" as UC3
+}
+
+package "Board Management" {
+    usecase "Board Management" as UC4
+    usecase "Create Board" as UC5
+    usecase "Update Board" as UC6
+    usecase "Delete Board" as UC7
+    usecase "Manage Background" as UC8
+    usecase "Search Cards" as UC9
+}
+
+package "Calendar & Planning" {
+    usecase "Calendar\nManagement" as UC10
+    usecase "View Calendar" as UC11
+    usecase "Navigate Calendar" as UC12
+    usecase "Switch View\n(M/W/D/A)" as UC13
+    usecase "Create Event" as UC14
+    usecase "Edit Event" as UC15
+    usecase "Delete Event" as UC16
+    usecase "Drag Cards" as UC17
+    usecase "Filter Tasks" as UC18
+    usecase "Sort Tasks" as UC19
+    usecase "Search Tasks" as UC20
+}
+
+package "List Management" {
+    usecase "List Management" as UC21
+    usecase "Create List" as UC22
+    usecase "Update List" as UC23
+    usecase "Delete List" as UC24
+    usecase "Reorder List" as UC25
+    usecase "Copy List" as UC26
+}
+
+package "Card Management" {
+    usecase "Card Management" as UC27
+    usecase "Create Card" as UC28
+    usecase "Edit Card" as UC29
+    usecase "Delete Card" as UC30
+    usecase "Move Card" as UC31
+    usecase "Toggle Complete" as UC32
+    usecase "Manage Labels" as UC33
+    usecase "Set Due Date" as UC34
+    usecase "Manage Checklist" as UC35
+    usecase "Manage Attachments" as UC36
+    usecase "Add Comments" as UC37
+    usecase "View Activity" as UC38
+}
+
+package "Member Management" {
+    usecase "Member\nManagement" as UC39
+    usecase "Invite Member" as UC40
+    usecase "Remove Member" as UC41
+    usecase "Change Role" as UC42
+    usecase "Search Users" as UC43
+}
+
+package "Template Management" {
+    usecase "Template\nManagement" as UC44
+    usecase "Create from\nTemplate" as UC45
+    usecase "Save as Template" as UC46
+    usecase "Delete Template" as UC47
+}
+
+package "AI & Automation" {
+    usecase "Chat with AI" as UC48
+    usecase "Send Reminder" as UC49
+    usecase "Log Activity" as UC50
+}
+
+' ==========================================
+' KẾT NỐI VISITOR
+' ==========================================
+Visitor --> UC1
+Visitor --> UC2
+
+' ==========================================
+' KẾT NỐI USER
+' ==========================================
+User --> UC3
+User --> UC4
+User --> UC10
+User --> UC45
+User --> UC9
+
+' ==========================================
+' KẾT NỐI MEMBER
+' ==========================================
+Member --> UC21
+Member --> UC27
+Member --> UC48
+Member --> UC44
+
+' ==========================================
+' KẾT NỐI ADMIN
+' ==========================================
+Admin --> UC6
+Admin --> UC7
+Admin --> UC8
+Admin --> UC39
+Admin --> UC46
+Admin --> UC47
+
+' ==========================================
+' KẾT NỐI SYSTEM
+' ==========================================
+System --> UC49
+System --> UC50
+
+' ==========================================
+' QUAN HỆ INCLUDE
+' ==========================================
+
+' Board Management
+UC4 ..> UC5 : <<include>>
+UC4 ..> UC6 : <<include>>
+UC4 ..> UC7 : <<include>>
+
+' Calendar Management
+UC10 ..> UC11 : <<include>>
+UC10 ..> UC12 : <<include>>
+UC10 ..> UC13 : <<include>>
+UC10 ..> UC14 : <<include>>
+UC10 ..> UC15 : <<include>>
+UC10 ..> UC16 : <<include>>
+UC10 ..> UC17 : <<include>>
+UC10 ..> UC18 : <<include>>
+UC10 ..> UC19 : <<include>>
+UC10 ..> UC20 : <<include>>
+
+' List Management
+UC21 ..> UC22 : <<include>>
+UC21 ..> UC23 : <<include>>
+UC21 ..> UC24 : <<include>>
+UC21 ..> UC25 : <<include>>
+UC21 ..> UC26 : <<include>>
+
+' Card Management
+UC27 ..> UC28 : <<include>>
+UC27 ..> UC29 : <<include>>
+UC27 ..> UC30 : <<include>>
+UC27 ..> UC31 : <<include>>
+UC27 ..> UC32 : <<include>>
+UC27 ..> UC33 : <<include>>
+UC27 ..> UC34 : <<include>>
+UC27 ..> UC35 : <<include>>
+UC27 ..> UC36 : <<include>>
+UC27 ..> UC37 : <<include>>
+UC27 ..> UC38 : <<include>>
+
+' Member Management
+UC39 ..> UC40 : <<include>>
+UC39 ..> UC41 : <<include>>
+UC39 ..> UC42 : <<include>>
+UC39 ..> UC43 : <<include>>
+
+' Template Management
+UC44 ..> UC45 : <<include>>
+UC44 ..> UC46 : <<include>>
+UC44 ..> UC47 : <<include>>
+
+' Activity Logging
+UC29 ..> UC50 : <<include>>
+UC31 ..> UC50 : <<include>>
+UC17 ..> UC50 : <<include>>
+
+@enduml

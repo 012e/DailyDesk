@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { Clock, CheckCircle2 } from "lucide-react";
+import { Clock, CheckCircle2, Repeat } from "lucide-react";
 import { getDueStatus, formatDueDate } from "@/lib/due-status";
 import { cn } from "@/lib/utils";
 import type { Card } from "@/types/card";
@@ -51,6 +51,9 @@ export function DueBadge({ card, onClick, className }: DueBadgeProps) {
       <span>{label || formattedDate}</span>
       {label && formattedDate && (
         <span className="ml-1 opacity-80">{formattedDate}</span>
+      )}
+      {card.repeatFrequency && (
+        <Repeat className="w-3 h-3 opacity-70" />
       )}
     </Badge>
   );

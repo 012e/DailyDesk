@@ -1,0 +1,234 @@
+@startuml
+
+' ER Diagram - DailyDesk Database Schema
+' Thiết kế CSDL cho ứng dụng DailyDesk
+
+scale 2
+skinparam dpi 300
+!define TABLE_BG White
+
+skinparam linetype ortho
+skinparam class {
+    BackgroundColor TABLE_BG
+    BorderColor TABLE_BORDER_COLOR
+    HeaderBackgroundColor TABLE_HEADER_BG
+    FontSize 10
+}
+
+hide empty methods
+hide circle
+
+' ==========================================
+' CORE ENTITIES
+' ==========================================
+
+entity "boards" as Board {
+    *id : TEXT <<PK>>
+    --
+    name : TEXT <<NOT NULL>>
+    user_id : TEXT <<NOT NULL>>
+    background_url : TEXT
+    background_public_id : TEXT
+    background_color : TEXT
+}
+
+entity "lists" as List {
+    *id : TEXT <<PK>>
+    --
+    name : TEXT <<NOT NULL>>
+    order : INTEGER <<NOT NULL>>
+    board_id : TEXT <<FK>>
+}
+
+entity "cards" as Card {
+    *id : TEXT <<PK>>
+    --
+    name : TEXT <<NOT NULL>>
+    description : TEXT
+    order : INTEGER <<NOT NULL>>
+    list_id : TEXT <<FK>>
+    cover_url : TEXT
+    cover_public_id : TEXT
+    cover_color : TEXT
+    cover_mode : TEXT
+    start_date : TIMESTAMP
+    deadline : TIMESTAMP
+    due_at : TIMESTAMP
+    due_complete : BOOLEAN
+    reminder_minutes : INTEGER
+    recurrence : TEXT
+    recurrence_day : INTEGER
+    recurrence_weekday : INTEGER
+    repeat_frequency : TEXT
+    repeat_interval : INTEGER
+    latitude : INTEGER
+    longitude : INTEGER
+    completed : BOOLEAN
+    is_template : BOOLEAN
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+}
+
+entity "checklist_items" as ChecklistItem {
+    *id : TEXT <<PK>>
+    --
+    name : TEXT <<NOT NULL>>
+    completed : BOOLEAN <<NOT NULL>>
+    order : INTEGER <<NOT NULL>>
+    card_id : TEXT <<FK>>
+}
+
+entity "attachments" as Attachment {
+    *id : TEXT <<PK>>
+    --
+    name : TEXT <<NOT NULL>>
+    url : TEXT <<NOT NULL>>
+    public_id : TEXT
+    type : TEXT <<NOT NULL>>
+    size : INTEGER <<NOT NULL>>
+    uploaded_at : TIMESTAMP <<NOT NULL>>
+    uploaded_by : TEXT <<NOT NULL>>
+    card_id : TEXT <<FK>>
+}
+
+entity "labels" as Label {
+    *id : TEXT <<PK>>
+    --
+    name : TEXT <<NOT NULL>>
+    color : TEXT <<NOT NULL>>
+    user_id : TEXT <<NOT NULL>>
+    --
+    <<UNIQUE(user_id, name, color)>>
+}
+
+entity "board_members" as BoardMember {
+    *id : TEXT <<PK>>
+    --
+    board_id : TEXT <<FK>>
+    user_id : TEXT <<NOT NULL>>
+    name : TEXT <<NOT NULL>>
+    email : TEXT <<NOT NULL>>
+    avatar : TEXT
+    role : TEXT <<NOT NULL>>
+    added_at : TIMESTAMP <<NOT NULL>>
+}
+
+entity "comments" as Comment {
+    *id : TEXT <<PK>>
+    --
+    card_id : TEXT <<FK>>
+    user_id : TEXT <<NOT NULL>>
+    content : TEXT <<NOT NULL>>
+    created_at : TIMESTAMP <<NOT NULL>>
+}
+
+entity "activities" as Activity {
+    *id : TEXT <<PK>>
+    --
+    card_id : TEXT <<FK>>
+    user_id : TEXT <<NOT NULL>>
+    action_type : TEXT <<NOT NULL>>
+    description : TEXT <<NOT NULL>>
+    metadata : TEXT
+    created_at : TIMESTAMP <<NOT NULL>>
+}
+
+entity "due_reminder_log" as DueReminderLog {
+    *id : TEXT <<PK>>
+    --
+    card_id : TEXT <<FK>>
+    user_id : TEXT <<NOT NULL>>
+    due_at_snapshot : TIMESTAMP <<NOT NULL>>
+    reminder_minutes : INTEGER <<NOT NULL>>
+    sent_at : TIMESTAMP <<NOT NULL>>
+}
+
+' ==========================================
+' JUNCTION TABLES (Many-to-Many)
+' ==========================================
+
+entity "card_labels" as CardLabel {
+    *id : TEXT <<PK>>
+    --
+    card_id : TEXT <<FK>>
+    label_id : TEXT <<FK>>
+}
+
+entity "card_members" as CardMember {
+    *id : TEXT <<PK>>
+    --
+    card_id : TEXT <<FK>>
+    member_id : TEXT <<FK>>
+}
+
+' ==========================================
+' TEMPLATE SYSTEM
+' ==========================================
+
+entity "board_templates" as BoardTemplate {
+    *id : TEXT <<PK>>
+    --
+    name : TEXT <<NOT NULL>>
+    description : TEXT
+    category : TEXT
+    user_id : TEXT
+    is_public : BOOLEAN
+    background_url : TEXT
+    background_color : TEXT
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+}
+
+entity "template_lists" as TemplateList {
+    *id : TEXT <<PK>>
+    --
+    name : TEXT <<NOT NULL>>
+    order : INTEGER <<NOT NULL>>
+    template_id : TEXT <<FK>>
+}
+
+entity "template_cards" as TemplateCard {
+    *id : TEXT <<PK>>
+    --
+    name : TEXT <<NOT NULL>>
+    description : TEXT
+    order : INTEGER <<NOT NULL>>
+    template_list_id : TEXT <<FK>>
+}
+
+entity "template_labels" as TemplateLabel {
+    *id : TEXT <<PK>>
+    --
+    name : TEXT <<NOT NULL>>
+    color : TEXT <<NOT NULL>>
+    template_id : TEXT <<FK>>
+}
+
+' ==========================================
+' RELATIONSHIPS
+' ==========================================
+
+' Core Entity Relationships
+Board ||--o{ List : "contains"
+Board ||--o{ BoardMember : "has members"
+
+List ||--o{ Card : "contains"
+
+Card ||--o{ ChecklistItem : "has"
+Card ||--o{ Attachment : "has"
+Card ||--o{ Comment : "has"
+Card ||--o{ Activity : "logs"
+Card ||--o{ DueReminderLog : "has reminders"
+Card ||--o{ CardLabel : "has labels"
+Card ||--o{ CardMember : "assigned to"
+
+' Junction Table Relationships
+CardLabel }o--|| Label : "references"
+CardMember }o--|| BoardMember : "references"
+
+' Template Relationships
+BoardTemplate ||--o{ TemplateList : "contains"
+BoardTemplate ||--o{ TemplateLabel : "has"
+TemplateList ||--o{ TemplateCard : "contains"
+
+@enduml

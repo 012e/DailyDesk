@@ -7,6 +7,7 @@ import {
   CreateBoardSchema,
   UpdateBoardSchema,
   BoardWithListsAndCardsSchema,
+  GroupedBoardsResponseSchema,
 } from "@/types/boards";
 import { ListSchema } from "@/types/lists";
 import { CardSchema } from "@/types/cards";
@@ -23,7 +24,7 @@ export default function createBoardRoutes() {
       path: "/",
       security: defaultSecurityScheme(),
       responses: {
-        200: successJson(BoardWithListsAndCardsSchema.array(), {
+        200: successJson(GroupedBoardsResponseSchema, {
           description: "Lấy Board thành công",
         }),
         500: {

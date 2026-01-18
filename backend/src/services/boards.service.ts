@@ -70,15 +70,17 @@ export async function getBoardsForUser(userSub: string) {
     },
   });
 
-  // Get boards where user is a member
-  const memberBoards = await db
+  // Get boards where user is a member (with role info)
+  const memberData = await db
     .select({
       boardId: boardMembersTable.boardId,
+      role: boardMembersTable.role,
     })
     .from(boardMembersTable)
     .where(eq(boardMembersTable.userId, userSub));
 
-  const memberBoardIds = memberBoards.map(mb => mb.boardId);
+  const memberBoardIds = memberData.map(mb => mb.boardId);
+  const roleByBoardId = new Map(memberData.map(mb => [mb.boardId, mb.role]));
 
   let sharedBoards: any[] = [];
   if (memberBoardIds.length > 0) {
@@ -97,99 +99,113 @@ export async function getBoardsForUser(userSub: string) {
     });
   }
 
-  // Combine owned and shared boards
-  const boards = [...ownedBoards, ...sharedBoards];
-
   // Get all card IDs from all boards
-  const cardIds = boards.flatMap((board: any) =>
+  const allBoards = [...ownedBoards, ...sharedBoards];
+  const cardIds = allBoards.flatMap((board: any) =>
     board.lists.flatMap((list: any) => list.cards.map((card: any) => card.id))
   );
 
-  if (cardIds.length === 0) {
-    return boards;
-  }
+  // Helper to enrich cards with labels, members, attachments
+  const enrichCards = async (boards: any[]) => {
+    if (cardIds.length === 0) return boards;
 
-  // Get labels for all cards
-  const cardLabelsData = await db
-    .select({
-      cardId: cardLabelsTable.cardId,
-      labelId: labelsTable.id,
-      labelName: labelsTable.name,
-      labelColor: labelsTable.color,
-    })
-    .from(cardLabelsTable)
-    .innerJoin(labelsTable, eq(cardLabelsTable.labelId, labelsTable.id))
-    .where(sql`${cardLabelsTable.cardId} IN (${sql.join(cardIds.map(id => sql`${id}`), sql`, `)})`);
+    // Get labels for all cards
+    const cardLabelsData = await db
+      .select({
+        cardId: cardLabelsTable.cardId,
+        labelId: labelsTable.id,
+        labelName: labelsTable.name,
+        labelColor: labelsTable.color,
+      })
+      .from(cardLabelsTable)
+      .innerJoin(labelsTable, eq(cardLabelsTable.labelId, labelsTable.id))
+      .where(sql`${cardLabelsTable.cardId} IN (${sql.join(cardIds.map(id => sql`${id}`), sql`, `)})`);
 
-  // Get members for all cards
-  const cardMembersData = await db
-    .select({
-      cardId: cardMembersTable.cardId,
-      memberId: boardMembersTable.id,
-      memberName: boardMembersTable.name,
-      memberEmail: boardMembersTable.email,
-      memberAvatar: boardMembersTable.avatar,
-    })
-    .from(cardMembersTable)
-    .innerJoin(boardMembersTable, eq(cardMembersTable.memberId, boardMembersTable.id))
-    .where(sql`${cardMembersTable.cardId} IN (${sql.join(cardIds.map(id => sql`${id}`), sql`, `)})`);
+    // Get members for all cards
+    const cardMembersData = await db
+      .select({
+        cardId: cardMembersTable.cardId,
+        memberId: boardMembersTable.id,
+        memberName: boardMembersTable.name,
+        memberEmail: boardMembersTable.email,
+        memberAvatar: boardMembersTable.avatar,
+      })
+      .from(cardMembersTable)
+      .innerJoin(boardMembersTable, eq(cardMembersTable.memberId, boardMembersTable.id))
+      .where(sql`${cardMembersTable.cardId} IN (${sql.join(cardIds.map(id => sql`${id}`), sql`, `)})`);
 
-  // Get attachments for all cards
-  const cardAttachmentsData = await db
-    .select()
-    .from(attachmentsTable)
-    .where(sql`${attachmentsTable.cardId} IN (${sql.join(cardIds.map(id => sql`${id}`), sql`, `)})`);
+    // Get attachments for all cards
+    const cardAttachmentsData = await db
+      .select()
+      .from(attachmentsTable)
+      .where(sql`${attachmentsTable.cardId} IN (${sql.join(cardIds.map(id => sql`${id}`), sql`, `)})`);
 
-  // Group labels and members by card ID
-  const labelsByCard = new Map<string, Array<{ id: string; name: string; color: string }>>();
-  for (const cl of cardLabelsData) {
-    if (!labelsByCard.has(cl.cardId)) {
-      labelsByCard.set(cl.cardId, []);
+    // Group labels and members by card ID
+    const labelsByCard = new Map<string, Array<{ id: string; name: string; color: string }>>();
+    for (const cl of cardLabelsData) {
+      if (!labelsByCard.has(cl.cardId)) {
+        labelsByCard.set(cl.cardId, []);
+      }
+      labelsByCard.get(cl.cardId)!.push({
+        id: cl.labelId,
+        name: cl.labelName,
+        color: cl.labelColor,
+      });
     }
-    labelsByCard.get(cl.cardId)!.push({
-      id: cl.labelId,
-      name: cl.labelName,
-      color: cl.labelColor,
-    });
-  }
 
-  const membersByCard = new Map<string, Array<{ id: string; name: string; email: string; avatar: string | null; initials: string }>>();
-  for (const cm of cardMembersData) {
-    if (!membersByCard.has(cm.cardId)) {
-      membersByCard.set(cm.cardId, []);
+    const membersByCard = new Map<string, Array<{ id: string; name: string; email: string; avatar: string | null; initials: string }>>();
+    for (const cm of cardMembersData) {
+      if (!membersByCard.has(cm.cardId)) {
+        membersByCard.set(cm.cardId, []);
+      }
+      // Generate initials from name
+      const initials = cm.memberName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      membersByCard.get(cm.cardId)!.push({
+        id: cm.memberId,
+        name: cm.memberName,
+        email: cm.memberEmail,
+        avatar: cm.memberAvatar,
+        initials,
+      });
     }
-    // Generate initials from name
-    const initials = cm.memberName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-    membersByCard.get(cm.cardId)!.push({
-      id: cm.memberId,
-      name: cm.memberName,
-      email: cm.memberEmail,
-      avatar: cm.memberAvatar,
-      initials,
-    });
-  }
 
-  const attachmentsByCard = new Map<string, Array<any>>();
-  for (const attachment of cardAttachmentsData) {
-    if (!attachmentsByCard.has(attachment.cardId)) {
-      attachmentsByCard.set(attachment.cardId, []);
+    const attachmentsByCard = new Map<string, Array<any>>();
+    for (const attachment of cardAttachmentsData) {
+      if (!attachmentsByCard.has(attachment.cardId)) {
+        attachmentsByCard.set(attachment.cardId, []);
+      }
+      attachmentsByCard.get(attachment.cardId)!.push(attachment);
     }
-    attachmentsByCard.get(attachment.cardId)!.push(attachment);
-  }
 
-  // Add labels, members, and attachments to cards in all boards
-  return boards.map((board: any) => ({
-    ...board,
-    lists: board.lists.map((list: any) => ({
-      ...list,
-      cards: list.cards.map((card: any) => ({
-        ...card,
-        labels: labelsByCard.get(card.id) || [],
-        members: membersByCard.get(card.id) || [],
-        attachments: attachmentsByCard.get(card.id) || [],
+    // Add labels, members, and attachments to cards in all boards
+    return boards.map((board: any) => ({
+      ...board,
+      lists: board.lists.map((list: any) => ({
+        ...list,
+        cards: list.cards.map((card: any) => ({
+          ...card,
+          labels: labelsByCard.get(card.id) || [],
+          members: membersByCard.get(card.id) || [],
+          attachments: attachmentsByCard.get(card.id) || [],
+        })),
       })),
-    })),
-  })) as any;
+    }));
+  };
+
+  // Enrich all boards
+  const enrichedOwned = await enrichCards(ownedBoards);
+  const enrichedShared = await enrichCards(sharedBoards);
+
+  // Add role to invited boards
+  const invitedBoardsWithRole = enrichedShared.map((board: any) => ({
+    ...board,
+    role: roleByBoardId.get(board.id) || "member",
+  }));
+
+  return {
+    ownedBoards: enrichedOwned,
+    invitedBoards: invitedBoardsWithRole,
+  } as any;
 }
 
 export async function createBoard(userSub: string, req: any) {
@@ -478,6 +494,11 @@ export async function getCardsForBoard(userSub: string, id: string) {
     dueAt: c.cards.dueAt,
     dueComplete: c.cards.dueComplete,
     reminderMinutes: c.cards.reminderMinutes,
+    recurrence: c.cards.recurrence,
+    recurrenceDay: c.cards.recurrenceDay,
+    recurrenceWeekday: c.cards.recurrenceWeekday,
+    repeatFrequency: c.cards.repeatFrequency,
+    repeatInterval: c.cards.repeatInterval,
     latitude: c.cards.latitude,
     longitude: c.cards.longitude,
     coverColor: c.cards.coverColor,

@@ -62,7 +62,7 @@ export function BoardCard({
     <Link to={`/board/${id}`}>
       <Card
         key={id}
-        className="group overflow-hidden relative gap-0 pb-14 bg-center bg-no-repeat bg-cover border-0 transition-all cursor-pointer hover:shadow-md min-h-[120px]"
+        className="group overflow-hidden relative gap-0 pb-14 bg-center bg-no-repeat bg-cover border-0 transition-all cursor-pointer hover:shadow-md min-h-[20vh]"
         style={backgroundStyle}
       >
         <div className="absolute inset-0 mb-16 pointer-events-none backdrop-blur-sm dark:bg-black/25 group-hover:bg-black/20 dark:group-hover:bg-black/40 transition-colors" />

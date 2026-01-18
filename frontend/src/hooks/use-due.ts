@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
+import type { RepeatFrequency } from "@/types/card";
 
 export function useUpdateDue() {
   const queryClient = useQueryClient();
@@ -12,6 +13,8 @@ export function useUpdateDue() {
       dueAt?: string | null;
       dueComplete?: boolean;
       reminderMinutes?: number | null;
+      repeatFrequency?: RepeatFrequency | null;
+      repeatInterval?: number | null;
     }) => {
       const { data, error } = await api.PATCH("/boards/{boardId}/cards/{cardId}/due", {
         params: {
@@ -25,6 +28,8 @@ export function useUpdateDue() {
           dueAt: params.dueAt,
           dueComplete: params.dueComplete,
           reminderMinutes: params.reminderMinutes?.toString() as "5" | "10" | "15" | "30" | "60" | "120" | "1440" | undefined,
+          repeatFrequency: params.repeatFrequency,
+          repeatInterval: params.repeatInterval,
         },
       });
 

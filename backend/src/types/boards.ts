@@ -24,6 +24,17 @@ export const BoardWithListsAndCardsSchema = BoardSchema.extend({
   lists: z.array(ListWithCardsSchema),
 });
 
+// Schema for invited board with role info
+export const InvitedBoardSchema = BoardWithListsAndCardsSchema.extend({
+  role: z.enum(["admin", "member", "viewer"]),
+});
+
+// Schema for grouped boards response (owned vs invited)
+export const GroupedBoardsResponseSchema = z.object({
+  ownedBoards: z.array(BoardWithListsAndCardsSchema),
+  invitedBoards: z.array(InvitedBoardSchema),
+});
+
 export const CreateBoardSchema = z.object({
   id: z.uuid(),
   name: z.string().nonempty(),
@@ -43,3 +54,4 @@ export const UpdateBoardSchema = z.object({
     .nullable()
     .optional(),
 });
+
