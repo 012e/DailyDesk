@@ -26,7 +26,7 @@ interface KanbanColumnProps {
     cards: BackendCard[];
   };
   boardId: string;
-  onDropOverColumn: (data: string) => void;
+  onDropOverColumn: (data: string, type: "card" | "column") => void;
   onDropOverListItem: (
     targetCardId: string,
     data: string,

@@ -206,10 +206,18 @@ export function Kanban({ boardId }: KanbanProps) {
 
   const handleDropOverColumn = (
     columnId: string,
-    dataTransferData: string
+    dataTransferData: string,
+    type: "card" | "column"
   ) => {
     if (!boardId) return;
 
+    if (type === "column") {
+      // Handle column reordering
+      handleDropColumnOverColumn(columnId, dataTransferData);
+      return;
+    }
+
+    // Handle card drop
     let cardId: string;
     try {
       const cardData = JSON.parse(dataTransferData);
@@ -230,6 +238,50 @@ export function Kanban({ boardId }: KanbanProps) {
       listId: columnId,
       order: newOrder,
     });
+  };
+
+  const handleDropColumnOverColumn = async (
+    targetColumnId: string,
+    dataTransferData: string
+  ) => {
+    try {
+      const draggedData = JSON.parse(dataTransferData);
+      const draggedColumnId = draggedData.id;
+      
+      if (draggedColumnId === targetColumnId) return;
+      
+      // Find the dragged and target columns
+      const sortedLists = [...lists].sort((a, b) => (a.order || 0) - (b.order || 0));
+      const draggedIndex = sortedLists.findIndex((l) => l.id === draggedColumnId);
+      const targetIndex = sortedLists.findIndex((l) => l.id === targetColumnId);
+      
+      if (draggedIndex === -1 || targetIndex === -1) return;
+      
+      // Calculate new order for the dragged column
+      let newOrder: number;
+      if (targetIndex === 0) {
+        // Moving to the beginning
+        newOrder = (sortedLists[0].order || 0) - 10000;
+      } else if (targetIndex === sortedLists.length - 1) {
+        // Moving to the end
+        newOrder = (sortedLists[sortedLists.length - 1].order || 0) + 10000;
+      } else if (draggedIndex < targetIndex) {
+        // Moving right: place after target
+        const afterOrder = sortedLists[targetIndex].order || 0;
+        const nextOrder = sortedLists[targetIndex + 1]?.order || afterOrder + 20000;
+        newOrder = Math.floor((afterOrder + nextOrder) / 2);
+      } else {
+        // Moving left: place before target
+        const beforeOrder = sortedLists[targetIndex].order || 0;
+        const prevOrder = sortedLists[targetIndex - 1]?.order || beforeOrder - 20000;
+        newOrder = Math.floor((prevOrder + beforeOrder) / 2);
+      }
+      
+      await updateList(draggedColumnId, { order: newOrder });
+    } catch (e) {
+      console.error("Failed to reorder column:", e);
+      toast.error("Failed to reorder list", { position: "bottom-left" });
+    }
   };
 
   const handleDropOverListItem = (
@@ -287,7 +339,7 @@ export function Kanban({ boardId }: KanbanProps) {
 
   const handleSaveColumnEdit = async (columnId: string, newName: string) => {
     try {
-      await updateList(columnId, newName);
+      await updateList(columnId, { name: newName });
       toast.success("List updated!", { position: "bottom-left" });
     } catch (error) {
       console.error("Failed to update list:", error);
@@ -370,7 +422,7 @@ export function Kanban({ boardId }: KanbanProps) {
               key={column.id}
               column={column}
               boardId={boardId || ""}
-              onDropOverColumn={(data) => handleDropOverColumn(column.id, data)}
+              onDropOverColumn={(data, type) => handleDropOverColumn(column.id, data, type)}
               onDropOverListItem={(targetCardId, data, direction) =>
                 handleDropOverListItem(column.id, targetCardId, data, direction)
               }
