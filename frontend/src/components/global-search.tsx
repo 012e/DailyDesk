@@ -32,15 +32,15 @@ export function GlobalSearch() {
 
       // Navigate based on result type
       if (type === "board") {
-        navigate(`/kanban/${id}`);
+        navigate(`/board/${id}`);
       } else if (type === "card" && boardId) {
-        navigate(`/kanban/${boardId}?cardId=${id}`);
+        navigate(`/board/${boardId}?cardId=${id}`);
       } else if (type === "list" && boardId) {
-        navigate(`/kanban/${boardId}?listId=${id}`);
+        navigate(`/board/${boardId}?listId=${id}`);
       } else if (type === "comment" && boardId) {
-        navigate(`/kanban/${boardId}?cardId=${id}`);
+        navigate(`/board/${boardId}?cardId=${id}`);
       } else if (type === "checklist" && boardId) {
-        navigate(`/kanban/${boardId}?cardId=${id}`);
+        navigate(`/board/${boardId}?cardId=${id}`);
       }
     },
     [navigate]

@@ -19,7 +19,7 @@ export default function Layout() {
         <main className="flex flex-col w-full h-screen bg-background overflow-hidden">
           <ReactQueryDevtools initialIsOpen={false} />
           {/* Header with Search Bar */}
-          <div className="sticky top-0 right-0 flex items-center gap-3 px-4 py-2 z-50 bg-background/80 backdrop-blur-sm">
+          <div className="sticky top-0 right-0 flex items-center gap-3 px-4 py-2 z-50 bg-background/80 backdrop-blur-sm w-full">
             <SidebarTrigger />
             <GlobalSearch />
             <ThemeToggle />
