@@ -10,6 +10,7 @@ import { eq, and } from "drizzle-orm";
 import { ContentfulStatusCode } from "hono/utils/http-status";
 import { randomUUID } from "crypto";
 import type { CreateActivity } from "@/types/activities";
+import { checkPermission, AuthorizationError } from "./authorization.service";
 
 export class ServiceError extends Error {
   status: ContentfulStatusCode;
@@ -20,6 +21,9 @@ export class ServiceError extends Error {
     this.name = "ServiceError";
   }
 }
+
+// Re-export AuthorizationError for backwards compatibility
+export { AuthorizationError };
 
 /**
  * Helper function to get user info
@@ -161,9 +165,8 @@ export async function getActivitiesForCard(userSub: string, cardId: string) {
     throw new ServiceError("Card không tồn tại", 404);
   }
 
-  if (result[0].boardUserId !== userSub) {
-    throw new ServiceError("Không có quyền truy cập card này", 403);
-  }
+  // Check authorization - only need content:read permission
+  await checkPermission(result[0].boardId, userSub, "content:read");
 
   const boardId = result[0].boardId;
 

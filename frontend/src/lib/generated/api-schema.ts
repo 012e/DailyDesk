@@ -90,6 +90,9 @@ export interface paths {
                                     recurrence: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day" | null;
                                     recurrenceDay: number | null;
                                     recurrenceWeekday: number | null;
+                                    /** @enum {string|null} */
+                                    repeatFrequency: "daily" | "weekly" | "monthly" | null;
+                                    repeatInterval: number | null;
                                     latitude: number | null;
                                     longitude: number | null;
                                     completed: boolean | null;
@@ -268,6 +271,9 @@ export interface paths {
                                     recurrence: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day" | null;
                                     recurrenceDay: number | null;
                                     recurrenceWeekday: number | null;
+                                    /** @enum {string|null} */
+                                    repeatFrequency: "daily" | "weekly" | "monthly" | null;
+                                    repeatInterval: number | null;
                                     latitude: number | null;
                                     longitude: number | null;
                                     completed: boolean | null;
@@ -567,6 +573,9 @@ export interface paths {
                             recurrence: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day" | null;
                             recurrenceDay: number | null;
                             recurrenceWeekday: number | null;
+                            /** @enum {string|null} */
+                            repeatFrequency: "daily" | "weekly" | "monthly" | null;
+                            repeatInterval: number | null;
                             latitude: number | null;
                             longitude: number | null;
                             completed: boolean | null;
@@ -996,6 +1005,9 @@ export interface paths {
                             recurrence: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day" | null;
                             recurrenceDay: number | null;
                             recurrenceWeekday: number | null;
+                            /** @enum {string|null} */
+                            repeatFrequency: "daily" | "weekly" | "monthly" | null;
+                            repeatInterval: number | null;
                             latitude: number | null;
                             longitude: number | null;
                             completed: boolean | null;
@@ -1062,6 +1074,9 @@ export interface paths {
                         recurrence?: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day";
                         recurrenceDay?: number;
                         recurrenceWeekday?: number;
+                        /** @enum {string} */
+                        repeatFrequency?: "daily" | "weekly" | "monthly";
+                        repeatInterval?: number;
                         latitude?: number;
                         longitude?: number;
                         coverColor?: string;
@@ -1126,6 +1141,9 @@ export interface paths {
                             recurrence: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day" | null;
                             recurrenceDay: number | null;
                             recurrenceWeekday: number | null;
+                            /** @enum {string|null} */
+                            repeatFrequency: "daily" | "weekly" | "monthly" | null;
+                            repeatInterval: number | null;
                             latitude: number | null;
                             longitude: number | null;
                             completed: boolean | null;
@@ -1232,6 +1250,9 @@ export interface paths {
                             recurrence: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day" | null;
                             recurrenceDay: number | null;
                             recurrenceWeekday: number | null;
+                            /** @enum {string|null} */
+                            repeatFrequency: "daily" | "weekly" | "monthly" | null;
+                            repeatInterval: number | null;
                             latitude: number | null;
                             longitude: number | null;
                             completed: boolean | null;
@@ -1296,6 +1317,9 @@ export interface paths {
                         recurrence?: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day" | null;
                         recurrenceDay?: number | null;
                         recurrenceWeekday?: number | null;
+                        /** @enum {string|null} */
+                        repeatFrequency?: "daily" | "weekly" | "monthly" | null;
+                        repeatInterval?: number | null;
                         latitude?: number | null;
                         longitude?: number | null;
                         coverColor?: string | null;
@@ -1361,6 +1385,9 @@ export interface paths {
                             recurrence: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day" | null;
                             recurrenceDay: number | null;
                             recurrenceWeekday: number | null;
+                            /** @enum {string|null} */
+                            repeatFrequency: "daily" | "weekly" | "monthly" | null;
+                            repeatInterval: number | null;
                             latitude: number | null;
                             longitude: number | null;
                             completed: boolean | null;
@@ -1503,6 +1530,9 @@ export interface paths {
                         dueComplete?: boolean;
                         /** @enum {string|null} */
                         reminderMinutes?: "5" | "10" | "15" | "30" | "60" | "120" | "1440" | null;
+                        /** @enum {string|null} */
+                        repeatFrequency?: "daily" | "weekly" | "monthly" | null;
+                        repeatInterval?: number | null;
                     };
                 };
             };
@@ -1562,6 +1592,9 @@ export interface paths {
                             recurrence: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day" | null;
                             recurrenceDay: number | null;
                             recurrenceWeekday: number | null;
+                            /** @enum {string|null} */
+                            repeatFrequency: "daily" | "weekly" | "monthly" | null;
+                            repeatInterval: number | null;
                             latitude: number | null;
                             longitude: number | null;
                             completed: boolean | null;
@@ -2040,7 +2073,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/boards/{boardId}/labels": {
+    "/users/{userId}/labels": {
         parameters: {
             query?: never;
             header?: never;
@@ -2052,7 +2085,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    boardId: string;
+                    userId: string;
                 };
                 cookie?: never;
             };
@@ -2069,20 +2102,12 @@ export interface paths {
                             id: string;
                             name: string;
                             color: string;
-                            /** Format: uuid */
-                            boardId: string;
+                            userId: string;
                         }[];
                     };
                 };
-                /** @description Không có quyền truy cập Board này */
+                /** @description Không có quyền truy cập Labels của user này */
                 403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Board không tồn tại */
-                404: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -2107,7 +2132,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    boardId: string;
+                    userId: string;
                 };
                 cookie?: never;
             };
@@ -2133,24 +2158,27 @@ export interface paths {
                             id: string;
                             name: string;
                             color: string;
-                            /** Format: uuid */
-                            boardId: string;
+                            userId: string;
                         };
                     };
                 };
-                /** @description Không có quyền tạo Label trong Board này */
+                /** @description Không có quyền tạo Label cho user này */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                /** @description Board không tồn tại */
-                404: {
+                /** @description Label với tên và màu này đã tồn tại */
+                409: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
                 };
                 /** @description Internal server error */
                 500: {
@@ -2171,7 +2199,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/boards/{boardId}/labels/{id}": {
+    "/users/{userId}/labels/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -2184,7 +2212,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    boardId: string;
+                    userId: string;
                     id: string;
                 };
                 cookie?: never;
@@ -2209,8 +2237,7 @@ export interface paths {
                             id: string;
                             name: string;
                             color: string;
-                            /** Format: uuid */
-                            boardId: string;
+                            userId: string;
                         };
                     };
                 };
@@ -2221,12 +2248,23 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Label hoặc Board không tồn tại */
+                /** @description Label không tồn tại */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
+                };
+                /** @description Label với tên và màu này đã tồn tại */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: string;
+                        };
+                    };
                 };
                 /** @description Internal server error */
                 500: {
@@ -2247,7 +2285,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    boardId: string;
+                    userId: string;
                     id: string;
                 };
                 cookie?: never;
@@ -2272,7 +2310,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Label hoặc Board không tồn tại */
+                /** @description Label không tồn tại */
                 404: {
                     headers: {
                         [name: string]: unknown;
@@ -2335,7 +2373,7 @@ export interface paths {
                              * @default member
                              * @enum {string}
                              */
-                            role: "member" | "admin" | "viewer";
+                            role: "member" | "admin";
                             /** Format: date-time */
                             addedAt: string | null;
                         }[];
@@ -2392,7 +2430,7 @@ export interface paths {
                          * @default member
                          * @enum {string}
                          */
-                        role?: "member" | "admin" | "viewer";
+                        role?: "member" | "admin";
                     };
                 };
             };
@@ -2417,7 +2455,7 @@ export interface paths {
                              * @default member
                              * @enum {string}
                              */
-                            role: "member" | "admin" | "viewer";
+                            role: "member" | "admin";
                             /** Format: date-time */
                             addedAt: string | null;
                         };
@@ -2490,7 +2528,7 @@ export interface paths {
                          * @default member
                          * @enum {string}
                          */
-                        role?: "member" | "admin" | "viewer";
+                        role?: "member" | "admin";
                     };
                 };
             };
@@ -2515,7 +2553,7 @@ export interface paths {
                              * @default member
                              * @enum {string}
                              */
-                            role: "member" | "admin" | "viewer";
+                            role: "member" | "admin";
                             /** Format: date-time */
                             addedAt: string | null;
                         };
@@ -2583,7 +2621,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         /** @enum {string} */
-                        role?: "member" | "admin" | "viewer";
+                        role?: "member" | "admin";
                     };
                 };
             };
@@ -2608,7 +2646,7 @@ export interface paths {
                              * @default member
                              * @enum {string}
                              */
-                            role: "member" | "admin" | "viewer";
+                            role: "member" | "admin";
                             /** Format: date-time */
                             addedAt: string | null;
                         };

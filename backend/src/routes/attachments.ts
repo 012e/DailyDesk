@@ -6,6 +6,7 @@ import db from "@/lib/db";
 import { attachmentsTable, cardsTable, listsTable, boardsTable } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
+import { checkPermission, AuthorizationError } from "@/services/authorization.service";
 
 const TAGS = ["Attachments"];
 
@@ -73,51 +74,47 @@ export default function createAttachmentRoutes() {
       const { boardId, cardId } = c.req.valid("param");
       const body = c.req.valid("json");
 
-      const board = await db
-        .select()
-        .from(boardsTable)
-        .where(eq(boardsTable.id, boardId))
-        .limit(1);
+      try {
+        // Check authorization - need content:create permission
+        await checkPermission(boardId, user.sub, "content:create");
 
-      if (board.length === 0) {
-        return c.json({ error: "Board không tồn tại" }, 404);
+        const card = await db
+          .select()
+          .from(cardsTable)
+          .innerJoin(listsTable, eq(cardsTable.listId, listsTable.id))
+          .where(eq(cardsTable.id, cardId))
+          .limit(1);
+
+        if (card.length === 0) {
+          return c.json({ error: "Card không tồn tại" }, 404);
+        }
+
+        if (card[0].lists.boardId !== boardId) {
+          return c.json({ error: "Card không thuộc Board này" }, 403);
+        }
+
+        const attachmentId = randomUUID();
+        const result = await db
+          .insert(attachmentsTable)
+          .values({
+            id: attachmentId,
+            name: body.name,
+            url: body.url,
+            publicId: body.publicId || null,
+            type: body.type,
+            size: body.size,
+            uploadedBy: user.sub,
+            cardId: cardId,
+          })
+          .returning();
+
+        return c.json(result[0], 200);
+      } catch (error: any) {
+        if (error instanceof AuthorizationError) {
+          return c.json({ error: error.message }, error.status);
+        }
+        return c.json({ error: "Internal server error" }, 500);
       }
-
-      if (board[0].userId !== user.sub) {
-        return c.json({ error: "Không có quyền truy cập Board này" }, 403);
-      }
-
-      const card = await db
-        .select()
-        .from(cardsTable)
-        .innerJoin(listsTable, eq(cardsTable.listId, listsTable.id))
-        .where(eq(cardsTable.id, cardId))
-        .limit(1);
-
-      if (card.length === 0) {
-        return c.json({ error: "Card không tồn tại" }, 404);
-      }
-
-      if (card[0].lists.boardId !== boardId) {
-        return c.json({ error: "Card không thuộc Board này" }, 403);
-      }
-
-      const attachmentId = randomUUID();
-      const result = await db
-        .insert(attachmentsTable)
-        .values({
-          id: attachmentId,
-          name: body.name,
-          url: body.url,
-          publicId: body.publicId || null,
-          type: body.type,
-          size: body.size,
-          uploadedBy: user.sub,
-          cardId: cardId,
-        })
-        .returning();
-
-      return c.json(result[0], 200);
     }
   );
 
@@ -159,41 +156,37 @@ export default function createAttachmentRoutes() {
       const user = ensureUserAuthenticated(c);
       const { boardId, cardId } = c.req.valid("param");
 
-      const board = await db
-        .select()
-        .from(boardsTable)
-        .where(eq(boardsTable.id, boardId))
-        .limit(1);
+      try {
+        // Check authorization - need content:read permission
+        await checkPermission(boardId, user.sub, "content:read");
 
-      if (board.length === 0) {
-        return c.json({ error: "Board không tồn tại" }, 404);
+        const card = await db
+          .select()
+          .from(cardsTable)
+          .innerJoin(listsTable, eq(cardsTable.listId, listsTable.id))
+          .where(eq(cardsTable.id, cardId))
+          .limit(1);
+
+        if (card.length === 0) {
+          return c.json({ error: "Card không tồn tại" }, 404);
+        }
+
+        if (card[0].lists.boardId !== boardId) {
+          return c.json({ error: "Card không thuộc Board này" }, 403);
+        }
+
+        const attachments = await db
+          .select()
+          .from(attachmentsTable)
+          .where(eq(attachmentsTable.cardId, cardId));
+
+        return c.json(attachments, 200);
+      } catch (error: any) {
+        if (error instanceof AuthorizationError) {
+          return c.json({ error: error.message }, error.status);
+        }
+        return c.json({ error: "Internal server error" }, 500);
       }
-
-      if (board[0].userId !== user.sub) {
-        return c.json({ error: "Không có quyền truy cập Board này" }, 403);
-      }
-
-      const card = await db
-        .select()
-        .from(cardsTable)
-        .innerJoin(listsTable, eq(cardsTable.listId, listsTable.id))
-        .where(eq(cardsTable.id, cardId))
-        .limit(1);
-
-      if (card.length === 0) {
-        return c.json({ error: "Card không tồn tại" }, 404);
-      }
-
-      if (card[0].lists.boardId !== boardId) {
-        return c.json({ error: "Card không thuộc Board này" }, 403);
-      }
-
-      const attachments = await db
-        .select()
-        .from(attachmentsTable)
-        .where(eq(attachmentsTable.cardId, cardId));
-
-      return c.json(attachments, 200);
     }
   );
 
@@ -236,48 +229,44 @@ export default function createAttachmentRoutes() {
       const user = ensureUserAuthenticated(c);
       const { boardId, cardId, id } = c.req.valid("param");
 
-      const board = await db
-        .select()
-        .from(boardsTable)
-        .where(eq(boardsTable.id, boardId))
-        .limit(1);
+      try {
+        // Check authorization - need content:delete permission
+        await checkPermission(boardId, user.sub, "content:delete");
 
-      if (board.length === 0) {
-        return c.json({ error: "Board không tồn tại" }, 404);
+        const card = await db
+          .select()
+          .from(cardsTable)
+          .innerJoin(listsTable, eq(cardsTable.listId, listsTable.id))
+          .where(eq(cardsTable.id, cardId))
+          .limit(1);
+
+        if (card.length === 0) {
+          return c.json({ error: "Card không tồn tại" }, 404);
+        }
+
+        if (card[0].lists.boardId !== boardId) {
+          return c.json({ error: "Card không thuộc Board này" }, 403);
+        }
+
+        const attachment = await db
+          .select()
+          .from(attachmentsTable)
+          .where(and(eq(attachmentsTable.id, id), eq(attachmentsTable.cardId, cardId)))
+          .limit(1);
+
+        if (attachment.length === 0) {
+          return c.json({ error: "Attachment không tồn tại" }, 404);
+        }
+
+        await db.delete(attachmentsTable).where(eq(attachmentsTable.id, id));
+
+        return c.json({ message: "Xóa attachment thành công" }, 200);
+      } catch (error: any) {
+        if (error instanceof AuthorizationError) {
+          return c.json({ error: error.message }, error.status);
+        }
+        return c.json({ error: "Internal server error" }, 500);
       }
-
-      if (board[0].userId !== user.sub) {
-        return c.json({ error: "Không có quyền truy cập Board này" }, 403);
-      }
-
-      const card = await db
-        .select()
-        .from(cardsTable)
-        .innerJoin(listsTable, eq(cardsTable.listId, listsTable.id))
-        .where(eq(cardsTable.id, cardId))
-        .limit(1);
-
-      if (card.length === 0) {
-        return c.json({ error: "Card không tồn tại" }, 404);
-      }
-
-      if (card[0].lists.boardId !== boardId) {
-        return c.json({ error: "Card không thuộc Board này" }, 403);
-      }
-
-      const attachment = await db
-        .select()
-        .from(attachmentsTable)
-        .where(and(eq(attachmentsTable.id, id), eq(attachmentsTable.cardId, cardId)))
-        .limit(1);
-
-      if (attachment.length === 0) {
-        return c.json({ error: "Attachment không tồn tại" }, 404);
-      }
-
-      await db.delete(attachmentsTable).where(eq(attachmentsTable.id, id));
-
-      return c.json({ message: "Xóa attachment thành công" }, 200);
     }
   );
 

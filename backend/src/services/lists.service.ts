@@ -3,6 +3,7 @@ import { boardsTable, listsTable } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { ContentfulStatusCode } from "hono/utils/http-status";
 import { publishBoardChanged } from "./events.service";
+import { checkPermission, AuthorizationError } from "./authorization.service";
 
 export class ServiceError extends Error {
   status: ContentfulStatusCode;
@@ -14,20 +15,12 @@ export class ServiceError extends Error {
   }
 }
 
+// Re-export AuthorizationError for backwards compatibility
+export { AuthorizationError };
+
 export async function getListsForBoard(userSub: string, boardId: string) {
-  const board = await db
-    .select()
-    .from(boardsTable)
-    .where(eq(boardsTable.id, boardId))
-    .limit(1);
-
-  if (board.length === 0) {
-    throw new ServiceError("Board không tồn tại", 404);
-  }
-
-  if (board[0].userId !== userSub) {
-    throw new ServiceError("Không có quyền truy cập Board này", 403);
-  }
+  // Check authorization - only need content:read permission
+  await checkPermission(boardId, userSub, "content:read");
 
   const lists = await db
     .select()
@@ -38,19 +31,8 @@ export async function getListsForBoard(userSub: string, boardId: string) {
 }
 
 export async function createList(userSub: string, boardId: string, req: any) {
-  const board = await db
-    .select()
-    .from(boardsTable)
-    .where(eq(boardsTable.id, boardId))
-    .limit(1);
-
-  if (board.length === 0) {
-    throw new ServiceError("Board không tồn tại", 404);
-  }
-
-  if (board[0].userId !== userSub) {
-    throw new ServiceError("Không có quyền tạo List trong Board này", 403);
-  }
+  // Check authorization - need content:create permission (member, admin, owner)
+  await checkPermission(boardId, userSub, "content:create");
 
   const list = await db
     .insert(listsTable)
@@ -69,19 +51,8 @@ export async function createList(userSub: string, boardId: string, req: any) {
 }
 
 export async function getListById(userSub: string, boardId: string, id: string) {
-  const board = await db
-    .select()
-    .from(boardsTable)
-    .where(eq(boardsTable.id, boardId))
-    .limit(1);
-
-  if (board.length === 0) {
-    throw new ServiceError("Board không tồn tại", 404);
-  }
-
-  if (board[0].userId !== userSub) {
-    throw new ServiceError("Không có quyền truy cập Board này", 403);
-  }
+  // Check authorization - only need content:read permission
+  await checkPermission(boardId, userSub, "content:read");
 
   const list = await db
     .select()
@@ -101,19 +72,8 @@ export async function getListById(userSub: string, boardId: string, id: string) 
 }
 
 export async function updateList(userSub: string, boardId: string, id: string, req: any) {
-  const board = await db
-    .select()
-    .from(boardsTable)
-    .where(eq(boardsTable.id, boardId))
-    .limit(1);
-
-  if (board.length === 0) {
-    throw new ServiceError("Board không tồn tại", 404);
-  }
-
-  if (board[0].userId !== userSub) {
-    throw new ServiceError("Không có quyền truy cập Board này", 403);
-  }
+  // Check authorization - need content:update permission (member, admin, owner)
+  await checkPermission(boardId, userSub, "content:update");
 
   const existingList = await db
     .select()
@@ -145,19 +105,8 @@ export async function updateList(userSub: string, boardId: string, id: string, r
 }
 
 export async function deleteList(userSub: string, boardId: string, id: string) {
-  const board = await db
-    .select()
-    .from(boardsTable)
-    .where(eq(boardsTable.id, boardId))
-    .limit(1);
-
-  if (board.length === 0) {
-    throw new ServiceError("Board không tồn tại", 404);
-  }
-
-  if (board[0].userId !== userSub) {
-    throw new ServiceError("Không có quyền truy cập Board này", 403);
-  }
+  // Check authorization - need content:delete permission (member, admin, owner)
+  await checkPermission(boardId, userSub, "content:delete");
 
   const existingList = await db
     .select()
