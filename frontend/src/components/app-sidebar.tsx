@@ -7,6 +7,7 @@ import {
   LayoutTemplate,
   Search,
   Settings,
+  User,
 } from "lucide-react";
 import { Link } from "react-router";
 import { useState } from "react";
@@ -44,6 +45,11 @@ const items = [
     title: "API",
     url: "/doc",
     icon: BookOpen,
+  },
+  {
+    title: "Profile",
+    url: "/profile",
+    icon: User,
   },
   {
     title: "Settings",
