@@ -82,7 +82,7 @@ describe("Search API", () => {
     });
 
     expect(response.status).toBe(200);
-    const data = await response.json();
+    const data = await response.json() as any;
 
     expect(data.query).toBe("Test");
     // At minimum should have 1 result since the test creates data with "Test" in the name
@@ -104,7 +104,7 @@ describe("Search API", () => {
     });
 
     expect(response.status).toBe(200);
-    const data = await response.json();
+    const data = await response.json() as any;
 
     expect(data.results).toBeDefined();
     expect(data.results.every((r: any) => r.type === "card")).toBe(true);
@@ -117,7 +117,7 @@ describe("Search API", () => {
     });
 
     expect(response.status).toBe(200);
-    const data = await response.json();
+    const data = await response.json() as any;
 
     // Each entity type should have at most 2 results
     const typeCounts = data.results.reduce((acc: any, r: any) => {
@@ -146,7 +146,7 @@ describe("Search API", () => {
     });
 
     expect(response.status).toBe(200);
-    const data = await response.json();
+    const data = await response.json() as any;
 
     // All results should belong to the specified board
     data.results.forEach((result: any) => {
@@ -163,7 +163,7 @@ describe("Search API", () => {
     });
 
     expect(response.status).toBe(200);
-    const data = await response.json();
+    const data = await response.json() as any;
 
     expect(data.total).toBe(0);
     expect(data.results).toHaveLength(0);
@@ -176,7 +176,7 @@ describe("Search API", () => {
     });
 
     expect(response.status).toBe(200);
-    const data = await response.json();
+    const data = await response.json() as any;
 
     expect(data.results).toBeDefined();
     const card = data.results.find((r: any) => r.id === testCardId);
@@ -191,7 +191,7 @@ describe("Search API", () => {
     });
 
     expect(response.status).toBe(200);
-    const data = await response.json();
+    const data = await response.json() as any;
 
     const card = data.results.find((r: any) => r.id === testCardId);
     expect(card).toBeDefined();
@@ -215,7 +215,7 @@ describe("Search API", () => {
     });
 
     expect(response.status).toBe(200);
-    const data = await response.json();
+    const data = await response.json() as any;
 
     // Should not include results from the other user's board
     const privateBoard = data.results.find(
