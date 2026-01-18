@@ -27,83 +27,165 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            /** Format: uuid */
-                            id: string;
-                            name: string;
-                            userId: string;
-                            backgroundUrl?: string;
-                            backgroundColor?: string;
-                            backgroundPublicId?: string;
-                            lists: {
+                            ownedBoards: {
                                 /** Format: uuid */
                                 id: string;
                                 name: string;
-                                order: number;
-                                /** Format: uuid */
-                                boardId: string;
-                                cards: {
+                                userId: string;
+                                backgroundUrl?: string;
+                                backgroundColor?: string;
+                                backgroundPublicId?: string;
+                                lists: {
                                     /** Format: uuid */
                                     id: string;
                                     name: string;
-                                    description: string | null;
                                     order: number;
-                                    /** Format: uri */
-                                    coverUrl: string | null;
-                                    coverPublicId: string | null;
-                                    coverColor: string | null;
-                                    coverMode: string | null;
                                     /** Format: uuid */
-                                    listId: string;
-                                    labels?: {
+                                    boardId: string;
+                                    cards: {
+                                        /** Format: uuid */
                                         id: string;
                                         name: string;
-                                        color: string;
-                                    }[] | null;
-                                    members?: {
-                                        id: string;
-                                        name: string;
-                                        email: string;
-                                        avatar?: string | null;
-                                        initials: string;
-                                    }[] | null;
-                                    attachments?: {
-                                        id: string;
-                                        name: string;
-                                        url: string;
-                                        publicId: string | null;
-                                        type: string;
-                                        size: number;
+                                        description: string | null;
+                                        order: number;
+                                        /** Format: uri */
+                                        coverUrl: string | null;
+                                        coverPublicId: string | null;
+                                        coverColor: string | null;
+                                        coverMode: string | null;
+                                        /** Format: uuid */
+                                        listId: string;
+                                        labels?: {
+                                            id: string;
+                                            name: string;
+                                            color: string;
+                                        }[] | null;
+                                        members?: {
+                                            id: string;
+                                            name: string;
+                                            email: string;
+                                            avatar?: string | null;
+                                            initials: string;
+                                        }[] | null;
+                                        attachments?: {
+                                            id: string;
+                                            name: string;
+                                            url: string;
+                                            publicId: string | null;
+                                            type: string;
+                                            size: number;
+                                            /** Format: date-time */
+                                            uploadedAt: string | null;
+                                            uploadedBy: string;
+                                            cardId: string;
+                                        }[] | null;
                                         /** Format: date-time */
-                                        uploadedAt: string | null;
-                                        uploadedBy: string;
-                                        cardId: string;
-                                    }[] | null;
-                                    /** Format: date-time */
-                                    startDate: string | null;
-                                    /** Format: date-time */
-                                    deadline: string | null;
-                                    /** Format: date-time */
-                                    dueAt: string | null;
-                                    dueComplete: boolean | null;
-                                    reminderMinutes: number | null;
-                                    /** @enum {string|null} */
-                                    recurrence: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day" | null;
-                                    recurrenceDay: number | null;
-                                    recurrenceWeekday: number | null;
-                                    /** @enum {string|null} */
-                                    repeatFrequency: "daily" | "weekly" | "monthly" | null;
-                                    repeatInterval: number | null;
-                                    latitude: number | null;
-                                    longitude: number | null;
-                                    completed: boolean | null;
-                                    isTemplate: boolean | null;
-                                    /** Format: date-time */
-                                    createdAt: string | null;
-                                    /** Format: date-time */
-                                    updatedAt: string | null;
+                                        startDate: string | null;
+                                        /** Format: date-time */
+                                        deadline: string | null;
+                                        /** Format: date-time */
+                                        dueAt: string | null;
+                                        dueComplete: boolean | null;
+                                        reminderMinutes: number | null;
+                                        /** @enum {string|null} */
+                                        recurrence: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day" | null;
+                                        recurrenceDay: number | null;
+                                        recurrenceWeekday: number | null;
+                                        /** @enum {string|null} */
+                                        repeatFrequency: "daily" | "weekly" | "monthly" | null;
+                                        repeatInterval: number | null;
+                                        latitude: number | null;
+                                        longitude: number | null;
+                                        completed: boolean | null;
+                                        isTemplate: boolean | null;
+                                        /** Format: date-time */
+                                        createdAt: string | null;
+                                        /** Format: date-time */
+                                        updatedAt: string | null;
+                                    }[];
                                 }[];
                             }[];
-                        }[];
+                            invitedBoards: {
+                                /** Format: uuid */
+                                id: string;
+                                name: string;
+                                userId: string;
+                                backgroundUrl?: string;
+                                backgroundColor?: string;
+                                backgroundPublicId?: string;
+                                lists: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    name: string;
+                                    order: number;
+                                    /** Format: uuid */
+                                    boardId: string;
+                                    cards: {
+                                        /** Format: uuid */
+                                        id: string;
+                                        name: string;
+                                        description: string | null;
+                                        order: number;
+                                        /** Format: uri */
+                                        coverUrl: string | null;
+                                        coverPublicId: string | null;
+                                        coverColor: string | null;
+                                        coverMode: string | null;
+                                        /** Format: uuid */
+                                        listId: string;
+                                        labels?: {
+                                            id: string;
+                                            name: string;
+                                            color: string;
+                                        }[] | null;
+                                        members?: {
+                                            id: string;
+                                            name: string;
+                                            email: string;
+                                            avatar?: string | null;
+                                            initials: string;
+                                        }[] | null;
+                                        attachments?: {
+                                            id: string;
+                                            name: string;
+                                            url: string;
+                                            publicId: string | null;
+                                            type: string;
+                                            size: number;
+                                            /** Format: date-time */
+                                            uploadedAt: string | null;
+                                            uploadedBy: string;
+                                            cardId: string;
+                                        }[] | null;
+                                        /** Format: date-time */
+                                        startDate: string | null;
+                                        /** Format: date-time */
+                                        deadline: string | null;
+                                        /** Format: date-time */
+                                        dueAt: string | null;
+                                        dueComplete: boolean | null;
+                                        reminderMinutes: number | null;
+                                        /** @enum {string|null} */
+                                        recurrence: "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day" | null;
+                                        recurrenceDay: number | null;
+                                        recurrenceWeekday: number | null;
+                                        /** @enum {string|null} */
+                                        repeatFrequency: "daily" | "weekly" | "monthly" | null;
+                                        repeatInterval: number | null;
+                                        latitude: number | null;
+                                        longitude: number | null;
+                                        completed: boolean | null;
+                                        isTemplate: boolean | null;
+                                        /** Format: date-time */
+                                        createdAt: string | null;
+                                        /** Format: date-time */
+                                        updatedAt: string | null;
+                                    }[];
+                                }[];
+                                /** @enum {string} */
+                                role: "admin" | "member" | "viewer";
+                            }[];
+                        };
                     };
                 };
                 /** @description Internal server error */

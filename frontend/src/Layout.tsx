@@ -34,7 +34,9 @@ export default function Layout() {
           >
             <Suspense fallback={<PageLoader />}>
               <Toaster richColors />
-              <Outlet />
+              <div className="flex-1 overflow-y-auto">
+                <Outlet />
+              </div>
             </Suspense>
           </ErrorBoundary>
         </main>

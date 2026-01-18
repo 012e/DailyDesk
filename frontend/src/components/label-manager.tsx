@@ -107,7 +107,6 @@ export function LabelManager({ members, creatorId, currentUserId }: LabelManager
       {
         onSuccess: () => {
           closeDialog();
-          toast.success("Label created!");
         },
         onError: () => {
           toast.error("Failed to create label");

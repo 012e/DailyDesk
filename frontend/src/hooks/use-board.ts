@@ -131,7 +131,10 @@ export function useBoards() {
       return data!;
     },
   });
-  return data;
+  return {
+    ownedBoards: data.ownedBoards,
+    invitedBoards: data.invitedBoards,
+  };
 }
 
 export function useBoard({ boardId }: { boardId: string }) {

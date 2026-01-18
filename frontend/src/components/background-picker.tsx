@@ -91,6 +91,7 @@ export function BackgroundPicker() {
               color={selectedColor}
               onChange={(color) => {
                 handleColorPick(color);
+                setSelectedBGIndex(null); // Clear gradient selection when picking color
               }}
             />
             <div className="grid grid-cols-[repeat(auto-fit,minmax(0.5rem,1fr))] w-[250] ">
@@ -100,11 +101,12 @@ export function BackgroundPicker() {
                   type="button"
                   aria-label={`Select background ${index + 1}`}
                   onClick={async () => {
+                    setSelectedBGIndex(index);
                     handleFilePick(await imageUrlToFile(c));
                   }}
                   className={cn(
                     "aspect-square w-full rounded-md border transition cursor-pointer select-none bg-center bg-cover bg-no-repeat",
-                    selectedColor === c
+                    selectedBGIndex === index
                       ? "border-sky-300 ring-1 ring-sky-200 scale-105 z-10 shadow-lg"
                       : "border-transparent"
                   )}
@@ -115,10 +117,17 @@ export function BackgroundPicker() {
           </div>
           <div className="flex gap-2 items-center ml-3 flex-[1]">
             <span className="text-sm text-muted-foreground">Preview</span>
-            <div
-              className="w-full h-9 rounded-md border"
-              style={{ backgroundColor: selectedColor }}
-            />
+            {selectedBGIndex !== null && colorPalette[selectedBGIndex] ? (
+              <div
+                className="w-full h-9 rounded-md border bg-cover bg-center"
+                style={{ backgroundImage: `url(${colorPalette[selectedBGIndex]})` }}
+              />
+            ) : (
+              <div
+                className="w-full h-9 rounded-md border"
+                style={{ backgroundColor: selectedColor }}
+              />
+            )}
           </div>
         </div>
       ) : (

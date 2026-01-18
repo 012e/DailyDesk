@@ -2,7 +2,7 @@ import {
   KanbanBoardColumnButton,
   KanbanBoardColumnFooter,
 } from "@/components/kanban";
-import { CardCreateDialog } from "@/components/card-edit-dialog";
+import { CardEditDialog } from "@/components/card-edit-dialog";
 import { PlusIcon, LayoutTemplate, Loader2 } from "lucide-react";
 import { useAtom, useAtomValue } from "jotai";
 import { addingCardColumnIdAtom } from "./atoms";
@@ -38,10 +38,11 @@ export function AddCardForm({ columnId, cardsCount }: AddCardFormProps) {
         },
       });
       if (result.error) {
-        const errorMessage = typeof result.error === "string" 
-          ? result.error 
-          : (result.error as any).error || JSON.stringify(result.error);
-        throw new Error(errorMessage);
+        const error = result.error as unknown;
+        const errorMessage = typeof error === "string" 
+          ? error 
+          : (error as Record<string, unknown>)?.error || JSON.stringify(error);
+        throw new Error(String(errorMessage));
       }
       return result.data;
     },
@@ -50,6 +51,7 @@ export function AddCardForm({ columnId, cardsCount }: AddCardFormProps) {
 
   const { mutate: createCard } = useCreateCard();
   const [isCreatingFromTemplate, setIsCreatingFromTemplate] = useState(false);
+  const [isCreatingTemplate, setIsCreatingTemplate] = useState(false);
 
   const isDialogOpen = addingCardColumnId === columnId;
 
@@ -59,6 +61,7 @@ export function AddCardForm({ columnId, cardsCount }: AddCardFormProps) {
 
   const closeDialog = () => {
     setAddingCardColumnId(null);
+    setIsCreatingTemplate(false);
   };
 
   // Filter templates from all cards in the board
@@ -95,6 +98,7 @@ export function AddCardForm({ columnId, cardsCount }: AddCardFormProps) {
     );
   };
 
+
   return (
     <>
       <KanbanBoardColumnFooter className="flex gap-1">
@@ -116,6 +120,15 @@ export function AddCardForm({ columnId, cardsCount }: AddCardFormProps) {
             <PopoverContent side="right" align="start" className="w-64 p-2">
               <div className="text-sm font-medium mb-2 px-2 text-muted-foreground">Templates</div>
               <div className="space-y-1">
+                 <Button 
+                    variant="ghost" 
+                    className="w-full justify-start font-medium text-primary hover:text-primary hover:bg-primary/10"
+                    onClick={() => setIsCreatingTemplate(true)}
+                 >
+                    <PlusIcon className="mr-2 h-4 w-4" />
+                    Create new template
+                 </Button>
+                 
                  {templates.length > 0 && <div className="h-px bg-border my-1" />}
 
                  <div className="grid gap-1 max-h-[300px] overflow-y-auto">
@@ -150,12 +163,13 @@ export function AddCardForm({ columnId, cardsCount }: AddCardFormProps) {
       </KanbanBoardColumnFooter>
 
       {boardId && (
-        <CardCreateDialog
+        <CardEditDialog
           boardId={boardId}
           listId={columnId}
           order={cardsCount}
-          isOpen={isDialogOpen}
+          isOpen={isDialogOpen || isCreatingTemplate}
           onClose={closeDialog}
+          defaultIsTemplate={isCreatingTemplate}
         />
       )}
     </>

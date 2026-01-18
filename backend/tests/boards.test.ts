@@ -13,15 +13,18 @@ describe("Boards API Integration Tests", () => {
   });
 
   describe("GET /boards", () => {
-    test("should return empty array for authenticated user with no boards", async () => {
+    test("should return grouped boards for authenticated user with no boards", async () => {
       const res = await app.request("/boards", {
         method: "GET",
         headers: createAuthHeaders(),
       });
 
       expect(res.status).toBe(200);
-      const data = await res.json();
-      expect(Array.isArray(data)).toBe(true);
+      const data = await res.json() as any;
+      expect(data).toHaveProperty("ownedBoards");
+      expect(data).toHaveProperty("invitedBoards");
+      expect(Array.isArray(data.ownedBoards)).toBe(true);
+      expect(Array.isArray(data.invitedBoards)).toBe(true);
     });
   });
 
