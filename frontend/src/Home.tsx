@@ -1,12 +1,14 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Search, Clipboard, Users, Clock } from "lucide-react";
+import { Plus, Search, Clipboard, Users, Clock, ChevronRight } from "lucide-react";
 import { Suspense, useState, useEffect } from "react";
 import CreateBoardDialog from "@/components/create-board-dialog";
 import { BoardCard } from "@/components/board-card";
 import { DeleteBoardDialog } from "@/components/delete-board-dialog";
 import { EditBoardDialog } from "@/components/edit-board-dialog";
+import { AllBoardsDialog } from "@/components/all-boards-dialog";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   useBoards,
   useCreateBoard,
@@ -31,7 +33,7 @@ type BoardToDelete = {
 } | null;
 
 const RECENT_BOARDS_KEY_PREFIX = "dailydesk-recent-boards-";
-const MAX_RECENT_BOARDS = 5;
+const MAX_RECENT_BOARDS = 4;
 
 // Helper to get recently accessed boards from localStorage (user-specific)
 function getRecentBoards(userId: string): string[] {
@@ -68,6 +70,11 @@ export default function Home() {
   const [boardToDelete, setBoardToDelete] = useState<BoardToDelete>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [recentBoardIds, setRecentBoardIds] = useState<string[]>([]);
+  const [isAllOwnedBoardsOpen, setIsAllOwnedBoardsOpen] = useState(false);
+  const [isAllInvitedBoardsOpen, setIsAllInvitedBoardsOpen] = useState(false);
+
+  // Show max 7 boards in grid (2 rows of 4 minus 1 for create button)
+  const MAX_DISPLAYED_BOARDS = 7;
 
   const userId = user?.sub || "";
 
@@ -177,7 +184,7 @@ export default function Home() {
       case "member":
         return "bg-blue-500/20 text-blue-400 border-blue-500/30";
       case "viewer":
-        return "bg-gray-500/20 text-gray-400 border-gray-500/30";
+        return "bg-gray-500/20 text-gray-300 border-gray-300/30";
       default:
         return "bg-gray-500/20 text-gray-400";
     }
@@ -209,16 +216,16 @@ export default function Home() {
 
         {/* Recent Boards Section (only show if there are recent boards) */}
         {!searchTerm && recentBoards.length > 0 && (
-          <section>
+          <section className="w-full">
             <div className="flex items-center gap-2 mb-3">
               <Clock className="w-5 h-5 text-muted-foreground" />
               <h2 className="text-lg font-semibold text-black dark:text-white">
                 Recent Boards
               </h2>
             </div>
-            <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-400/50 scrollbar-track-transparent">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {recentBoards.map((board: any) => (
-                <div key={board.id} className="shrink-0 w-[25%]" onClick={() => handleBoardClick(board.id)}>
+                <div key={board.id}  onClick={() => handleBoardClick(board.id)}>
                   <BoardCard
                     id={board.id}
                     name={board.name}
@@ -248,14 +255,27 @@ export default function Home() {
 
         {/* My Boards Section */}
         <section>
-          <div className="flex items-center gap-2 mb-3">
-            <Clipboard className="w-5 h-5 text-muted-foreground" />
-            <h2 className="text-lg font-semibold text-black dark:text-white">
-              My Boards
-            </h2>
-            <Badge variant="secondary" className="ml-1">
-              {filteredOwnedBoards.length}
-            </Badge>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Clipboard className="w-5 h-5 text-muted-foreground" />
+              <h2 className="text-lg font-semibold text-black dark:text-white">
+                My Boards
+              </h2>
+              <Badge variant="secondary" className="ml-1">
+                {filteredOwnedBoards.length}
+              </Badge>
+            </div>
+            {filteredOwnedBoards.length > MAX_DISPLAYED_BOARDS && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsAllOwnedBoardsOpen(true)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                See All
+                <ChevronRight className="ml-1 h-4 w-4" />
+              </Button>
+            )}
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {/* Create New Board Card - Always visible */}
@@ -271,7 +291,7 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            {filteredOwnedBoards.map((board) => (
+            {filteredOwnedBoards.slice(0, MAX_DISPLAYED_BOARDS).map((board) => (
               <div key={board.id} onClick={() => handleBoardClick(board.id)}>
                 <BoardCard
                   id={board.id}
@@ -302,17 +322,30 @@ export default function Home() {
         {/* Invited Boards Section */}
         {filteredInvitedBoards.length > 0 && (
           <section>
-            <div className="flex items-center gap-2 mb-3">
-              <Users className="w-5 h-5 text-muted-foreground" />
-              <h2 className="text-lg font-semibold text-black dark:text-white">
-                Invited Boards
-              </h2>
-              <Badge variant="secondary" className="ml-1">
-                {filteredInvitedBoards.length}
-              </Badge>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-muted-foreground" />
+                <h2 className="text-lg font-semibold text-black dark:text-white">
+                  Invited Boards
+                </h2>
+                <Badge variant="secondary" className="ml-1">
+                  {filteredInvitedBoards.length}
+                </Badge>
+              </div>
+              {filteredInvitedBoards.length > 8 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsAllInvitedBoardsOpen(true)}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  See All
+                  <ChevronRight className="ml-1 h-4 w-4" />
+                </Button>
+              )}
             </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {filteredInvitedBoards.map((board: any) => (
+              {filteredInvitedBoards.slice(0, 8).map((board: any) => (
                 <div key={board.id} className="relative" onClick={() => handleBoardClick(board.id)}>
                   <BoardCard
                     id={board.id}
@@ -381,6 +414,39 @@ export default function Home() {
           onOpenChange={(open) => !open && setBoardToDelete(null)}
           boardName={boardToDelete?.name ?? ""}
           onConfirm={handleDeleteBoard}
+        />
+
+        {/* See All Owned Boards Dialog */}
+        <AllBoardsDialog
+          open={isAllOwnedBoardsOpen}
+          onOpenChange={setIsAllOwnedBoardsOpen}
+          boards={ownedBoards}
+          title={`All My Boards (${ownedBoards.length})`}
+          onBoardClick={handleBoardClick}
+          onEdit={(board) =>
+            setBoardToEdit({
+              id: board.id,
+              name: board.name,
+              backgroundUrl: board.backgroundUrl ?? undefined,
+              backgroundColor: board.backgroundColor ?? undefined,
+            })
+          }
+          onDelete={(board) =>
+            setBoardToDelete({
+              id: board.id,
+              name: board.name,
+              hasImage: !!board.backgroundUrl,
+            })
+          }
+        />
+
+        {/* See All Invited Boards Dialog */}
+        <AllBoardsDialog
+          open={isAllInvitedBoardsOpen}
+          onOpenChange={setIsAllInvitedBoardsOpen}
+          boards={invitedBoards}
+          title={`All Invited Boards (${invitedBoards.length})`}
+          onBoardClick={handleBoardClick}
         />
       </div>
     </Suspense>

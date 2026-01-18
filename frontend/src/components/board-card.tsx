@@ -17,6 +17,7 @@ export interface BoardCardProps {
   backgroundColor?: string;
   onEdit?: () => void;
   onDelete?: () => void;
+  compact?: boolean;
 }
 
 export function BoardCard({
@@ -26,6 +27,7 @@ export function BoardCard({
   backgroundColor,
   onEdit,
   onDelete,
+  compact = false,
 }: BoardCardProps) {
   // Image takes priority over color
   let backgroundStyle: HTMLAttributes<HTMLDivElement>["style"];
@@ -62,10 +64,15 @@ export function BoardCard({
     <Link to={`/board/${id}`}>
       <Card
         key={id}
-        className="group overflow-hidden relative gap-0 pb-14 bg-center bg-no-repeat bg-cover border-0 transition-all cursor-pointer hover:shadow-md min-h-[20vh]"
-        style={backgroundStyle}
+        className={`group overflow-hidden rounded-xl relative border-0 transition-all cursor-pointer hover:shadow-md ${compact ? 'h-[15vh]' : 'min-h-[20vh] pb-14 gap-0'}`}
       >
-        <div className="absolute inset-0 mb-16 pointer-events-none backdrop-blur-sm dark:bg-black/25 group-hover:bg-black/20 dark:group-hover:bg-black/40 transition-colors" />
+        {/* Background layer with proper clipping */}
+        <div 
+          className="absolute inset-0 bg-center bg-no-repeat bg-cover rounded-xl"
+          style={backgroundStyle}
+        />
+        {/* Overlay */}
+        <div className={`absolute inset-0 pointer-events-none backdrop-blur-sm dark:bg-black/25 group-hover:bg-black/20 dark:group-hover:bg-black/40 transition-colors ${compact ? 'rounded-xl rounded-b-none mb-10' : 'mb-16'}`} />
 
         <CardHeader className="flex flex-row justify-between items-start p-4 py-0 z-5">
           <CardTitle className="text-md font-medium overflow-hidden text-ellipsis max-w-[70%] z-10">
@@ -99,11 +106,13 @@ export function BoardCard({
           </DropdownMenu>
         </CardHeader>
 
-        <CardContent className="z-10 p-4 pt-0">
-          <p className="text-sm text-white dark:text-gray-200 ">
-            Click to open board
-          </p>
-        </CardContent>
+        {!compact && (
+          <CardContent className="z-10 p-4 pt-0">
+            <p className="text-sm text-white dark:text-gray-200 ">
+              Click to open board
+            </p>
+          </CardContent>
+        )}
       </Card>
     </Link>
   );
