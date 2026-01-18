@@ -54,6 +54,7 @@ export const cardsTable = sqliteTable("cards", {
   latitude: integer("latitude"),
   longitude: integer("longitude"),
   completed: integer("completed", { mode: "boolean" }).default(false),
+  isTemplate: integer("is_template", { mode: "boolean" }).default(false),
   createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
   updatedAt: integer("updated_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
 });

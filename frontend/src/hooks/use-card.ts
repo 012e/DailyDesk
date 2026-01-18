@@ -31,6 +31,7 @@ export function useUpdateCard() {
       coverColor?: string | null;
       coverUrl?: string | null;
       completed?: boolean | null;
+      isTemplate?: boolean | null;
     }) => {
       const { data, error } = await api.PUT("/boards/{boardId}/cards/{id}", {
         params: {
@@ -50,6 +51,7 @@ export function useUpdateCard() {
           coverColor: params.coverColor,
           coverUrl: params.coverUrl,
           completed: params.completed,
+          isTemplate: params.isTemplate,
         },
       });
 
@@ -142,6 +144,7 @@ export function useCreateCard() {
       repeatInterval?: number | null;
       coverColor?: string;
       coverUrl?: string;
+      isTemplate?: boolean;
     }) => {
       const cardId = uuidv7();
 
@@ -166,6 +169,7 @@ export function useCreateCard() {
             dueAt: params.dueAt,
             dueComplete: params.dueComplete,
             reminderMinutes: params.reminderMinutes ?? undefined,
+            isTemplate: params.isTemplate,
             repeatFrequency: params.repeatFrequency ?? undefined,
             repeatInterval: params.repeatInterval ?? undefined,
           },

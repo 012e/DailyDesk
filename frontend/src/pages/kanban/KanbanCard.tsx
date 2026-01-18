@@ -11,6 +11,7 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Tooltip,
   TooltipContent,
@@ -23,6 +24,7 @@ import { useAtom } from "jotai";
 import { isCardDialogOpenAtom, selectedCardAtom } from "./atoms";
 import { useUpdateDue } from "@/hooks/use-due";
 import { useUpdateCard } from "@/hooks/use-card";
+import { LayoutTemplate } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 
@@ -30,6 +32,7 @@ type NormalizedCard = CardType & {
   title: string;
   description?: string;
   color?: KanbanBoardCircleColor;
+  isTemplate?: boolean;
 };
 
 interface KanbanCardProps {
@@ -60,6 +63,7 @@ interface KanbanCardProps {
     updatedAt?: Date;
     color?: KanbanBoardCircleColor;
     completed?: boolean;
+    isTemplate?: boolean;
   };
   columnId: string;
   boardId: string;
@@ -108,6 +112,7 @@ export function KanbanCard({
     updatedAt: card.updatedAt || new Date(),
     color: card.color,
     completed: card.completed,
+    isTemplate: card.isTemplate,
   };
 
   const openCardDialog = () => {
@@ -241,6 +246,24 @@ export function KanbanCard({
                   className="w-full h-auto object-contain"
                 />
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 pt-8">
+                  <div className="flex items-center gap-2">
+                    <div onClick={handleToggleComplete} className="flex-shrink-0">
+                      <Checkbox 
+                        checked={normalizedCard.completed} 
+                        className="border-white/70 data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1 min-w-0">
+                      {normalizedCard.isTemplate && (
+                        <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-blue-500/80 text-[10px] font-medium text-white max-w-fit pointer-events-none">
+                          <LayoutTemplate className="h-3 w-3" />
+                          Template
+                        </div>
+                      )}
+                      <KanbanBoardCardTitle className={`text-white drop-shadow-md line-clamp-2 ${normalizedCard.completed ? "line-through opacity-75" : ""}`}>
+                        {normalizedCard.title}
+                      </KanbanBoardCardTitle>
+                    </div>
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
                     <TooltipProvider>
@@ -285,6 +308,24 @@ export function KanbanCard({
                 style={{ backgroundColor: normalizedCard.coverColor }}
               >
                 <div className="w-full bg-gradient-to-t from-black/70 to-transparent p-3 pt-8">
+                  <div className="flex items-center gap-2">
+                    <div onClick={handleToggleComplete} className="flex-shrink-0">
+                      <Checkbox 
+                        checked={normalizedCard.completed} 
+                        className="border-white/70 data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1 min-w-0">
+                      {normalizedCard.isTemplate && (
+                        <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-black/20 text-[10px] font-medium text-white max-w-fit pointer-events-none">
+                          <LayoutTemplate className="h-3 w-3" />
+                          Template
+                        </div>
+                      )}
+                      <KanbanBoardCardTitle className={`text-white drop-shadow-sm line-clamp-2 ${normalizedCard.completed ? "line-through opacity-75" : ""}`}>
+                        {normalizedCard.title}
+                      </KanbanBoardCardTitle>
+                    </div>
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
                     <TooltipProvider>

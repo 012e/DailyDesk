@@ -283,6 +283,7 @@ export async function getCardsForBoard(userSub: string, boardId: string) {
     coverColor: c.cards.coverColor,
     coverUrl: c.cards.coverUrl,
     completed: c.cards.completed,
+    isTemplate: c.cards.isTemplate,
   }));
 }
 
@@ -346,6 +347,7 @@ export async function createCard(userSub: string, boardId: string, req: CreateCa
       coverColor: req.coverColor,
       coverUrl: req.coverUrl,
       completed: req.completed,
+      isTemplate: req.isTemplate ?? false,
     })
     .returning();
 
@@ -542,6 +544,7 @@ export async function getCardById(userSub: string, boardId: string, id: string) 
     coverColor: card[0].cards.coverColor,
     coverUrl: card[0].cards.coverUrl,
     completed: card[0].cards.completed,
+    isTemplate: card[0].cards.isTemplate,
   };
 }
 
@@ -699,6 +702,7 @@ export async function updateCard(userSub: string, boardId: string, id: string, r
   if (req.coverUrl !== undefined) updateData.coverUrl = req.coverUrl;
   if (req.coverMode !== undefined) updateData.coverMode = req.coverMode;
   if (req.completed !== undefined) updateData.completed = req.completed;
+  if (req.isTemplate !== undefined) updateData.isTemplate = req.isTemplate;
 
   let updatedCard;
   if (Object.keys(updateData).length > 0) {
