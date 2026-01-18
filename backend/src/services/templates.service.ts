@@ -7,6 +7,7 @@ import {
   boardsTable,
   listsTable,
   cardsTable,
+  cardLabelsTable,
   labelsTable,
 } from "@/lib/db/schema";
 import { eq, asc, or, and, isNull } from "drizzle-orm";
@@ -260,18 +261,39 @@ export async function createBoardFromTemplate(
   // Copy labels first (so we can reference them later if needed)
   const labelMapping = new Map<string, string>(); // old label ID -> new label ID
   if (template.labels && template.labels.length > 0) {
-    const labelsToInsert = template.labels.map((label: any) => {
+    const existingLabels = await db
+      .select({
+        id: labelsTable.id,
+        name: labelsTable.name,
+        color: labelsTable.color,
+      })
+      .from(labelsTable)
+      .where(eq(labelsTable.userId, userSub));
+    const existingByKey = new Map(
+      existingLabels.map(label => [`${label.name}::${label.color}`, label.id])
+    );
+
+    const labelsToInsert = [];
+    for (const label of template.labels) {
+      const key = `${label.name}::${label.color}`;
+      const existingId = existingByKey.get(key);
+      if (existingId) {
+        labelMapping.set(label.id, existingId);
+        continue;
+      }
       const newLabelId = randomUUID();
       labelMapping.set(label.id, newLabelId);
-      return {
+      labelsToInsert.push({
         id: newLabelId,
-        boardId: boardId,
+        userId: userSub,
         name: label.name,
         color: label.color,
-      };
-    });
+      });
+    }
 
-    await db.insert(labelsTable).values(labelsToInsert);
+    if (labelsToInsert.length > 0) {
+      await db.insert(labelsTable).values(labelsToInsert);
+    }
   }
 
   // Copy lists
@@ -353,9 +375,17 @@ export async function saveBoardAsTemplate(
 
   // Get board labels
   const boardLabels = await db
-    .select()
-    .from(labelsTable)
-    .where(eq(labelsTable.boardId, boardId));
+    .select({
+      id: labelsTable.id,
+      name: labelsTable.name,
+      color: labelsTable.color,
+    })
+    .from(cardLabelsTable)
+    .innerJoin(cardsTable, eq(cardLabelsTable.cardId, cardsTable.id))
+    .innerJoin(listsTable, eq(cardsTable.listId, listsTable.id))
+    .innerJoin(labelsTable, eq(cardLabelsTable.labelId, labelsTable.id))
+    .where(eq(listsTable.boardId, boardId))
+    .groupBy(labelsTable.id, labelsTable.name, labelsTable.color);
 
   // Create template
   const templateId = randomUUID();
