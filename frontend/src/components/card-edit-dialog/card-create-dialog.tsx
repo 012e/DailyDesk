@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import type { Card, Label, Member } from "@/types/card";
-import { X, Tag, UserPlus, Clock, Wallpaper, CheckSquare, Paperclip, FileIcon, Loader2, ChevronDown } from "lucide-react";
+import type { Card, Label, Member, RepeatFrequency } from "@/types/card";
+import { X, Tag, UserPlus, Clock, Wallpaper, CheckSquare, Paperclip, FileIcon, Loader2, ChevronDown, Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -59,6 +59,8 @@ function InnerCardCreateDialog({
   const [dueAt, setDueAt] = useState<Date | string | null>(null);
   const [dueComplete, setDueComplete] = useState(false);
   const [reminderMinutes, setReminderMinutes] = useState<number | null>(null);
+  const [repeatFrequency, setRepeatFrequency] = useState<RepeatFrequency | null>(null);
+  const [repeatInterval, setRepeatInterval] = useState<number | null>(null);
   const [isLabelPopoverOpen, setIsLabelPopoverOpen] = useState(false);
   const [isMemberPopoverOpen, setIsMemberPopoverOpen] = useState(false);
   const [isDatePopoverOpen, setIsDatePopoverOpen] = useState(false);
@@ -136,6 +138,8 @@ function InnerCardCreateDialog({
     dueAt,
     dueComplete,
     reminderMinutes,
+    repeatFrequency,
+    repeatInterval,
     coverUrl: "",
     coverColor: "",
     createdAt: new Date(),
@@ -163,6 +167,12 @@ function InnerCardCreateDialog({
     }
     if (updates.reminderMinutes !== undefined) {
       setReminderMinutes(updates.reminderMinutes);
+    }
+    if (updates.repeatFrequency !== undefined) {
+      setRepeatFrequency(updates.repeatFrequency ?? null);
+    }
+    if (updates.repeatInterval !== undefined) {
+      setRepeatInterval(updates.repeatInterval ?? null);
     }
     if (updates.description !== undefined) {
       setDescription(updates.description || "");
@@ -265,6 +275,8 @@ function InnerCardCreateDialog({
       dueAt: dueAt ? (typeof dueAt === "string" ? dueAt : dueAt.toISOString()) : undefined,
       dueComplete,
       reminderMinutes,
+      repeatFrequency,
+      repeatInterval,
     };
 
     try {
@@ -430,6 +442,8 @@ function InnerCardCreateDialog({
     setDueAt(null);
     setDueComplete(false);
     setReminderMinutes(null);
+    setRepeatFrequency(null);
+    setRepeatInterval(null);
     setIsCreating(false);
     resetBackground();
 
@@ -540,7 +554,16 @@ function InnerCardCreateDialog({
         )}
 
         {/* Main content area */}
-        <div className="flex flex-col flex-1 w-full overflow-y-auto p-6 gap-4">
+        <div
+          className="flex flex-col flex-1 w-full overflow-y-auto overscroll-contain p-6 gap-4"
+          style={{
+            touchAction: 'auto',
+            WebkitOverflowScrolling: 'touch'
+          } as React.CSSProperties}
+          onWheel={(e) => {
+            e.stopPropagation();
+          }}
+        >
           {/* Title */}
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-muted-foreground">Card Title *</label>
@@ -777,6 +800,7 @@ function InnerCardCreateDialog({
                   >
                     <Clock className="h-3.5 w-3.5" />
                     <span className="text-sm">Due: {formatDueDateVN(dueAt)}</span>
+                    {repeatFrequency && <Repeat className="h-3.5 w-3.5 opacity-70" />}
                     <ChevronDown className="h-3.5 w-3.5 ml-1" />
                   </Button>
                 )}

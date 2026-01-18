@@ -1,3 +1,4 @@
+import { useRef, useEffect } from "react";
 import {
   KanbanBoardColumn,
   KanbanBoardColumnHeader,
@@ -14,6 +15,8 @@ interface BackendCard {
   name: string;
   order: number;
   listId: string;
+  repeatFrequency?: "daily" | "weekly" | "monthly" | null;
+  repeatInterval?: number | null;
 }
 
 interface KanbanColumnProps {
@@ -45,10 +48,25 @@ export function KanbanColumn({
   onDeleteCard,
   index,
 }: KanbanColumnProps) {
+  const listRef = useRef<HTMLUListElement>(null);
+  const prevCardCount = useRef(column.cards.length);
+
+  useEffect(() => {
+    if (column.cards.length > prevCardCount.current) {
+      if (listRef.current) {
+        // Use setTimeout to ensure the DOM has updated with the new card before scrolling
+        setTimeout(() => {
+           listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' });
+        }, 0);
+      }
+    }
+    prevCardCount.current = column.cards.length;
+  }, [column.cards.length]);
+
   return (
     <KanbanBoardColumn
       key={column.id}
-      className="h-full"
+      className="max-h-full h-auto"
       columnId={column.id}
       onDropOverColumn={onDropOverColumn}
       index={index}
@@ -62,7 +80,7 @@ export function KanbanColumn({
         />
       </KanbanBoardColumnHeader>
 
-      <KanbanBoardColumnList>
+      <KanbanBoardColumnList ref={listRef}>
         {column.cards.map((card) => (
           <KanbanCard
             key={card.id}

@@ -19,7 +19,7 @@ export default function setupRoutes(app: OpenAPIHono) {
   app.route("/boards", createCardRoutes());
   app.route("/media", createImageRoute());
   app.route("/boards", createChecklistItemRoutes());
-  app.route("/boards", createLabelRoutes());
+  app.route("/", createLabelRoutes()); // Changed to root path for /users/{userId}/labels
   app.route("/boards", createMemberRoutes());
   app.route("/boards", createAttachmentRoutes());
   app.route("/boards", createCommentRoutes());

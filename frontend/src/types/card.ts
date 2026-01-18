@@ -4,6 +4,7 @@ export interface Label {
   id: string;
   name: string;
   color: string;
+  userId?: string; // Labels belong to users, not boards
 }
 
 export interface Member {
@@ -68,6 +69,7 @@ export type CardCoverMode =
   (typeof CardCoverModeValue)[keyof typeof CardCoverModeValue];
 
 export type RecurrenceType = "never" | "daily_weekdays" | "weekly" | "monthly_date" | "monthly_day";
+export type RepeatFrequency = "daily" | "weekly" | "monthly";
 
 export interface Card {
   id: string;
@@ -85,6 +87,8 @@ export interface Card {
   recurrence?: RecurrenceType;
   recurrenceDay?: number; // 1st, 2nd, 3rd, 4th, 5th
   recurrenceWeekday?: number; // 0=Sunday, 6=Saturday
+  repeatFrequency?: RepeatFrequency | null;
+  repeatInterval?: number | null;
   coverUrl: string;
   coverColor: string;
   coverMode?: CardCoverMode;
@@ -95,6 +99,7 @@ export interface Card {
   updatedAt: Date;
   order: number;
   completed?: boolean;
+  isTemplate?: boolean;
 }
 
 export type DueStatus = "none" | "complete" | "overdue" | "dueSoon" | "dueLater";

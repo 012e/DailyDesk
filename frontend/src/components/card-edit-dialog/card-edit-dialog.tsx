@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import type { Card } from "@/types/card";
 import { CardCoverModeValue } from "@/types/card";
-import { X, Tag, UserPlus, Paperclip, Clock, Wallpaper, Loader2, FileIcon, ExternalLink, Download, ChevronDown } from "lucide-react";
+import { X, Tag, UserPlus, Paperclip, Clock, Wallpaper, Loader2, FileIcon, ExternalLink, Download, ChevronDown, Repeat , LayoutTemplate } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CardHeader } from "./card-header";
 import { CardDescription } from "./card-description";
@@ -39,6 +39,7 @@ interface CardEditDialogProps {
   listId?: string;
   order?: number;
   onCreated?: () => void;
+  defaultIsTemplate?: boolean;
 }
 
 export function CardEditDialog({
@@ -50,6 +51,7 @@ export function CardEditDialog({
   listId,
   order,
   onCreated,
+  defaultIsTemplate,
 }: CardEditDialogProps) {
   const { uploadImage } = useUploadImage();
 
@@ -79,6 +81,7 @@ export function CardEditDialog({
     coverColor: "",
     createdAt: new Date(),
     updatedAt: new Date(),
+    isTemplate: defaultIsTemplate,
   };
 
   return (
@@ -154,6 +157,7 @@ function InnerDialog({
   const [labels, setLabels] = useState<CardLabel[]>(card.labels || []);
   const [members, setMembers] = useState<Member[]>(card.members || []);
   const [deadline, setDeadline] = useState<Date | undefined>(card.dueDate);
+  const [isTemplate, setIsTemplate] = useState(card.isTemplate || false);
   const [isCreating, setIsCreating] = useState(false);
 
   const { mutate: updateCard } = useUpdateCard();
@@ -213,7 +217,8 @@ function InnerDialog({
     labels: isCreateMode ? labels : card.labels,
     members: isCreateMode ? members : card.members,
     dueDate: isCreateMode ? deadline : card.dueDate,
-  }), [card, isCreateMode, title, description, labels, members, deadline]);
+    isTemplate: isCreateMode ? isTemplate : card.isTemplate,
+  }), [card, isCreateMode, title, description, labels, members, deadline, isTemplate]);
 
   const handleUpdate = useCallback(
     (updates: Partial<Card>) => {
@@ -224,6 +229,7 @@ function InnerDialog({
         if (updates.labels !== undefined) setLabels(updates.labels || []);
         if (updates.members !== undefined) setMembers(updates.members || []);
         if (updates.dueDate !== undefined) setDeadline(updates.dueDate);
+        if (updates.isTemplate !== undefined) setIsTemplate(updates.isTemplate);
         return;
       }
 
@@ -269,6 +275,7 @@ function InnerDialog({
           deadline: localCard.dueDate,
           // Set cover color if provided (image covers are uploaded separately)
           coverColor: (!currentImageFile && coverColor) ? coverColor : undefined,
+          isTemplate: localCard.isTemplate,
         },
         {
           onSuccess: async (newCard) => {
@@ -545,8 +552,15 @@ function InnerDialog({
         <div className="flex flex-row h-full w-full overflow-hidden">
           {/* Left column - Main content */}
           <div
-            className="flex-1 space-y-6 p-6 overflow-y-auto max-h-full"
-            style={{ minWidth: "500px" }}
+            className="flex-1 space-y-6 p-6 overflow-y-auto max-h-full overscroll-contain"
+            style={{
+              minWidth: "500px",
+              touchAction: 'auto',
+              WebkitOverflowScrolling: 'touch'
+            } as React.CSSProperties}
+            onWheel={(e) => {
+              e.stopPropagation();
+            }}
           >
             {/* Header with title */}
             <CardHeader card={localCard} onUpdate={handleUpdate} />
@@ -686,7 +700,20 @@ function InnerDialog({
                   </div>
                 </PopoverContent>
               </Popover>
+
+              {/* Template Toggle */}
+              <Button
+                variant={localCard.isTemplate ? "default" : "outline"}
+                size="sm"
+                className="h-8"
+                onClick={() => handleUpdate({ isTemplate: !localCard.isTemplate })}
+              >
+                <LayoutTemplate className="h-4 w-4 mr-1" />
+                {localCard.isTemplate ? "Template" : "Make template"}
+              </Button>
             </div>
+
+           
 
             {/* Labels display - only show if has labels */}
             {localCard.labels && localCard.labels.length > 0 && (
@@ -723,6 +750,7 @@ function InnerDialog({
                     >
                       <Clock className="h-3.5 w-3.5" />
                       <span className="text-sm">Due: {formatDueDateVN(card.dueAt)}</span>
+                      {card.repeatFrequency && <Repeat className="h-3.5 w-3.5 opacity-70" />}
                       <ChevronDown className="h-3.5 w-3.5 ml-1" />
                     </Button>
                   )}
@@ -817,7 +845,16 @@ function InnerDialog({
           </div>
 
           {/* Right column - Comments and activity */}
-          <div className="w-96 flex-shrink-0 border-l bg-muted/30 p-12 overflow-y-auto">
+          <div
+            className="w-96 flex-shrink-0 border-l bg-muted/30 p-12 overflow-y-auto overscroll-contain"
+            style={{
+              touchAction: 'auto',
+              WebkitOverflowScrolling: 'touch'
+            } as React.CSSProperties}
+            onWheel={(e) => {
+              e.stopPropagation();
+            }}
+          >
             <div className="space-y-4">
               {/* Header */}
               <div className="flex items-center justify-between">

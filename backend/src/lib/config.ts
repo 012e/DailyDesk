@@ -62,14 +62,19 @@ export type Config = z.infer<typeof configSchema>;
 
 export default function getConfig(): Config {
   ensureFolderExistsSync("tmp");
+  const isTest = process.env.NODE_ENV === "test";
+  const authDomain =
+    process.env.AUTH0_DOMAIN || (isTest ? "example.test" : undefined);
+  const authAudience =
+    process.env.AUTH0_API_AUDIENCE || (isTest ? "test-audience" : undefined);
   const rawConfig: Partial<Config> = {
     databaseUrl: process.env.DATABASE_URL!,
     isProduction: process.env.NODE_ENV === "production",
-    authIssuerUrl: "https://" + process.env.AUTH0_DOMAIN! + "/",
-    authAudience: process.env.AUTH0_API_AUDIENCE!,
+    authIssuerUrl: authDomain ? `https://${authDomain}/` : undefined,
+    authAudience,
     openai: process.env.OPENAI_API_KEY || undefined,
     auth0Token: process.env.AUTH0_TOKEN || undefined,
-    auth0Domain: process.env.AUTH0_DOMAIN!,
+    auth0Domain: authDomain,
   };
 
   return configSchema.parse(rawConfig);

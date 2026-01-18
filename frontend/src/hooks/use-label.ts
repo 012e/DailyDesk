@@ -1,25 +1,27 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useQueries } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { uuidv7 } from "uuidv7";
+import { useMembers } from "@/hooks/use-member";
+import { useAuth0 } from "@auth0/auth0-react";
 
 export interface Label {
   id: string;
   name: string;
   color: string;
-  boardId: string;
+  userId: string;
 }
 
 /**
- * Hook to fetch all labels for a board
+ * Hook to fetch all labels for a user
  */
-export function useLabels(boardId: string) {
+export function useLabels(userId: string) {
   return useQuery({
-    queryKey: ["labels", boardId],
+    queryKey: ["labels", userId],
     queryFn: async () => {
-      const { data, error } = await api.GET("/boards/{boardId}/labels", {
+      const { data, error } = await api.GET("/users/{userId}/labels", {
         params: {
           path: {
-            boardId,
+            userId,
           },
         },
       });
@@ -30,8 +32,65 @@ export function useLabels(boardId: string) {
 
       return data as Label[];
     },
-    enabled: !!boardId,
+    enabled: !!userId,
   });
+}
+
+/**
+ * Hook to fetch labels from all board members plus the current user
+ * This aggregates labels from all users who are members of a board
+ * and always includes the current user's labels (even if not a member)
+ */
+export function useBoardLabels(boardId: string) {
+  const { data: members = [] } = useMembers(boardId);
+  const { user } = useAuth0();
+  const currentUserId = user?.sub || "";
+
+  // Get unique user IDs: all members + current user (deduplicated)
+  const memberUserIds = members.map(m => m.userId);
+  const allUserIds = currentUserId && !memberUserIds.includes(currentUserId)
+    ? [...memberUserIds, currentUserId]
+    : memberUserIds;
+  
+  // Fetch labels for each user
+  const labelQueries = useQueries({
+    queries: allUserIds.map(userId => ({
+      queryKey: ["labels", userId],
+      queryFn: async () => {
+        const { data, error } = await api.GET("/users/{userId}/labels", {
+          params: {
+            path: {
+              userId,
+            },
+          },
+        });
+
+        if (error) {
+          return [];
+        }
+
+        return (data as Label[]) || [];
+      },
+      enabled: !!userId,
+    })),
+  });
+
+  // Combine all labels from all users
+  const allLabels = labelQueries.reduce<Label[]>((acc, query) => {
+    if (query.data) {
+      return [...acc, ...query.data];
+    }
+    return acc;
+  }, []);
+
+  const isLoading = labelQueries.some(q => q.isLoading);
+  const isError = labelQueries.some(q => q.isError);
+
+  return {
+    data: allLabels,
+    isLoading,
+    isError,
+  };
 }
 
 /**
@@ -42,16 +101,16 @@ export function useCreateLabel() {
 
   return useMutation({
     mutationFn: async (params: {
-      boardId: string;
+      userId: string;
       name: string;
       color: string;
     }) => {
       const labelId = uuidv7();
 
-      const { data, error } = await api.POST("/boards/{boardId}/labels", {
+      const { data, error } = await api.POST("/users/{userId}/labels", {
         params: {
           path: {
-            boardId: params.boardId,
+            userId: params.userId,
           },
         },
         body: {
@@ -69,7 +128,7 @@ export function useCreateLabel() {
     },
 
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["labels", variables.boardId] });
+      queryClient.invalidateQueries({ queryKey: ["labels", variables.userId] });
     },
 
     onError: (err) => {
@@ -86,15 +145,15 @@ export function useUpdateLabel() {
 
   return useMutation({
     mutationFn: async (params: {
-      boardId: string;
+      userId: string;
       labelId: string;
       name?: string;
       color?: string;
     }) => {
-      const { data, error } = await api.PUT("/boards/{boardId}/labels/{id}", {
+      const { data, error } = await api.PUT("/users/{userId}/labels/{id}", {
         params: {
           path: {
-            boardId: params.boardId,
+            userId: params.userId,
             id: params.labelId,
           },
         },
@@ -112,7 +171,7 @@ export function useUpdateLabel() {
     },
 
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["labels", variables.boardId] });
+      queryClient.invalidateQueries({ queryKey: ["labels", variables.userId] });
     },
 
     onError: (err) => {
@@ -128,11 +187,11 @@ export function useDeleteLabel() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (params: { boardId: string; labelId: string }) => {
-      const { data, error } = await api.DELETE("/boards/{boardId}/labels/{id}", {
+    mutationFn: async (params: { userId: string; labelId: string }) => {
+      const { data, error } = await api.DELETE("/users/{userId}/labels/{id}", {
         params: {
           path: {
-            boardId: params.boardId,
+            userId: params.userId,
             id: params.labelId,
           },
         },
@@ -146,7 +205,7 @@ export function useDeleteLabel() {
     },
 
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["labels", variables.boardId] });
+      queryClient.invalidateQueries({ queryKey: ["labels", variables.userId] });
     },
 
     onError: (err) => {

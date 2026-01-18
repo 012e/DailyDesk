@@ -49,7 +49,7 @@ export function Kanban({ boardId }: KanbanProps) {
   const { mutate: updateCard } = useUpdateCard();
   const { mutate: deleteCard } = useDeleteCard();
 
-  const { ref: scrollRef, ...dragEvents } = useDraggableScroll<HTMLDivElement>();
+  const { ref: scrollRef, isDragging: _isDragging, ...dragEvents } = useDraggableScroll<HTMLDivElement>();
 
   // Auth0 user has 'sub' field for user ID
   const isOwner = currentUser?.sub === board?.userId;
@@ -273,7 +273,7 @@ export function Kanban({ boardId }: KanbanProps) {
   return (
     <KanbanBoardProvider>
       <div
-        className="p-4 w-full flex-1 flex flex-col overflow-hidden"
+        className="p-4 w-full h-screen flex-1 flex flex-col overflow-hidden"
         style={{
           backgroundImage: board.backgroundUrl
             ? `url(${board.backgroundUrl})`
@@ -290,12 +290,14 @@ export function Kanban({ boardId }: KanbanProps) {
           boardName={board.name}
           members={members}
           isOwner={isOwner}
+          creatorId={board?.userId || ""}
+          currentUserId={currentUser?.sub || ""}
           filters={filters}
           onFiltersChange={setFilters}
           onEditBoard={() => setIsEditBoardOpen(true)}
           progress={progress}
         />
-        <KanbanBoard ref={scrollRef} {...dragEvents} className="max-h-[calc(95vh)] cursor-grab active:cursor-grabbing pb-48 flex-1 overflow-x-auto overflow-y-auto ">
+        <KanbanBoard ref={scrollRef} {...dragEvents} className=" cursor-grab active:cursor-grabbing pb-24 flex-1 overflow-x-auto overflow-y-auto items-start">
           {filteredLists.map((column, index) => (
             <KanbanColumn
               key={column.id}
@@ -323,7 +325,6 @@ export function Kanban({ boardId }: KanbanProps) {
           isOpen={isCardDialogOpen}
           onClose={() => {
             setIsCardDialogOpen(false);
-            setSelectedCard(null);
           }}
           onUpdate={handleUpdateCard}
           onDelete={handleDeleteCard}

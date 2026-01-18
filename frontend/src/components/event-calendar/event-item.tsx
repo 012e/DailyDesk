@@ -4,7 +4,7 @@ import type { DraggableAttributes } from "@dnd-kit/core";
 import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import { differenceInMinutes, format, getMinutes, isPast } from "date-fns";
 import { useMemo } from "react";
-import { Repeat } from "lucide-react";
+import { CheckCircle2, Repeat } from "lucide-react";
 
 import {
   type CalendarEvent,
@@ -12,6 +12,9 @@ import {
   getEventColorClasses,
 } from "@/components/event-calendar";
 import { cn } from "@/lib/utils";
+
+const doneEventClasses =
+  "bg-emerald-200/60 hover:bg-emerald-200/50 text-emerald-950/90 dark:bg-emerald-400/30 dark:hover:bg-emerald-400/25 dark:text-emerald-200 shadow-emerald-700/12";
 
 // Using date-fns format with custom formatting:
 // 'h' - hours (1-12)
@@ -65,7 +68,7 @@ function EventWrapper({
     <button
       className={cn(
         "flex size-full select-none overflow-hidden px-1 text-left font-medium outline-none backdrop-blur-md transition focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 data-dragging:cursor-grabbing data-past-event:line-through data-dragging:shadow-lg sm:px-2",
-        getEventColorClasses(event.color),
+        event.isDone ? doneEventClasses : getEventColorClasses(event.color),
         getBorderRadiusClasses(isFirstDay, isLastDay),
         className,
       )}
@@ -169,6 +172,9 @@ export function EventItem({
       >
         {children || (
           <div className="flex items-center gap-1 truncate w-full">
+            {event.isDone && (
+              <CheckCircle2 className="w-3 h-3 flex-shrink-0 text-emerald-700 dark:text-emerald-300" />
+            )}
             {event.isRecurring && (
               <Repeat className="w-3 h-3 flex-shrink-0 opacity-70" />
             )}
@@ -208,7 +214,10 @@ export function EventItem({
       >
         {durationMinutes < 45 ? (
           <div className="flex flex-col gap-0.5 w-full">
-            <div className="truncate">
+            <div className="truncate flex items-center gap-1">
+              {event.isDone && (
+                <CheckCircle2 className="w-3 h-3 flex-shrink-0 text-emerald-700 dark:text-emerald-300" />
+              )}
               {event.title}{" "}
               {showTime && (
                 <span className="opacity-70">
@@ -219,7 +228,12 @@ export function EventItem({
           </div>
         ) : (
           <>
-            <div className="font-medium truncate">{event.title}</div>
+            <div className="font-medium truncate flex items-center gap-1">
+              {event.isDone && (
+                <CheckCircle2 className="w-3 h-3 flex-shrink-0 text-emerald-700 dark:text-emerald-300" />
+              )}
+              {event.title}
+            </div>
             {showTime && (
               <div className="font-normal opacity-70 truncate sm:text-[11px]">
                 {getEventTime()}
@@ -236,7 +250,7 @@ export function EventItem({
     <button
       className={cn(
         "flex w-full flex-col gap-1 rounded p-2 text-left outline-none transition focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 data-past-event:line-through data-past-event:opacity-90",
-        getEventColorClasses(eventColor),
+        event.isDone ? doneEventClasses : getEventColorClasses(eventColor),
         className,
       )}
       data-past-event={isPast(new Date(event.end)) || undefined}
@@ -247,7 +261,12 @@ export function EventItem({
       {...dndListeners}
       {...dndAttributes}
     >
-      <div className="text-sm font-medium">{event.title}</div>
+      <div className="text-sm font-medium flex items-center gap-1">
+        {event.isDone && (
+          <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-emerald-700 dark:text-emerald-300" />
+        )}
+        {event.title}
+      </div>
       <div className="text-xs opacity-70">
         {event.allDay ? (
           <span>All day</span>
