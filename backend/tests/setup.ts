@@ -89,6 +89,7 @@ beforeEach(async () => {
   await testDbInstance.delete(schema.attachmentsTable);
   await testDbInstance.delete(schema.cardLabelsTable);
   await testDbInstance.delete(schema.cardMembersTable);
+  await testDbInstance.delete(schema.checklistItemMembersTable);
   await testDbInstance.delete(schema.checklistItemsTable);
   await testDbInstance.delete(schema.cardsTable);
   await testDbInstance.delete(schema.listsTable);
