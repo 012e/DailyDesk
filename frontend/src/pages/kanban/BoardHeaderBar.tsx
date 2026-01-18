@@ -69,6 +69,8 @@ interface BoardHeaderBarProps {
   boardName: string;
   members: Member[];
   isOwner: boolean;
+  isAdmin?: boolean;
+  currentUserRole?: "admin" | "member" | "viewer";
   creatorId: string;
   currentUserId: string;
   filters: FilterState;
@@ -105,6 +107,8 @@ export function BoardHeaderBar({
   boardName,
   members,
   isOwner,
+  isAdmin = false,
+  currentUserRole,
   creatorId,
   currentUserId,
   filters,
@@ -235,7 +239,12 @@ export function BoardHeaderBar({
                   </SheetDescription>
                 </SheetHeader>
                 <div className="py-6 p-4">
-                  <BoardMembersManager boardId={boardId} isOwner={isOwner} />
+                  <BoardMembersManager 
+                    boardId={boardId} 
+                    isOwner={isOwner} 
+                    isAdmin={isAdmin}
+                    currentUserRole={currentUserRole}
+                  />
                 </div>
               </SheetContent>
             </Sheet>

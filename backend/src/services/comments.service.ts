@@ -10,6 +10,7 @@ import { eq, and, desc } from "drizzle-orm";
 import { ContentfulStatusCode } from "hono/utils/http-status";
 import { randomUUID } from "crypto";
 import type { CreateComment } from "@/types/comments";
+import { checkPermission, checkBoardAccess, AuthorizationError } from "./authorization.service";
 
 export class ServiceError extends Error {
   status: ContentfulStatusCode;
@@ -20,6 +21,9 @@ export class ServiceError extends Error {
     this.name = "ServiceError";
   }
 }
+
+// Re-export AuthorizationError for backwards compatibility
+export { AuthorizationError };
 
 /**
  * Helper function to get user info
@@ -89,7 +93,7 @@ async function getUserInfo(userId: string, boardId: string) {
  * Helper function to verify user has access to a card
  * Returns { card, boardId } if access is granted
  */
-async function verifyCardAccess(userSub: string, cardId: string) {
+async function verifyCardAccess(userSub: string, cardId: string, permission: "content:read" | "content:create" | "content:update" | "content:delete" = "content:read") {
   // Get card with its list and board info
   const result = await db
     .select({
@@ -108,10 +112,8 @@ async function verifyCardAccess(userSub: string, cardId: string) {
     throw new ServiceError("Card không tồn tại", 404);
   }
 
-  // Verify user owns the board
-  if (result[0].boardUserId !== userSub) {
-    throw new ServiceError("Không có quyền truy cập card này", 403);
-  }
+  // Verify user has access to the board with required permission
+  await checkPermission(result[0].boardId, userSub, permission);
 
   return {
     cardId: result[0].cardId,
@@ -127,8 +129,8 @@ export async function addComment(
   cardId: string,
   req: CreateComment
 ) {
-  // Verify access
-  const { boardId } = await verifyCardAccess(userSub, cardId);
+  // Verify access with content:create permission
+  const { boardId } = await verifyCardAccess(userSub, cardId, "content:create");
 
   // Get user info
   const userInfo = await getUserInfo(userSub, boardId);
@@ -184,7 +186,7 @@ export async function updateComment(
   }
 
   // Verify user still has access to the card
-  const { boardId } = await verifyCardAccess(userSub, comment[0].cardId);
+  const { boardId } = await verifyCardAccess(userSub, comment[0].cardId, "content:update");
 
   // Update comment
   await db
@@ -230,7 +232,7 @@ export async function deleteComment(userSub: string, commentId: string) {
   }
 
   // Verify user still has access to the card
-  await verifyCardAccess(userSub, comment[0].cardId);
+  await verifyCardAccess(userSub, comment[0].cardId, "content:delete");
 
   // Delete comment
   await db.delete(commentsTable).where(eq(commentsTable.id, commentId));
@@ -243,8 +245,8 @@ export async function deleteComment(userSub: string, commentId: string) {
  * Returns comments sorted by createdAt (oldest first - mới nhất ở dưới như Trello)
  */
 export async function getCommentsForCard(userSub: string, cardId: string) {
-  // Verify access
-  const { boardId } = await verifyCardAccess(userSub, cardId);
+  // Verify access with content:read permission
+  const { boardId } = await verifyCardAccess(userSub, cardId, "content:read");
 
   // Get all comments for this card
   const comments = await db

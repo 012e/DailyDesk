@@ -53,6 +53,11 @@ export function Kanban({ boardId }: KanbanProps) {
 
   // Auth0 user has 'sub' field for user ID
   const isOwner = currentUser?.sub === board?.userId;
+  
+  // Get current user's role from members list
+  const currentUserMember = members.find(m => m.userId === currentUser?.sub);
+  const currentUserRole = currentUserMember?.role;
+  const isAdmin = currentUserRole === "admin";
 
   // Filter and sort lists' cards based on active filters
   const filteredLists = useMemo(() => {
@@ -290,6 +295,8 @@ export function Kanban({ boardId }: KanbanProps) {
           boardName={board.name}
           members={members}
           isOwner={isOwner}
+          isAdmin={isAdmin}
+          currentUserRole={currentUserRole}
           creatorId={board?.userId || ""}
           currentUserId={currentUser?.sub || ""}
           filters={filters}
