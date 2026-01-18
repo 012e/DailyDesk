@@ -1,4 +1,4 @@
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { integer, sqliteTable, text, unique } from "drizzle-orm/sqlite-core";
 import { relations } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
@@ -88,17 +88,18 @@ export const attachmentsTable = sqliteTable("attachments", {
     .references(() => cardsTable.id, { onDelete: "cascade" }),
 });
 
-// Labels table
+// Labels table - user-specific labels (can be applied to cards across multiple boards)
+// Each user can have unique combinations of (name, color) - same name with different colors allowed
 export const labelsTable = sqliteTable("labels", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => randomUUID()),
   name: text("name").notNull(),
   color: text("color").notNull(), // Hex color code
-  boardId: text("board_id")
-    .notNull()
-    .references(() => boardsTable.id, { onDelete: "cascade" }),
-});
+  userId: text("user_id").notNull(), // Auth0 user ID - labels belong to users, not boards
+}, (table) => ({
+  uniqueUserNameColor: unique().on(table.userId, table.name, table.color)
+}));
 
 // Board members table - maps Clerk users to boards
 export const boardMembersTable = sqliteTable("board_members", {
@@ -177,7 +178,6 @@ export const activitiesTable = sqliteTable("activities", {
 // Relations - Board to Lists (one-to-many), Labels (one-to-many), and Members (one-to-many)
 export const boardRelations = relations(boardsTable, ({ many }) => ({
   lists: many(listsTable),
-  labels: many(labelsTable),
   members: many(boardMembersTable),
 }));
 
@@ -221,11 +221,7 @@ export const attachmentRelations = relations(attachmentsTable, ({ one }) => ({
 }));
 
 // Relations - Label to Board (many-to-one)
-export const labelRelations = relations(labelsTable, ({ one, many }) => ({
-  board: one(boardsTable, {
-    fields: [labelsTable.boardId],
-    references: [boardsTable.id],
-  }),
+export const labelRelations = relations(labelsTable, ({ many }) => ({
   cardLabels: many(cardLabelsTable),
 }));
 

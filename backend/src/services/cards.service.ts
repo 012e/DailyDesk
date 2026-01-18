@@ -352,6 +352,20 @@ export async function createCard(userSub: string, boardId: string, req: CreateCa
   const createdCard = card[0];
 
   if (req.labels && req.labels.length > 0) {
+    // Validate that all labels belong to the user
+    const labelIds = req.labels.map(l => l.id);
+    const userLabels = await db
+      .select()
+      .from(labelsTable)
+      .where(sql`${labelsTable.id} IN (${sql.join(labelIds.map(id => sql`${id}`), sql`, `)})`);
+
+    const userLabelIds = new Set(userLabels.filter(l => l.userId === userSub).map(l => l.id));
+    const invalidLabels = labelIds.filter(id => !userLabelIds.has(id));
+
+    if (invalidLabels.length > 0) {
+      throw new ServiceError("Không thể gán labels không thuộc về user này", 403);
+    }
+
     const labelInserts = req.labels.map((label) => ({
       id: randomUUID(),
       cardId: createdCard.id,
@@ -705,6 +719,22 @@ export async function updateCard(userSub: string, boardId: string, id: string, r
 
   if (req.labels !== undefined) {
     try {
+      // Validate that all labels belong to the user
+      if (req.labels && req.labels.length > 0) {
+        const labelIds = req.labels.map(l => l.id);
+        const userLabels = await db
+          .select()
+          .from(labelsTable)
+          .where(sql`${labelsTable.id} IN (${sql.join(labelIds.map(id => sql`${id}`), sql`, `)})`);
+
+        const userLabelIds = new Set(userLabels.filter(l => l.userId === userSub).map(l => l.id));
+        const invalidLabels = labelIds.filter(id => !userLabelIds.has(id));
+
+        if (invalidLabels.length > 0) {
+          throw new ServiceError("Không thể gán labels không thuộc về user này", 403);
+        }
+      }
+
       await db.delete(cardLabelsTable).where(eq(cardLabelsTable.cardId, id));
 
       if (req.labels && req.labels.length > 0) {
