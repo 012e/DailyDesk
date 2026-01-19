@@ -26,6 +26,7 @@ import { Label } from "@/components/ui/label";
 import { useMembers, useCreateMember, useDeleteMember, useUpdateMember } from "@/hooks/use-member";
 import { useUserSearch, type UserSearchResult } from "@/hooks/use-user-search";
 import { toast } from "sonner";
+import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 
 interface BoardMembersManagerProps {
   boardId: string;
@@ -56,6 +57,7 @@ export function BoardMembersManager({ boardId, isOwner, isAdmin = false, current
   const { mutate: createMember, isPending: isCreating } = useCreateMember();
   const { mutate: deleteMember } = useDeleteMember();
   const { mutate: updateMember } = useUpdateMember();
+  const { confirm, ConfirmDialog } = useConfirmDialog();
 
   // Reset form when dialog closes
   useState(() => {
@@ -122,8 +124,15 @@ export function BoardMembersManager({ boardId, isOwner, isAdmin = false, current
     );
   };
 
-  const handleDeleteMember = (memberId: string, memberName: string) => {
-    if (confirm(`Are you sure you want to remove ${memberName} from the board?`)) {
+  const handleDeleteMember = async (memberId: string, memberName: string) => {
+    const confirmed = await confirm({
+      title: "Xóa thành viên",
+      description: `Bạn có chắc chắn muốn xóa ${memberName} khỏi bảng?`,
+      confirmText: "Xóa",
+      cancelText: "Hủy",
+      variant: "destructive"
+    });
+    if (confirmed) {
       deleteMember({ boardId, memberId });
     }
   };
@@ -411,6 +420,7 @@ export function BoardMembersManager({ boardId, isOwner, isAdmin = false, current
           })
         )}
       </div>
+      <ConfirmDialog />
     </div>
   );
 }

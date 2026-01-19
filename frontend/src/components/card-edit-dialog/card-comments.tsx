@@ -10,6 +10,7 @@ import type { Card } from "@/types/card";
 import { formatDistanceToNow } from "date-fns";
 import { useCardTimeline, useAddComment, useUpdateComment, useDeleteComment } from "@/hooks/use-comments";
 import { Loader2, Activity } from "lucide-react";
+import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 
 interface CardCommentsProps {
   card: Card;
@@ -43,6 +44,7 @@ export function CardComments({
   const { mutate: addComment, isPending: isAddingComment } = useAddComment();
   const { mutate: updateComment, isPending: isUpdatingComment } = useUpdateComment();
   const { mutate: deleteComment } = useDeleteComment();
+  const { confirm, ConfirmDialog } = useConfirmDialog();
 
   // Filter timeline based on showActivities
   const displayItems = showActivities
@@ -166,8 +168,15 @@ export function CardComments({
     }
   };
 
-  const handleDeleteComment = (commentId: string) => {
-    if (!window.confirm("Delete this comment?")) return;
+  const handleDeleteComment = async (commentId: string) => {
+    const confirmed = await confirm({
+      title: "Xóa bình luận",
+      description: "Bạn có chắc chắn muốn xóa bình luận này?",
+      confirmText: "Xóa",
+      cancelText: "Hủy",
+      variant: "destructive"
+    });
+    if (!confirmed) return;
 
     deleteComment({
       boardId,
@@ -404,6 +413,7 @@ export function CardComments({
           ))}
         </div>
       )}
+      <ConfirmDialog />
     </div>
   );
 }

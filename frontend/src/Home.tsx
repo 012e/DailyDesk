@@ -78,6 +78,8 @@ export default function Home() {
 
   const userId = user?.sub || "";
 
+ 
+
   // Load recent boards from localStorage on mount and when userId changes
   useEffect(() => {
     if (userId) {

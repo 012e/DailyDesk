@@ -21,6 +21,10 @@ export function CardHeader({ card, onUpdate }: CardHeaderProps) {
   }, [isEditing]);
 
   useEffect(() => {
+    setTitle(card.title);
+  }, [card.title]);
+
+  useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
       textareaRef.current.style.height = textareaRef.current.scrollHeight + "px";
