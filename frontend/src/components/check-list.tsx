@@ -18,10 +18,12 @@ export default function CheckList({
   card,
   boardId: propBoardId,
   onUpdate,
+  ownerInfo,
 }: {
   card: Card;
   boardId?: string;
   onUpdate: (updates: Partial<Card>) => void;
+  ownerInfo?: { userId: string; name: string; email: string; avatar?: string | null };
 }) {
   // Prefer explicit boardId prop (passed from CardEditDialog), fallback to card.listId only if necessary
   const boardId = propBoardId ?? card.listId;
@@ -38,7 +40,25 @@ export default function CheckList({
   const deleteMutation = useDeleteChecklistItem(boardId, cardId);
   
   // Fetch board members for assignment
-  const { data: boardMembers = [] } = useMembers(boardId);
+  const { data: fetchedBoardMembers = [] } = useMembers(boardId);
+
+  const boardMembers = [...fetchedBoardMembers];
+
+  if (ownerInfo) {
+    const isOwnerInMembers = fetchedBoardMembers.some(m => m.userId === ownerInfo.userId);
+    if (!isOwnerInMembers) {
+      boardMembers.unshift({
+        id: ownerInfo.userId, 
+        userId: ownerInfo.userId,
+        boardId: boardId || "",
+        name: ownerInfo.name,
+        email: ownerInfo.email,
+        avatar: ownerInfo.avatar,
+        role: "admin",
+        addedAt: new Date(),
+      } as any);
+    }
+  }
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +71,6 @@ export default function CheckList({
       await addMutation.mutateAsync({ name: newItem, completed: false, order: items.length, cardId });
       setNewItem("");
       setCreating(false);
-      toast.success("Checklist item created");
     } catch (err: any) {
       console.error("Failed to create checklist item:", err);
       toast.error(err?.message || "Failed to create checklist item");

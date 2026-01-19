@@ -20,11 +20,16 @@ export default function Layout() {
         <main className="flex flex-col w-full h-screen bg-background overflow-hidden">
           <ReactQueryDevtools initialIsOpen={false} />
           {/* Header with Search Bar */}
-          <div className="sticky top-0 right-0 flex items-center gap-3 px-4 py-2 z-50 bg-background/80 backdrop-blur-sm w-full">
+          <div className="sticky top-0 right-0 flex items-center justify-between gap-3 px-6 py-2 z-50 bg-background/80 backdrop-blur-sm w-full">
+            <div className="flex items-center gap-3 min-w-[50vw]" >
             <SidebarTrigger />
             <GlobalSearch />
-            <ThemeToggle />
-            <UserMenu />
+            </div>
+            <div className="flex items-center gap-3" >
+              <UserMenu /> 
+              <ThemeToggle />
+            </div>
+        
           </div>
 
           <ErrorBoundary

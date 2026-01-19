@@ -235,12 +235,12 @@ export function KanbanCard({
           <KanbanBoardCard 
             data={normalizedCard} 
             onClick={openCardDialog}
-            className={(normalizedCard.coverUrl || normalizedCard.coverColor) ? "!p-0 overflow-hidden" : ""}
+            className={(normalizedCard.coverUrl || normalizedCard.coverColor) ? "!p-0 overflow-hidden relative group" : "relative group"}
           >
             {normalizedCard.coverUrl ? (
-              <div className="relative w-full">
+              <div className="relative w-full rounded-md hidden-cover-fix">
                 {normalizedCard.isTemplate && (
-                  <div className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-blue-500/90 text-[10px] font-medium text-white pointer-events-none shadow-sm">
+                  <div className="absolute top-2 left-2 z-20 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-blue-500 text-[10px] font-medium text-white shadow-sm">
                     <LayoutTemplate className="h-3 w-3" />
                     Template
                   </div>
@@ -248,117 +248,101 @@ export function KanbanCard({
                 <img
                   src={normalizedCard.coverUrl}
                   alt=""
-                  className="w-full h-auto object-contain"
+                  className="w-full h-auto object-contain rounded-md"
                 />
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 pt-8">
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div
-                              onClick={handleToggleComplete}
-                              className={`flex-shrink-0 cursor-pointer transition-opacity ${isDone ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
-                              role="checkbox"
-                              aria-checked={isDone}
-                              tabIndex={-1}
-                            >
-                              <div className={`h-5 w-5 shrink-0 rounded-full border-2 ${
-                                isDone
-                                  ? 'bg-green-500 border-green-500 flex items-center justify-center'
-                                  : 'border-white/70 hover:border-white'
-                              }`}>
-                                {isDone && (
-                                  <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="flex items-center gap-2">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div
+                            onClick={handleToggleComplete}
+                            className={`flex-shrink-0 cursor-pointer transition-opacity ${isDone ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
+                            role="checkbox"
+                            aria-checked={isDone}
+                            tabIndex={-1}
+                          >
+                            <div className={`h-5 w-5 shrink-0 rounded-full border-2 ${
+                              isDone
+                                ? 'bg-green-500 border-green-500 flex items-center justify-center'
+                                : 'border-white/70 hover:border-white'
+                            }`}>
+                              {isDone && (
+                                <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                                 </svg>
                               )}
                             </div>
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{isDone ? "Mark incomplete" : "Mark complete"}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                      <div className="flex flex-col gap-1 min-w-0">
-                        {normalizedCard.isTemplate && (
-                          <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-blue-500/80 text-[10px] font-medium text-white max-w-fit pointer-events-none">
-                            <LayoutTemplate className="h-3 w-3" />
-                            Template
                           </div>
-                        )}
-                        <KanbanBoardCardTitle className={`text-white drop-shadow-md line-clamp-2 ${isDone ? "!text-green-200" : ""}`}>
-                          {normalizedCard.title}
-                        </KanbanBoardCardTitle>
-                      </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{isDone ? "Mark incomplete" : "Mark complete"}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <div className="flex flex-col gap-1 min-w-0">
+                      <KanbanBoardCardTitle className={`text-white drop-shadow-md line-clamp-2 ${normalizedCard.completed ? "line-through opacity-75" : ""}`}>
+                        {normalizedCard.title}
+                      </KanbanBoardCardTitle>
                     </div>
-                    {shouldShowDateRow && <DateRow className="text-white/80" />}
                   </div>
+                  {shouldShowDateRow && <DateRow className="text-white/80" />}
                 </div>
               </div>
             ) : normalizedCard.coverColor ? (
               <div
-                className="relative w-full min-h-[100px] flex items-end"
+                className="relative w-full min-h-[100px] flex items-end rounded-md"
                 style={{ backgroundColor: normalizedCard.coverColor }}
               >
                 {normalizedCard.isTemplate && (
-                  <div className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-blue-500/90 text-[10px] font-medium text-white pointer-events-none shadow-sm">
+                  <div className="absolute top-2 left-2 z-20 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-black/20 backdrop-blur-[1px] text-[10px] font-medium text-white shadow-sm">
                     <LayoutTemplate className="h-3 w-3" />
                     Template
                   </div>
                 )}
                 <div className="w-full bg-gradient-to-t from-black/70 to-transparent p-3 pt-8">
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div
-                              onClick={handleToggleComplete}
-                              className={`flex-shrink-0 cursor-pointer transition-opacity ${isDone ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
-                              role="checkbox"
-                              aria-checked={isDone}
-                              tabIndex={-1}
-                            >
-                              <div className={`h-5 w-5 shrink-0 rounded-full border-2 ${
-                                isDone
-                                  ? 'bg-green-500 border-green-500 flex items-center justify-center'
-                                  : 'border-white/70 hover:border-white'
-                              }`}>
-                                {isDone && (
-                                  <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="flex items-center gap-2">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div
+                            onClick={handleToggleComplete}
+                            className={`flex-shrink-0 cursor-pointer transition-opacity ${isDone ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
+                            role="checkbox"
+                            aria-checked={isDone}
+                            tabIndex={-1}
+                          >
+                            <div className={`h-5 w-5 shrink-0 rounded-full border-2 ${
+                              isDone
+                                ? 'bg-green-500 border-green-500 flex items-center justify-center'
+                                : 'border-white/70 hover:border-white'
+                            }`}>
+                              {isDone && (
+                                <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                                 </svg>
                               )}
                             </div>
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{isDone ? "Mark incomplete" : "Mark complete"}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                      <div className="flex flex-col gap-1 min-w-0">
-                        {normalizedCard.isTemplate && (
-                          <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-black/20 text-[10px] font-medium text-white max-w-fit pointer-events-none">
-                            <LayoutTemplate className="h-3 w-3" />
-                            Template
                           </div>
-                        )}
-                        <KanbanBoardCardTitle className={`text-white drop-shadow-sm line-clamp-2 ${isDone ? "!text-green-200" : ""}`}>
-                          {normalizedCard.title}
-                        </KanbanBoardCardTitle>
-                      </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{isDone ? "Mark incomplete" : "Mark complete"}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <div className="flex flex-col gap-1 min-w-0">
+                      <KanbanBoardCardTitle className={`text-white drop-shadow-sm line-clamp-2 ${normalizedCard.completed ? "line-through opacity-75" : ""}`}>
+                        {normalizedCard.title}
+                      </KanbanBoardCardTitle>
                     </div>
-                    {shouldShowDateRow && <DateRow className="text-white/80" />}
                   </div>
+                  {shouldShowDateRow && <DateRow className="text-white/80 " />}
                 </div>
               </div>
             ) : (
-              <div className="relative flex flex-col gap-1">
-                {normalizedCard.isTemplate && (
-                  <div className="absolute -top-1 -right-1 z-10 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-blue-500 text-[10px] font-medium text-white pointer-events-none shadow-sm">
+              <div className="flex flex-col gap-1 pt-1">
+                 {normalizedCard.isTemplate && (
+                  <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 text-[10px] font-medium max-w-fit mb-0.5">
                     <LayoutTemplate className="h-3 w-3" />
                     Template
                   </div>
@@ -396,7 +380,7 @@ export function KanbanCard({
                     {normalizedCard.title}
                   </KanbanBoardCardTitle>
                 </div>
-                {shouldShowDateRow && <DateRow className="pl-6 text-muted-foreground" />}
+                {shouldShowDateRow && <DateRow className="text-muted-foreground px-6" />}
               </div>
             )}
           </KanbanBoardCard>

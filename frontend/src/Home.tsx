@@ -78,8 +78,11 @@ export default function Home() {
 
   const userId = user?.sub || "";
 
+<<<<<<< HEAD
+=======
   // Debug logging
 
+>>>>>>> 9e98de32730099da32c1cf1d5e8ed22ab6cb2b84
   // Load recent boards from localStorage on mount and when userId changes
   useEffect(() => {
     if (userId) {
@@ -170,7 +173,8 @@ export default function Home() {
   const handleBoardClick = (boardId: string) => {
     if (userId) {
       addToRecentBoards(userId, boardId);
-      setRecentBoardIds(getRecentBoards(userId));
+      // Don't update state here to avoid re-render before navigation
+      // setRecentBoardIds(getRecentBoards(userId));
     }
   };
 

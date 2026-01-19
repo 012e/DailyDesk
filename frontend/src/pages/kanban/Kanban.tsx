@@ -26,17 +26,24 @@ import { EditBoardDialog } from "@/components/edit-board-dialog";
 import { cardMatchesFilters, emptyFilterState, type FilterState } from "@/components/board-filter-popover";
 import { useAuth0 } from "@auth0/auth0-react";
 import { toast } from "sonner";
-import { useSearchParams } from "react-router";
+import { useSearchParams, useParams } from "react-router";
 
 interface KanbanProps {
   boardId?: string;
 }
 
-export function Kanban({ boardId }: KanbanProps) {
+export function Kanban({ boardId: propBoardId }: KanbanProps) {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { boardId: paramBoardId } = useParams();
+  const boardId = propBoardId || paramBoardId;
+
   const setBoardId = useSetAtom(boardIdAtom);
   const { createList, updateList, deleteList } = useListActions();
-  const board = useBoard({ boardId: boardId! });
+  
+  // Ensure boardId is available before calling useBoard if possible, 
+  // but since we can't conditionally call hooks, we pass it. 
+  // If it's undefined, useBoard might throw/fail, but normally the route ensures we have an ID.
+  const board = useBoard({ boardId: boardId! }); 
   const lists = board?.lists || [];
   const { user: currentUser } = useAuth0();
   const { data: members = [] } = useMembers(boardId || "");
@@ -447,6 +454,7 @@ export function Kanban({ boardId }: KanbanProps) {
           }}
           onUpdate={handleUpdateCard}
           onDelete={handleDeleteCard}
+          ownerInfo={ownerInfo}
         />
 
         <EditBoardDialog

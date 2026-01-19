@@ -153,6 +153,20 @@ export function BoardHeaderBar({
     }
   };
 
+  const allMembers = [...members];
+  // If owner exists and is not in members list, add them to the start
+  if (ownerInfo) {
+    const isOwnerInMembers = members.some(m => m.userId === ownerInfo.userId);
+    if (!isOwnerInMembers) {
+      allMembers.unshift({
+        id: ownerInfo.userId, // Use userId as id for display purposes if not a real member record
+        userId: ownerInfo.userId,
+        name: ownerInfo.name,
+        avatar: ownerInfo.avatar,
+      });
+    }
+  }
+
   return (
     <>
       <div className="sticky top-1 z-10 mb-4 flex items-center justify-between bg-card/80 dark:bg-black/30 backdrop-blur-sm rounded-lg px-4 py-2 border border-border/50">
@@ -182,7 +196,7 @@ export function BoardHeaderBar({
               <SheetTrigger asChild>
                 <div className="flex items-center cursor-pointer group hidden lg:flex">
                   <div className="flex -space-x-2">
-                    {members.slice(0, 5).map((member, index) => {
+                    {allMembers.slice(0, 5).map((member, index) => {
                       const colorClass = AVATAR_COLORS[index % AVATAR_COLORS.length];
                       const initials = getInitials(member.name);
                       return (
@@ -207,10 +221,10 @@ export function BoardHeaderBar({
                         </Tooltip>
                       );
                     })}
-                    {members.length > 5 && (
+                    {allMembers.length > 5 && (
                       <Avatar className="h-8 w-8 border-2 border-black/30 bg-gray-600">
                         <AvatarFallback className="bg-gray-600 text-white text-xs font-semibold">
-                          +{members.length - 5}
+                          +{allMembers.length - 5}
                         </AvatarFallback>
                       </Avatar>
                     )}

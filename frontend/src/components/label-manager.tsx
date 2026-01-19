@@ -128,7 +128,6 @@ export function LabelManager({ members, creatorId, currentUserId }: LabelManager
       {
         onSuccess: () => {
           closeDialog();
-          toast.success("Label updated!");
         },
         onError: () => {
           toast.error("Failed to update label");
