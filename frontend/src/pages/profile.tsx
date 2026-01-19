@@ -24,10 +24,12 @@ import {
 } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 import { useSearchParams } from "react-router";
+import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 
 export default function ProfilePage() {
   const { user, isLoading, logout } = useAuth0();
   const { theme, setTheme } = useTheme();
+  const { confirm, ConfirmDialog } = useConfirmDialog();
   const [searchParams] = useSearchParams();
   const [preferences, setPreferences] = useAtom(userPreferencesAtom);
   
@@ -64,8 +66,15 @@ export default function ProfilePage() {
     toast.info("Chức năng đổi ngôn ngữ đang được phát triển");
   };
 
-  const handleDeleteAccount = () => {
-    if (confirm("Bạn có chắc chắn muốn xóa tài khoản? Hành động này không thể hoàn tác.")) {
+  const handleDeleteAccount = async () => {
+    const confirmed = await confirm({
+      title: "Xóa tài khoản",
+      description: "Bạn có chắc chắn muốn xóa tài khoản? Hành động này không thể hoàn tác.",
+      confirmText: "Xóa",
+      cancelText: "Hủy",
+      variant: "destructive"
+    });
+    if (confirmed) {
       // In a real app, this would call an API to delete the account
       toast.error("Chức năng xóa tài khoản đang được phát triển");
     }
@@ -415,6 +424,7 @@ export default function ProfilePage() {
         </TabsContent>
       </Tabs>
       </div>
+      <ConfirmDialog />
     </div>
   );
 }
