@@ -31,7 +31,7 @@ interface CardCreateDialogProps {
   order: number;
   isOpen: boolean;
   onClose: () => void;
-  onCreated?: () => void;
+  onCreated?: (card: Card) => void;
 }
 
 export function CardCreateDialog(props: CardCreateDialogProps) {
@@ -295,12 +295,12 @@ function InnerCardCreateDialog({
               tempChecklistItems.length +
               tempAttachments.length;
 
-            if (totalSteps === 0) {
-              resetForm();
-              onCreated?.();
-              onClose();
-              return;
-            }
+              if (totalSteps === 0) {
+                resetForm();
+                onCreated?.(newCard as Card);
+                onClose();
+                return;
+              }
 
             setIsBatchUploading(true);
             let currentStep = 0;
@@ -409,13 +409,13 @@ function InnerCardCreateDialog({
               }
 
               resetForm();
-              onCreated?.();
+              onCreated?.(newCard as Card);
               onClose();
             } catch (error) {
               console.error("Error during batch upload:", error);
               toast.error("Card created, but some items failed. Please edit the card to add them manually.");
               resetForm();
-              onCreated?.();
+              onCreated?.(newCard as Card);
               onClose();
             } finally {
               setIsBatchUploading(false);
