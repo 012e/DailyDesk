@@ -26,6 +26,12 @@ export interface CalendarEvent {
   labels?: Label[];
   members?: Member[];
   listId?: string;
+  startDate?: Date | null;
+  dueAt?: Date | null;
+  dueComplete?: boolean;
+  reminderMinutes?: number | null;
+  repeatFrequency?: import("@/types/card").RepeatFrequency | null;
+  repeatInterval?: number | null;
   isRecurring?: boolean;
   isRecurringInstance?: boolean;
   isDone?: boolean;

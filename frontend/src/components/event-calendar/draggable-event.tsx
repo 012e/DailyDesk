@@ -61,6 +61,7 @@ export function DraggableEvent({
         multiDayWidth: multiDayWidth,
         view,
       },
+      disabled: !!event.isDone,
       id: `${event.id}-${view}`,
     });
 
@@ -121,6 +122,7 @@ export function DraggableEvent({
         if (elementRef) elementRef.current = node;
       }}
       style={style}
+      title={event.isDone ? "Completed cards can't be moved." : undefined}
     >
       <EventItem
         aria-hidden={ariaHidden}

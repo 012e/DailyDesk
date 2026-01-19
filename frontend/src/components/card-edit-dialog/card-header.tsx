@@ -55,7 +55,13 @@ export function CardHeader({ card, onUpdate }: CardHeaderProps) {
     }
   };
 
+  const isDone = card.dueAt ? !!card.dueComplete : !!card.completed;
+
   const handleToggleCompleted = (checked: boolean) => {
+    if (card.dueAt) {
+      onUpdate({ dueComplete: checked });
+      return;
+    }
     onUpdate({ completed: checked });
   };
 
@@ -63,7 +69,7 @@ export function CardHeader({ card, onUpdate }: CardHeaderProps) {
     <div className="flex items-start gap-3">
       <Checkbox
         className="mt-1"
-        checked={card.completed || false}
+        checked={isDone}
         onCheckedChange={handleToggleCompleted}
         aria-label="Mark card as complete"
       />
@@ -82,7 +88,7 @@ export function CardHeader({ card, onUpdate }: CardHeaderProps) {
         ) : (
           <h2
             className={`font-semibold text-xl cursor-pointer hover:bg-muted rounded px-2 py-1 -mx-2 -my-1 break-words ${
-              card.completed ? "line-through text-muted-foreground" : ""
+              isDone ? "line-through text-muted-foreground" : ""
             }`}
             onClick={() => setIsEditing(true)}
           >

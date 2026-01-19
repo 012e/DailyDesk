@@ -1,4 +1,4 @@
-import { CardEditDialog } from "@/components/card-edit-dialog";
+import { CardCreateDialog, CardEditDialog } from "@/components/card-edit-dialog";
 import {
   KanbanBoard,
   KanbanBoardExtraMargin,
@@ -6,12 +6,13 @@ import {
   type KanbanBoardDropDirection,
 } from "@/components/kanban";
 import { useBoard, useUpdateBoard } from "@/hooks/use-board";
-import { useUpdateCard, useDeleteCard } from "@/hooks/use-card";
+import { useUpdateCard, useDeleteCard, useCreateCard } from "@/hooks/use-card";
+import { useUpdateDue } from "@/hooks/use-due";
 import { useListActions } from "@/hooks/use-list";
 import { useMembers } from "@/hooks/use-member";
 import { useUploadImage } from "@/hooks/use-image";
 import type { Card as CardType } from "@/types/card";
-import { EventCalendar } from "@/components/event-calendar";
+import { EventCalendar, type CalendarEvent } from "@/components/event-calendar";
 import { listsCardsToCalendarEvents } from "@/components/event-calendar/utils";
 import { Button } from "@/components/ui/button";
 import { useAtom, useSetAtom } from "jotai";
@@ -59,9 +60,13 @@ export function Kanban({ boardId: propBoardId }: KanbanProps) {
   const [isEditBoardOpen, setIsEditBoardOpen] = useState(false);
   const [filters, setFilters] = useState<FilterState>(emptyFilterState);
   const [viewMode, setViewMode] = useState<"kanban" | "calendar">("kanban");
+  const [isCalendarCreateOpen, setIsCalendarCreateOpen] = useState(false);
+  const [calendarCreateDate, setCalendarCreateDate] = useState<Date | null>(null);
 
   const { mutate: updateCard } = useUpdateCard();
   const { mutate: deleteCard } = useDeleteCard();
+  const { mutate: createCard } = useCreateCard();
+  const { mutate: updateDue } = useUpdateDue();
 
   const { ref: scrollRef, isDragging: _isDragging, ...dragEvents } = useDraggableScroll<HTMLDivElement>();
 
@@ -378,6 +383,110 @@ export function Kanban({ boardId: propBoardId }: KanbanProps) {
     setSelectedCard(updatedCard);
   };
 
+  const handleEventAdd = (event: CalendarEvent) => {
+    if (!boardId) return;
+
+    const targetListId = event.listId || lists[0]?.id;
+    if (!targetListId) {
+      toast.error("Please create a list first", { position: "bottom-left" });
+      return;
+    }
+
+    createCard(
+      {
+        boardId,
+        listId: targetListId,
+        name: event.title || "(no title)",
+        description: event.description || undefined,
+        labels: event.labels,
+        members: event.members,
+        startDate: event.startDate ? new Date(event.startDate).toISOString() : undefined,
+        dueAt: event.dueAt ? new Date(event.dueAt).toISOString() : undefined,
+        dueComplete: event.dueComplete ?? false,
+        reminderMinutes: event.reminderMinutes ?? null,
+        repeatFrequency: event.repeatFrequency ?? null,
+        repeatInterval: event.repeatInterval ?? null,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Event created", { position: "bottom-left" });
+        },
+        onError: () => {
+          toast.error("Failed to create event", { position: "bottom-left" });
+        },
+      },
+    );
+  };
+
+  const handleEventUpdate = (event: CalendarEvent) => {
+    if (!boardId || !event.id) return;
+    const baseEventId = event.id.includes("-recurring-")
+      ? event.id.split("-recurring-")[0]
+      : event.id;
+    const nextStartDate = event.startDate ? new Date(event.startDate) : null;
+    const nextDueAt = event.dueAt ? new Date(event.dueAt) : null;
+    if (nextDueAt && nextDueAt.getTime() < Date.now()) {
+      toast.error("Due date cannot be in the past", { position: "bottom-left" });
+      return;
+    }
+    if (nextStartDate && nextDueAt && nextStartDate.getTime() > nextDueAt.getTime()) {
+      toast.error("Start date cannot be after due date", { position: "bottom-left" });
+      return;
+    }
+
+    updateCard({
+      boardId,
+      cardId: baseEventId,
+      name: event.title,
+      description: event.description ?? null,
+      listId: event.listId,
+      labels: event.labels ?? null,
+      members: event.members ?? null,
+    });
+
+    updateDue({
+      boardId,
+      cardId: baseEventId,
+      startDate: nextStartDate ? nextStartDate.toISOString() : null,
+      dueAt: nextDueAt ? nextDueAt.toISOString() : null,
+      dueComplete: event.dueComplete ?? false,
+      reminderMinutes: event.reminderMinutes ?? null,
+      repeatFrequency: event.repeatFrequency ?? null,
+      repeatInterval: event.repeatInterval ?? null,
+    });
+  };
+
+  const handleEventDelete = (eventId: string) => {
+    if (!boardId) return;
+    deleteCard({ boardId, cardId: eventId });
+  };
+
+  const handleOpenCalendarCreate = (date?: Date) => {
+    if (!lists.length) {
+      toast.error("Please create a list first", { position: "bottom-left" });
+      return;
+    }
+    if (date && date.getTime() < Date.now()) {
+      toast.error("Due date cannot be in the past", { position: "bottom-left" });
+      return;
+    }
+    setCalendarCreateDate(date ?? null);
+    setIsCalendarCreateOpen(true);
+  };
+
+  const handleCalendarEventSelect = (event: CalendarEvent) => {
+    const eventId = event.id.includes("-recurring-")
+      ? event.id.split("-recurring-")[0]
+      : event.id;
+    const selected = lists
+      .flatMap((list) => list.cards)
+      .find((card) => card.id === eventId);
+    if (!selected) return false;
+    setSelectedCard(selected as CardType);
+    setIsCardDialogOpen(true);
+    return true;
+  };
+
   const handleDeleteCard = (cardId: string) => {
     if (!boardId) return;
     
@@ -460,7 +569,18 @@ export function Kanban({ boardId: propBoardId }: KanbanProps) {
           {isCalendarView ? (
             <div className="absolute inset-0 z-20 overflow-y-auto">
               <div className="min-h-full w-full bg-background">
-                <EventCalendar events={calendarEvents} initialView="month" />
+                <EventCalendar
+                  events={calendarEvents}
+                  initialView="month"
+                  boardId={boardId || ""}
+                  lists={lists.map((list) => ({ id: list.id, title: list.name }))}
+                  onEventAdd={handleEventAdd}
+                  onEventUpdate={handleEventUpdate}
+                  onEventDelete={handleEventDelete}
+                  createLabel="New card"
+                  onCreateClick={handleOpenCalendarCreate}
+                  onEventSelect={handleCalendarEventSelect}
+                />
               </div>
             </div>
           ) : (
@@ -497,6 +617,8 @@ export function Kanban({ boardId: propBoardId }: KanbanProps) {
             onUpdate={handleUpdateCard}
             onDelete={handleDeleteCard}
             ownerInfo={ownerInfo}
+            layout={isCalendarView ? "vertical" : "horizontal"}
+            hideCommentsActivity={isCalendarView}
           />
 
           <EditBoardDialog
@@ -507,6 +629,27 @@ export function Kanban({ boardId: propBoardId }: KanbanProps) {
             initialBackgroundColor={board.backgroundColor ?? undefined}
             onSave={handleBoardUpdate}
           />
+
+          {isCalendarView && boardId && lists.length > 0 && (
+            <CardCreateDialog
+              boardId={boardId}
+              listId={lists[0].id}
+              order={lists[0].cards.length}
+              lists={lists.map((list) => ({
+                id: list.id,
+                name: list.name,
+                cardsCount: list.cards.length,
+              }))}
+              initialDate={calendarCreateDate}
+              compact
+              isOpen={isCalendarCreateOpen}
+              onClose={() => setIsCalendarCreateOpen(false)}
+              onCreated={(card) => {
+                setIsCalendarCreateOpen(false);
+                setSelectedCard(card);
+              }}
+            />
+          )}
         </div>
       </KanbanBoardProvider>
     </BoardEventsProvider>

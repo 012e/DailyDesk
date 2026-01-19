@@ -52,6 +52,9 @@ export interface EventCalendarProps {
   onEventAdd?: (event: CalendarEvent) => void;
   onEventUpdate?: (event: CalendarEvent) => void;
   onEventDelete?: (eventId: string) => void;
+  onEventSelect?: (event: CalendarEvent) => boolean | void;
+  createLabel?: string;
+  onCreateClick?: (date?: Date) => void;
   className?: string;
   initialView?: CalendarView;
   boardId?: string;
@@ -63,6 +66,9 @@ export function EventCalendar({
   onEventAdd,
   onEventUpdate,
   onEventDelete,
+  onEventSelect,
+  createLabel,
+  onCreateClick,
   className,
   initialView = "month",
   boardId,
@@ -144,12 +150,21 @@ export function EventCalendar({
 
   const handleEventSelect = (event: CalendarEvent) => {
     console.log("Event selected:", event); // Debug log
+    const handled = onEventSelect?.(event);
+    if (handled !== false) {
+      return;
+    }
     setSelectedEvent(event);
     setIsEventDialogOpen(true);
   };
 
   const handleEventCreate = (startTime: Date) => {
     console.log("Creating new event at:", startTime); // Debug log
+
+    if (onCreateClick) {
+      onCreateClick(startTime);
+      return;
+    }
 
     // Snap to 15-minute intervals
     const minutes = startTime.getMinutes();
@@ -355,6 +370,10 @@ export function EventCalendar({
             <Button
               className="max-[479px]:aspect-square max-[479px]:p-0!"
               onClick={() => {
+                if (onCreateClick) {
+                  onCreateClick();
+                  return;
+                }
                 setSelectedEvent(null); // Ensure we're creating a new event
                 setIsEventDialogOpen(true);
               }}
@@ -365,7 +384,9 @@ export function EventCalendar({
                 className="opacity-60 sm:-ms-1"
                 size={16}
               />
-              <span className="max-sm:sr-only">New event</span>
+              <span className="max-sm:sr-only">
+                {createLabel || "New event"}
+              </span>
             </Button>
           </div>
         </div>

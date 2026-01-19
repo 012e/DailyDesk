@@ -36,16 +36,6 @@ const items = [
     url: "/tasks",
     icon: CheckSquare,
   },
-  {
-    title: "API",
-    url: "/doc",
-    icon: BookOpen,
-  },
-  {
-    title: "Profile",
-    url: "/profile",
-    icon: User,
-  },
 ];
 
 export function AppSidebar() {

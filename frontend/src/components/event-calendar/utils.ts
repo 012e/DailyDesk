@@ -28,11 +28,14 @@ type ApiCard = {
   description?: string | null;
   deadline?: Date | string | null;
   dueAt?: Date | string | null;
+  startDate?: Date | string | null;
   dueComplete?: boolean | null;
   completed?: boolean | null;
   recurrence?: RecurrenceType;
   recurrenceDay?: number;
   recurrenceWeekday?: number;
+  repeatFrequency?: Card["repeatFrequency"] | null;
+  repeatInterval?: number | null;
   labels?: Array<{ color?: string }> | null;
 };
 
@@ -264,13 +267,19 @@ export function cardToCalendarEvent(card: CardInput, listName?: string, listId?:
     ('dueAt' in card && card.dueAt) ||
     ('dueDate' in card && card.dueDate) ||
     ('deadline' in card && card.deadline);
-  
-  if (!dueDateValue) {
-    return null; // Only cards with due dates should appear in calendar
+  const startDateValue = ('startDate' in card && card.startDate) || null;
+
+  if (!dueDateValue && !startDateValue) {
+    return null; // Only cards with due dates or start dates should appear in calendar
   }
 
   // Convert to Date if it's a string
-  const dueDate = typeof dueDateValue === 'string' ? new Date(dueDateValue) : dueDateValue;
+  const dueDate = dueDateValue
+    ? (typeof dueDateValue === 'string' ? new Date(dueDateValue) : dueDateValue)
+    : null;
+  const startDate = startDateValue
+    ? (typeof startDateValue === 'string' ? new Date(startDateValue) : startDateValue)
+    : null;
   
   // Handle both 'name' (backend) and 'title' (frontend) fields
   const title = ('title' in card && card.title) || ('name' in card && card.name) || "Untitled";
@@ -280,7 +289,9 @@ export function cardToCalendarEvent(card: CardInput, listName?: string, listId?:
     ? mapLabelColorToEventColor(card.labels[0].color)
     : "sky";
 
-  const { start, end } = getEventStartEnd(dueDate);
+  const { start, end } = dueDate
+    ? getEventStartEnd(dueDate)
+    : { start: startDate!, end: addHours(startDate!, 1) };
   
   // Get description - handle null/undefined
   const description = 'description' in card ? card.description : undefined;
@@ -292,6 +303,11 @@ export function cardToCalendarEvent(card: CardInput, listName?: string, listId?:
     ('dueComplete' in card && card.dueComplete) ||
     ('completed' in card && card.completed) ||
     false;
+  const repeatFrequency =
+    ('repeatFrequency' in card && card.repeatFrequency) ||
+    ('recurrence' in card && card.recurrence ? "weekly" : null);
+  const repeatInterval =
+    ('repeatInterval' in card && card.repeatInterval) || null;
   
   return {
     id: card.id,
@@ -303,8 +319,12 @@ export function cardToCalendarEvent(card: CardInput, listName?: string, listId?:
     color: color,
     location: listName, // Use list name as location
     listId: listId || ('listId' in card ? card.listId : undefined),
+    startDate: startDate ?? undefined,
+    dueAt: dueDate ?? undefined,
     labels: labels as unknown as Label[] | undefined,
     members: members as unknown as Member[] | undefined,
+    repeatFrequency: repeatFrequency ?? undefined,
+    repeatInterval: repeatInterval ?? undefined,
     isDone,
   };
 }
