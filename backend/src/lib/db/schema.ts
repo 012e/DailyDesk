@@ -125,6 +125,19 @@ export const checklistItemsTable = sqliteTable("checklist_items", {
     .references(() => cardsTable.id, { onDelete: "cascade" }),
 });
 
+// Checklist Item-Member junction table (many-to-many)
+export const checklistItemMembersTable = sqliteTable("checklist_item_members", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
+  checklistItemId: text("checklist_item_id")
+    .notNull()
+    .references(() => checklistItemsTable.id, { onDelete: "cascade" }),
+  memberId: text("member_id")
+    .notNull()
+    .references(() => boardMembersTable.id, { onDelete: "cascade" }),
+});
+
 // Attachments table with foreign key to cards
 export const attachmentsTable = sqliteTable("attachments", {
   id: text("id")
@@ -260,10 +273,23 @@ export const cardRelations = relations(cardsTable, ({ one, many }) => ({
 }));
 
 // Relations - Checklist Item to Card (many-to-one)
-export const checklistItemRelations = relations(checklistItemsTable, ({ one }) => ({
+export const checklistItemRelations = relations(checklistItemsTable, ({ one, many }) => ({
   card: one(cardsTable, {
     fields: [checklistItemsTable.cardId],
     references: [cardsTable.id],
+  }),
+  checklistItemMembers: many(checklistItemMembersTable),
+}));
+
+// Relations - Checklist Item Member junction (many-to-one to both ChecklistItem and BoardMember)
+export const checklistItemMemberRelations = relations(checklistItemMembersTable, ({ one }) => ({
+  checklistItem: one(checklistItemsTable, {
+    fields: [checklistItemMembersTable.checklistItemId],
+    references: [checklistItemsTable.id],
+  }),
+  member: one(boardMembersTable, {
+    fields: [checklistItemMembersTable.memberId],
+    references: [boardMembersTable.id],
   }),
 }));
 
@@ -287,6 +313,7 @@ export const boardMemberRelations = relations(boardMembersTable, ({ one, many })
     references: [boardsTable.id],
   }),
   cardMembers: many(cardMembersTable),
+  checklistItemMembers: many(checklistItemMembersTable),
 }));
 
 // Relations - Card Label junction (many-to-one to both Card and Label)

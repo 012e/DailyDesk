@@ -157,7 +157,6 @@ export function CardLabels({ card, onUpdate, boardId, isOpen: controlledIsOpen, 
             });
           }
           setEditingLabelId(null);
-          toast.success("Label updated successfully!");
         },
         onError: (error: any) => {
           const errorMsg = error?.message || "Failed to update label";

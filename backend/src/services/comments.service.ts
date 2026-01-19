@@ -11,6 +11,7 @@ import { ContentfulStatusCode } from "hono/utils/http-status";
 import { randomUUID } from "crypto";
 import type { CreateComment } from "@/types/comments";
 import { checkPermission, checkBoardAccess, AuthorizationError } from "./authorization.service";
+import { fetchAuth0UserInfo } from "./members.service";
 
 export class ServiceError extends Error {
   status: ContentfulStatusCode;
@@ -75,12 +76,14 @@ async function getUserInfo(userId: string, boardId: string) {
     .limit(1);
 
   if (board.length > 0 && board[0].userId === userId) {
-    // User is board owner, return basic info
-    // In production, you should fetch from Clerk API or user table
+    const ownerInfo = await fetchAuth0UserInfo(userId);
+    if (ownerInfo) {
+      return ownerInfo;
+    }
     return {
       id: userId,
-      name: "Board Owner", // Placeholder - should fetch from Clerk
-      email: "", // Placeholder
+      name: "Board Owner",
+      email: "",
       avatar: undefined,
       initials: "BO",
     };
@@ -299,13 +302,17 @@ export async function getCommentsForCard(userSub: string, cardId: string) {
     .limit(1);
 
   if (boardOwner.length > 0 && !userMap.has(boardOwner[0].userId)) {
-    userMap.set(boardOwner[0].userId, {
-      id: boardOwner[0].userId,
-      name: "Board Owner",
-      email: "",
-      avatar: undefined,
-      initials: "BO",
-    });
+    const ownerInfo = await fetchAuth0UserInfo(boardOwner[0].userId);
+    userMap.set(
+      boardOwner[0].userId,
+      ownerInfo || {
+        id: boardOwner[0].userId,
+        name: "Board Owner",
+        email: "",
+        avatar: undefined,
+        initials: "BO",
+      }
+    );
   }
 
   // Combine comments with user info

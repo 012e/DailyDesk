@@ -21,7 +21,7 @@ export interface Attachment {
   url: string;
   type: string;
   size: number;
-  uploadedAt: Date;
+  uploadedAt: Date | string | null;
   uploadedBy: string;
 }
 
@@ -89,7 +89,7 @@ export interface Card {
   recurrenceWeekday?: number; // 0=Sunday, 6=Saturday
   repeatFrequency?: RepeatFrequency | null;
   repeatInterval?: number | null;
-  coverUrl: string;
+  coverUrl: string | null;
   coverColor: string;
   coverMode?: CardCoverMode;
   attachments?: Attachment[];

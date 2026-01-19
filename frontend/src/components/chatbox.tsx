@@ -1,6 +1,9 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
+import { useLocation, matchPath } from "react-router";
+import { toast } from "sonner";
 import { MessageCircle, MessageSquareIcon, X, CheckIcon } from "lucide-react";
 import { useChat } from "@ai-sdk/react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   DefaultChatTransport,
   lastAssistantMessageIsCompleteWithApprovalResponses,
@@ -91,7 +94,14 @@ export function Chatbox() {
   const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
   const accessToken = useAtomValue(accessTokenAtom);
   const modelRef = useRef<string>(model);
-  const { boardId } = useParams<{ boardId?: string }>();
+  const { boardId: paramBoardId } = useParams<{ boardId?: string }>();
+    const location = useLocation();
+
+    const boardId = useMemo(() => {
+        if (paramBoardId) return paramBoardId;
+        const match = matchPath({ path: "/board/:boardId", end: false }, location.pathname);
+        return match?.params.boardId;
+    }, [paramBoardId, location.pathname]);
 
   // A dirty fix, dirty as hell
   // Keep ref in sync with state
@@ -141,6 +151,38 @@ export function Chatbox() {
       return false;
     }
   }
+
+  const queryClient = useQueryClient();
+  const processedToolCallIds = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    messages.forEach((message) => {
+      if (!message.parts) return;
+
+      message.parts.forEach((part: any) => {
+        if (part.type === "tool-createCard" && part.state === "result") {
+          const id = part.toolCallId || part.approval?.id;
+          if (id && !processedToolCallIds.current.has(id)) {
+            const result = part.result;
+            // Backend returns { success: true }
+             if (result && result.success) {
+                console.log("Chatbox: Card created successfully via AI", id);
+                processedToolCallIds.current.add(id);
+                
+                // Invalidate all related queries
+                console.log("Chatbox: Invalidating queries for board", boardId);
+                queryClient.invalidateQueries({ queryKey: ["board"] });
+                if (boardId) {
+                   queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+                   queryClient.invalidateQueries({ queryKey: ["lists", boardId] });
+                }
+                toast.success("Board updated");
+             }
+          }
+        }
+      });
+    });
+  }, [messages, boardId, queryClient]);
 
   return (
     <>

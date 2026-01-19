@@ -8,15 +8,22 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useMembers } from "@/hooks/use-member";
+import { User, Plus, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function CheckList({
   card,
   boardId: propBoardId,
   onUpdate,
+  ownerInfo,
 }: {
   card: Card;
   boardId?: string;
   onUpdate: (updates: Partial<Card>) => void;
+  ownerInfo?: { userId: string; name: string; email: string; avatar?: string | null };
 }) {
   // Prefer explicit boardId prop (passed from CardEditDialog), fallback to card.listId only if necessary
   const boardId = propBoardId ?? card.listId;
@@ -31,6 +38,27 @@ export default function CheckList({
   const addMutation = useAddChecklistItem(boardId, cardId);
   const updateMutation = useUpdateChecklistItem(boardId, cardId);
   const deleteMutation = useDeleteChecklistItem(boardId, cardId);
+  
+  // Fetch board members for assignment
+  const { data: fetchedBoardMembers = [] } = useMembers(boardId);
+
+  const boardMembers = [...fetchedBoardMembers];
+
+  if (ownerInfo) {
+    const isOwnerInMembers = fetchedBoardMembers.some(m => m.userId === ownerInfo.userId);
+    if (!isOwnerInMembers) {
+      boardMembers.unshift({
+        id: ownerInfo.userId, 
+        userId: ownerInfo.userId,
+        boardId: boardId || "",
+        name: ownerInfo.name,
+        email: ownerInfo.email,
+        avatar: ownerInfo.avatar,
+        role: "admin",
+        addedAt: new Date(),
+      } as any);
+    }
+  }
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,7 +71,6 @@ export default function CheckList({
       await addMutation.mutateAsync({ name: newItem, completed: false, order: items.length, cardId });
       setNewItem("");
       setCreating(false);
-      toast.success("Checklist item created");
     } catch (err: any) {
       console.error("Failed to create checklist item:", err);
       toast.error(err?.message || "Failed to create checklist item");
@@ -75,6 +102,7 @@ export default function CheckList({
   }) {
     const [editing, setEditing] = useState(false);
     const [localName, setLocalName] = useState(item.name);
+    const [memberPopoverOpen, setMemberPopoverOpen] = useState(false);
 
     const onSubmitName = () => {
       if (localName.trim() && localName !== item.name) {
@@ -91,6 +119,25 @@ export default function CheckList({
       if (e.key === "Escape") {
         setLocalName(item.name);
         setEditing(false);
+      }
+    };
+
+    const handleToggleMember = (memberId: string) => {
+      const currentMembers = item.members || [];
+      const isMember = currentMembers.some((m) => m.id === memberId);
+      
+      if (isMember) {
+        // Remove member
+        updateMutation.mutate({
+          ...item,
+          members: currentMembers.filter((m) => m.id !== memberId).map(m => ({ id: m.id })),
+        });
+      } else {
+        // Add member
+        updateMutation.mutate({
+          ...item,
+          members: [...currentMembers.map(m => ({ id: m.id })), { id: memberId }],
+        });
       }
     };
 
@@ -123,6 +170,84 @@ export default function CheckList({
         )}
 
         <div className="flex items-center gap-2">
+          {/* Display assigned members */}
+          {item.members && item.members.length > 0 && (
+            <div className="flex -space-x-2">
+              {item.members.slice(0, 3).map((member) => (
+                <Avatar key={member.id} className="h-6 w-6 border-2 border-background">
+                  {member.avatar ? (
+                    <AvatarImage src={member.avatar} alt={member.name} />
+                  ) : null}
+                  <AvatarFallback className="text-xs">
+                    {member.initials || member.name.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              ))}
+              {item.members.length > 3 && (
+                <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center border-2 border-background">
+                  <span className="text-xs">+{item.members.length - 3}</span>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Add member button */}
+          <Popover open={memberPopoverOpen} onOpenChange={setMemberPopoverOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                size="icon-sm"
+                variant="ghost"
+                aria-label="Assign member"
+              >
+                <User className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-3" align="end">
+              <div className="space-y-3">
+                <div>
+                  <h4 className="font-semibold text-sm mb-1">Gán thành viên</h4>
+                  <p className="text-xs text-muted-foreground">
+                    Chọn thành viên cho mục này
+                  </p>
+                </div>
+                <div className="max-h-48 overflow-y-auto space-y-1">
+                  {boardMembers.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">Không có thành viên</p>
+                  ) : (
+                    boardMembers.map((member) => {
+                      const isMember = item.members?.some((m) => m.id === member.id);
+                      return (
+                        <button
+                          key={member.id}
+                          onClick={() => handleToggleMember(member.id)}
+                          className={cn(
+                            "w-full flex items-center gap-2 p-2 rounded-md hover:bg-accent transition-colors",
+                            isMember && "bg-accent"
+                          )}
+                        >
+                          <Avatar className="h-6 w-6">
+                            {member.avatar ? (
+                              <AvatarImage src={member.avatar} alt={member.name} />
+                            ) : null}
+                            <AvatarFallback className="text-xs">
+                              {member.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 text-left">
+                            <div className="text-sm font-medium">{member.name}</div>
+                            <div className="text-xs text-muted-foreground">{member.email}</div>
+                          </div>
+                          {isMember && <Check className="h-4 w-4 text-primary" />}
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+
           <Button
             type="button"
             size="icon-sm"

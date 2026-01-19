@@ -71,6 +71,39 @@ async function fetchAuth0UserById(userId: string): Promise<Auth0User | null> {
   }
 }
 
+export async function fetchAuth0UserInfo(userId: string): Promise<{
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+  initials: string;
+} | null> {
+  try {
+    const auth0User = await fetchAuth0UserById(userId);
+    if (!auth0User) return null;
+    const name =
+      auth0User.name ||
+      auth0User.nickname ||
+      auth0User.email.split("@")[0];
+    const initials = name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+    return {
+      id: auth0User.user_id,
+      name,
+      email: auth0User.email,
+      avatar: auth0User.picture || undefined,
+      initials,
+    };
+  } catch (error) {
+    console.error("Failed to fetch Auth0 user info:", error);
+    return null;
+  }
+}
+
 /**
  * Ensures a board member exists in the database. If the member doesn't exist,
  * fetches their information from Auth0 and inserts them into the board.

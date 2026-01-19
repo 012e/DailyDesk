@@ -85,8 +85,8 @@ export function useUpdateBoard() {
   const { mutateAsync } = queryApi.useMutation("put", "/boards/{id}", {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["boards"] });
-      if (variables?.id) {
-        queryClient.invalidateQueries({ queryKey: ["board", variables.id] });
+      if (variables?.params?.path?.id) {
+        queryClient.invalidateQueries({ queryKey: ["board", variables.params.path.id] });
       }
     },
     onError: (err) => {
