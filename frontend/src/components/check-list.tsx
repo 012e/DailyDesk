@@ -13,6 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useMembers } from "@/hooks/use-member";
 import { User, Plus, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 
 export default function CheckList({
   card,
@@ -38,6 +39,7 @@ export default function CheckList({
   const addMutation = useAddChecklistItem(boardId, cardId);
   const updateMutation = useUpdateChecklistItem(boardId, cardId);
   const deleteMutation = useDeleteChecklistItem(boardId, cardId);
+  const { confirm, ConfirmDialog } = useConfirmDialog();
   
   // Fetch board members for assignment
   const { data: fetchedBoardMembers = [] } = useMembers(boardId);
@@ -252,8 +254,15 @@ export default function CheckList({
             type="button"
             size="icon-sm"
             variant="ghost"
-            onClick={() => {
-              if (confirm("Delete this checklist item?")) handleDelete(item.id);
+            onClick={async () => {
+              const confirmed = await confirm({
+                title: "Xóa mục",
+                description: "Bạn có chắc chắn muốn xóa mục này?",
+                confirmText: "Xóa",
+                cancelText: "Hủy",
+                variant: "destructive"
+              });
+              if (confirmed) handleDelete(item.id);
             }}
             disabled={deleteMutation.isPending}
             aria-label="Delete checklist item"
@@ -330,6 +339,7 @@ export default function CheckList({
           items.map((item) => <ChecklistRow key={item.id} item={item} />)
         )}
       </div>
+      <ConfirmDialog />
     </div>
   );
 }
