@@ -11,6 +11,8 @@ import { CardComments } from "./card-comments";
 import { CardLabels } from "./card-labels";
 import { CardDates } from "./card-dates";
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { toast } from "sonner";
+import { useUpdateDue } from "@/hooks/use-due";
 import { useUpdateCard, useCreateCard } from "@/hooks/use-card";
 import { useAddComment } from "@/hooks/use-comments";
 import { BackgroundPickerProvider } from "@/components/background-picker-provider";
@@ -40,6 +42,8 @@ interface CardEditDialogProps {
   onClose: () => void;
   onUpdate?: (card: Card) => void;
   onDelete?: (cardId: string) => void;
+  layout?: "horizontal" | "vertical";
+  hideCommentsActivity?: boolean;
   // Props for create mode
   listId?: string;
   order?: number;
@@ -59,6 +63,8 @@ export function CardEditDialog({
   onCreated,
   defaultIsTemplate,
   ownerInfo,
+  layout = "horizontal",
+  hideCommentsActivity = false,
 }: CardEditDialogProps) {
   const { uploadImage } = useUploadImage();
 
@@ -111,6 +117,8 @@ export function CardEditDialog({
         order={order}
         onCreated={onCreated}
         ownerInfo={ownerInfo}
+        layout={layout}
+        hideCommentsActivity={hideCommentsActivity}
       />
     </BackgroundPickerProvider>
   );
@@ -134,6 +142,8 @@ interface InnerDialogProps {
   order?: number;
   onCreated?: (card: Card) => void;
   ownerInfo?: { userId: string; name: string; email: string; avatar?: string | null };
+  layout?: "horizontal" | "vertical";
+  hideCommentsActivity?: boolean;
 }
 
 function InnerDialog({
@@ -148,7 +158,10 @@ function InnerDialog({
   order,
   onCreated,
   ownerInfo,
+  layout = "horizontal",
+  hideCommentsActivity = false,
 }: InnerDialogProps) {
+  const isVertical = layout === "vertical";
   const [isCoverPickerOpen, setIsCoverPickerOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isLabelPopoverOpen, setIsLabelPopoverOpen] = useState(false);
@@ -188,6 +201,7 @@ function InnerDialog({
   const [pendingComments, setPendingComments] = useState<string[]>([]);
   const { mutateAsync: addCommentAsync } = useAddComment();
   const { mutate: updateCard } = useUpdateCard();
+  const { mutate: updateDue } = useUpdateDue();
   const { mutate: createCard, isPending: isCreatePending } = useCreateCard();
   const { deleteImage } = useDeleteImage();
   const uploadAttachmentMutation = useUploadAttachment();
@@ -284,8 +298,27 @@ function InnerDialog({
         if (updates.members !== undefined) setMembers(updates.members || []);
         
         // Handle Date Updates
-        if (updates.startDate !== undefined) setStartDate(updates.startDate ? new Date(updates.startDate) : undefined);
-        if (updates.dueAt !== undefined) setDueAt(updates.dueAt ? new Date(updates.dueAt) : undefined);
+        const nextStart = updates.startDate !== undefined
+          ? (updates.startDate ? new Date(updates.startDate) : undefined)
+          : startDate;
+        const nextDue = updates.dueAt !== undefined
+          ? (updates.dueAt ? new Date(updates.dueAt) : undefined)
+          : dueAt;
+
+        if (nextStart && nextDue && nextStart.getTime() > nextDue.getTime()) {
+          toast.error("Start date cannot be after due date");
+          return;
+        }
+
+        if (updates.startDate !== undefined) setStartDate(nextStart);
+        if (updates.dueAt !== undefined) {
+          const nextDueAt = nextDue;
+          if (nextDueAt && nextDueAt.getTime() < Date.now()) {
+            toast.error("Due date cannot be in the past");
+            return;
+          }
+          setDueAt(nextDueAt);
+        }
         // Map dueDate to dueAt if dueAt is missing but dueDate is present (compatibility)
         if (updates.dueDate !== undefined && updates.dueAt === undefined) setDueAt(updates.dueDate);
         
@@ -300,11 +333,48 @@ function InnerDialog({
 
       if (!card) return;
 
+      const nextStart = updates.startDate !== undefined
+        ? (updates.startDate ? new Date(updates.startDate) : undefined)
+        : startDate;
+      const nextDue = updates.dueAt !== undefined
+        ? (updates.dueAt ? new Date(updates.dueAt) : undefined)
+        : dueAt;
+
+      if (nextStart && nextDue && nextStart.getTime() > nextDue.getTime()) {
+        toast.error("Start date cannot be after due date");
+        return;
+      }
+
+      if (updates.dueAt !== undefined) {
+        const nextDueAt = nextDue;
+        if (nextDueAt && nextDueAt.getTime() < Date.now()) {
+          toast.error("Due date cannot be in the past");
+          return;
+        }
+      }
+
       // Update local state immediately for optimistic UI
       onUpdate?.({ ...card, ...updates });
 
-      // Sync with backend if boardId is available
       if (boardId) {
+        const isDueCompleteOnly =
+          updates.dueComplete !== undefined &&
+          updates.dueAt === undefined &&
+          updates.startDate === undefined &&
+          updates.reminderMinutes === undefined &&
+          updates.repeatFrequency === undefined &&
+          updates.repeatInterval === undefined;
+
+        if (isDueCompleteOnly) {
+          updateDue({
+            boardId,
+            cardId: card.id,
+            dueComplete: updates.dueComplete,
+          });
+          return;
+        }
+
+        // Sync with backend if boardId is available
         updateCard({
           boardId,
           cardId: card.id,
@@ -617,10 +687,10 @@ function InnerDialog({
       <DialogContent
         className="!flex !flex-col !p-0 !gap-0"
         style={{
-          maxWidth: '1200px',
-          width: '90vw',
-          height: '600px',
-          minHeight: '600px'
+          maxWidth: isVertical ? '920px' : '1200px',
+          width: isVertical ? '92vw' : '90vw',
+          height: isVertical ? '85vh' : '600px',
+          minHeight: isVertical ? '600px' : '600px'
         }}
         showCloseButton={false}
       >
@@ -672,12 +742,12 @@ function InnerDialog({
           ></div>
         )}
         {/* Main content area - Horizontal flex layout */}
-        <div className="flex flex-row h-full w-full overflow-hidden">
+        <div className={`flex ${isVertical ? "flex-col" : "flex-row"} h-full w-full overflow-hidden`}>
           {/* Left column - Main content */}
           <div
             className="flex-1 space-y-6 p-6 overflow-y-auto max-h-full overscroll-contain"
             style={{
-              minWidth: "500px",
+              minWidth: isVertical ? "auto" : "500px",
               touchAction: 'auto',
               WebkitOverflowScrolling: 'touch'
             } as React.CSSProperties}
@@ -981,48 +1051,54 @@ function InnerDialog({
           </div>
 
           {/* Right column - Comments and activity */}
-          <div
-            className="w-96 flex-shrink-0 border-l bg-muted/30 p-12 overflow-y-auto overscroll-contain"
-            style={{
-              touchAction: 'auto',
-              WebkitOverflowScrolling: 'touch'
-            } as React.CSSProperties}
-            onWheel={(e) => {
-              e.stopPropagation();
-            }}
-          >
-            <div className="space-y-4">
-              {/* Header */}
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold">
-                  Comments and Activity
-                </span>
-              </div>
-
-              {/* Comments section */}
-              <CardComments
-                card={localCard}
-                boardId={boardId}
-                showActivities={showActivities}
-                onToggleActivities={() => setShowActivities(!showActivities)}
-                isCreateMode={isCreateMode}
-                pendingComments={pendingComments}
-                onAddPendingComment={(comment) => setPendingComments(prev => [...prev, comment])}
-              />
-
-              {/* Footer with Create button for create mode */}
-              {isCreateMode && (
-                <div className="flex justify-end gap-2 pt-4 border-t mt-auto">
-                  <Button variant="outline" onClick={handleClose}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleCreateCard} disabled={isSubmitting}>
-                    {isSubmitting ? "Creating..." : "Create Card"}
-                  </Button>
+          {!hideCommentsActivity && (
+            <div
+              className={`flex-shrink-0 overflow-y-auto overscroll-contain ${
+                isVertical
+                  ? "w-full border-t bg-muted/30 p-6"
+                  : "w-96 border-l bg-muted/30 p-12"
+              }`}
+              style={{
+                touchAction: 'auto',
+                WebkitOverflowScrolling: 'touch'
+              } as React.CSSProperties}
+              onWheel={(e) => {
+                e.stopPropagation();
+              }}
+            >
+              <div className="space-y-4">
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold">
+                    Comments and Activity
+                  </span>
                 </div>
-              )}
+
+                {/* Comments section */}
+                <CardComments
+                  card={localCard}
+                  boardId={boardId}
+                  showActivities={showActivities}
+                  onToggleActivities={() => setShowActivities(!showActivities)}
+                  isCreateMode={isCreateMode}
+                  pendingComments={pendingComments}
+                  onAddPendingComment={(comment) => setPendingComments(prev => [...prev, comment])}
+                />
+
+                {/* Footer with Create button for create mode */}
+                {isCreateMode && (
+                  <div className="flex justify-end gap-2 pt-4 border-t mt-auto">
+                    <Button variant="outline" onClick={handleClose}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleCreateCard} disabled={isSubmitting}>
+                      {isSubmitting ? "Creating..." : "Create Card"}
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
         {/* Cover picker dialog */}
         <Popover

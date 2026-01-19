@@ -7,6 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label as UILabel } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { CardLabels } from "./card-labels";
 import { CardMembers } from "./card-members";
 import { CardDates } from "./card-dates";
@@ -29,6 +36,10 @@ interface CardCreateDialogProps {
   boardId: string;
   listId: string;
   order: number;
+  lists?: Array<{ id: string; name: string; cardsCount: number }>;
+  initialListId?: string;
+  initialDate?: Date | null;
+  compact?: boolean;
   isOpen: boolean;
   onClose: () => void;
   onCreated?: (card: Card) => void;
@@ -46,10 +57,16 @@ function InnerCardCreateDialog({
   boardId,
   listId,
   order,
+  lists,
+  initialListId,
+  initialDate,
+  compact,
   isOpen,
   onClose,
   onCreated,
 }: CardCreateDialogProps) {
+  const [activeListId, setActiveListId] = useState(initialListId || listId);
+  const [activeOrder, setActiveOrder] = useState(order);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [labels, setLabels] = useState<Label[]>([]);
@@ -128,9 +145,9 @@ function InnerCardCreateDialog({
     id: "",
     title: title,
     description: description,
-    listId: listId,
-    position: order,
-    order: order,
+    listId: activeListId,
+    position: activeOrder,
+    order: activeOrder,
     labels: labels,
     members: members,
     dueDate: deadline,
@@ -260,13 +277,28 @@ function InnerCardCreateDialog({
 
   const handleCreate = async () => {
     if (!title.trim()) return;
+    if (dueAt) {
+      const dueDateTime = typeof dueAt === "string" ? new Date(dueAt) : dueAt;
+      if (dueDateTime.getTime() < Date.now()) {
+        toast.error("Due date cannot be in the past");
+        return;
+      }
+    }
+    if (startDate && dueAt) {
+      const startDateTime = typeof startDate === "string" ? new Date(startDate) : startDate;
+      const dueDateTime = typeof dueAt === "string" ? new Date(dueAt) : dueAt;
+      if (startDateTime.getTime() > dueDateTime.getTime()) {
+        toast.error("Start date cannot be after due date");
+        return;
+      }
+    }
     setIsCreating(true);
 
     const cardData = {
       boardId,
-      listId,
+      listId: activeListId,
       name: title.trim(),
-      order,
+      order: activeOrder,
       description: description || undefined,
       labels: labels.length > 0 ? labels : undefined,
       members: members.length > 0 ? members : undefined,
@@ -433,6 +465,8 @@ function InnerCardCreateDialog({
   };
 
   const resetForm = () => {
+    setActiveListId(initialListId || listId);
+    setActiveOrder(order);
     setTitle("");
     setDescription("");
     setLabels([]);
@@ -485,15 +519,38 @@ function InnerCardCreateDialog({
     return `${hours}:${minutes} ${day} ${month}`;
   };
 
+  useEffect(() => {
+    if (lists && lists.length) {
+      const defaultListId = initialListId || listId || lists[0].id;
+      const currentList = lists.find((list) => list.id === defaultListId) || lists[0];
+      setActiveListId(currentList.id);
+      setActiveOrder(currentList.cardsCount);
+    }
+  }, [lists, initialListId, listId]);
+
+  useEffect(() => {
+    if (!lists || lists.length === 0) {
+      setActiveListId(listId);
+      setActiveOrder(order);
+    }
+  }, [lists, listId, order]);
+
+  useEffect(() => {
+    if (isOpen && initialDate) {
+      setDueAt(initialDate);
+      setStartDate(null);
+    }
+  }, [isOpen, initialDate]);
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent
         className="!flex !flex-col !p-0 !gap-0"
         style={{
-          maxWidth: '1200px',
-          width: '90vw',
-          height: hasCover ? '650px' : '550px',
-          minHeight: '500px'
+          maxWidth: compact ? '820px' : '1200px',
+          width: compact ? '92vw' : '90vw',
+          height: compact ? '85vh' : (hasCover ? '650px' : '550px'),
+          minHeight: compact ? '600px' : '500px'
         }}
         showCloseButton={false}
       >
@@ -575,6 +632,33 @@ function InnerCardCreateDialog({
               className="text-lg font-semibold"
             />
           </div>
+
+          {lists && lists.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-muted-foreground">List</label>
+              <Select
+                value={activeListId}
+                onValueChange={(nextListId) => {
+                  setActiveListId(nextListId);
+                  const nextList = lists.find((list) => list.id === nextListId);
+                  if (nextList) {
+                    setActiveOrder(nextList.cardsCount);
+                  }
+                }}
+              >
+                <SelectTrigger className="h-10">
+                  <SelectValue placeholder="Select list" />
+                </SelectTrigger>
+                <SelectContent>
+                  {lists.map((list) => (
+                    <SelectItem key={list.id} value={list.id}>
+                      {list.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {/* Action buttons row */}
           <div className="flex flex-wrap gap-2">
