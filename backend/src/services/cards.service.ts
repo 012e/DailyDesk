@@ -17,6 +17,7 @@ import { publishBoardChanged } from "./events.service";
 import { applyRecurringDueDate } from "./recurring.service";
 import { ensureBoardMembersExist } from "./members.service";
 import { checkPermission, AuthorizationError } from "./authorization.service";
+import { refreshCardReminders } from "./reminder.service";
 import { 
   CreateCardSchema, 
   UpdateCardSchema,
@@ -373,6 +374,12 @@ export async function createCard(userSub: string, boardId: string, req: CreateCa
     }
   }
 
+  try {
+    await refreshCardReminders(createdCard.id);
+  } catch (error) {
+    console.error("Failed to schedule reminders for card creation:", error);
+  }
+
   // Log activity for card creation (non-blocking)
   try {
     await logActivity({
@@ -664,6 +671,13 @@ export async function updateCard(userSub: string, boardId: string, id: string, r
   if (req.completed !== undefined) updateData.completed = req.completed;
   if (req.isTemplate !== undefined) updateData.isTemplate = req.isTemplate;
 
+  const shouldRefreshReminders =
+    req.dueAt !== undefined ||
+    req.reminderMinutes !== undefined ||
+    req.dueComplete !== undefined ||
+    req.completed !== undefined ||
+    req.members !== undefined;
+
   let updatedCard;
   if (Object.keys(updateData).length > 0) {
     const result = await db
@@ -731,6 +745,14 @@ export async function updateCard(userSub: string, boardId: string, id: string, r
         }));
         await db.insert(cardMembersTable).values(memberInserts);
       }
+    }
+  }
+
+  if (shouldRefreshReminders) {
+    try {
+      await refreshCardReminders(id);
+    } catch (error) {
+      console.error("Failed to refresh reminders after card update:", error);
     }
   }
 
@@ -996,6 +1018,12 @@ export async function updateCardDue(
 
   await db.update(cardsTable).set(updateData).where(eq(cardsTable.id, cardId));
 
+  try {
+    await refreshCardReminders(cardId);
+  } catch (error) {
+    console.error("Failed to refresh reminders after due update:", error);
+  }
+
   const shouldScheduleRenew =
     dueData.dueComplete === true &&
     currentDueAt &&
@@ -1050,6 +1078,12 @@ export async function updateCardDue(
             updatedAt: new Date(),
           })
           .where(eq(cardsTable.id, cardId));
+
+        try {
+          await refreshCardReminders(cardId);
+        } catch (error) {
+          console.error("Failed to refresh reminders after auto-renew:", error);
+        }
 
         await logActivity({
           cardId,
@@ -1122,6 +1156,12 @@ export async function clearCardDue(userSub: string, boardId: string, cardId: str
       updatedAt: new Date(),
     })
     .where(eq(cardsTable.id, cardId));
+
+  try {
+    await refreshCardReminders(cardId);
+  } catch (error) {
+    console.error("Failed to refresh reminders after due clear:", error);
+  }
 
   try {
     await logActivity({

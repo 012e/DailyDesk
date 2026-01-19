@@ -7,6 +7,7 @@ export const MemberSchema = z.object({
   name: z.string(),
   email: z.email(),
   avatar: z.string().nullable().optional(),
+  timezone: z.string().optional().nullable(),
   role: z.enum(["member", "admin"]).default("member"),
   addedAt: z.coerce.date(),
 });

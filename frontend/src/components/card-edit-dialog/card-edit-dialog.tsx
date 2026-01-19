@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import type { Card } from "@/types/card";
 import { CardCoverModeValue } from "@/types/card";
-import { X, Tag, UserPlus, Paperclip, Clock, Wallpaper, Loader2, FileIcon, ExternalLink, Download, ChevronDown, Repeat , LayoutTemplate } from "lucide-react";
+import { X, Tag, UserPlus, Paperclip, Clock, Wallpaper, Loader2, FileIcon, ExternalLink, Download, ChevronDown, Repeat, LayoutTemplate } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CardHeader } from "./card-header";
 import { CardDescription } from "./card-description";
@@ -12,6 +12,7 @@ import { CardLabels } from "./card-labels";
 import { CardDates } from "./card-dates";
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useUpdateCard, useCreateCard } from "@/hooks/use-card";
+import { useAddComment } from "@/hooks/use-comments";
 import { BackgroundPickerProvider } from "@/components/background-picker-provider";
 import { CardCoverPicker } from "@/components/card-edit-dialog/card-cover-picker";
 import { useUploadImage, useDeleteImage } from "@/hooks/use-image";
@@ -26,8 +27,12 @@ import CheckList from "../check-list";
 import { useUploadAttachment, useCreateAttachmentLink, useDeleteAttachment } from "@/hooks/use-attachment";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { Label as CardLabel, Member } from "@/types/card";
+import type { Label as CardLabel, Member, Attachment } from "@/types/card";
 
+
+// ... existing imports ...
+
+// Inside InnerDialog
 interface CardEditDialogProps {
   card?: Card | null;
   boardId: string;
@@ -38,8 +43,9 @@ interface CardEditDialogProps {
   // Props for create mode
   listId?: string;
   order?: number;
-  onCreated?: () => void;
+  onCreated?: (card: Card) => void;
   defaultIsTemplate?: boolean;
+  ownerInfo?: { userId: string; name: string; email: string; avatar?: string | null };
 }
 
 export function CardEditDialog({
@@ -52,6 +58,7 @@ export function CardEditDialog({
   order,
   onCreated,
   defaultIsTemplate,
+  ownerInfo,
 }: CardEditDialogProps) {
   const { uploadImage } = useUploadImage();
 
@@ -103,6 +110,7 @@ export function CardEditDialog({
         listId={listId}
         order={order}
         onCreated={onCreated}
+        ownerInfo={ownerInfo}
       />
     </BackgroundPickerProvider>
   );
@@ -124,7 +132,8 @@ interface InnerDialogProps {
   isCreateMode?: boolean;
   listId?: string;
   order?: number;
-  onCreated?: () => void;
+  onCreated?: (card: Card) => void;
+  ownerInfo?: { userId: string; name: string; email: string; avatar?: string | null };
 }
 
 function InnerDialog({
@@ -138,6 +147,7 @@ function InnerDialog({
   listId,
   order,
   onCreated,
+  ownerInfo,
 }: InnerDialogProps) {
   const [isCoverPickerOpen, setIsCoverPickerOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -152,14 +162,31 @@ function InnerDialog({
   const [showActivities, setShowActivities] = useState(true); // For comments/activities toggle
 
   // Create mode state - default title to "Untitled Card" for new cards
-  const [title, setTitle] = useState(card.title || "Untitled Card");
+  // Handle both 'title' (frontend type) and 'name' (backend response) 
+  const [title, setTitle] = useState(card.title || (card as any).name || "Untitled Card");
   const [description, setDescription] = useState(card.description || "");
   const [labels, setLabels] = useState<CardLabel[]>(card.labels || []);
   const [members, setMembers] = useState<Member[]>(card.members || []);
-  const [deadline, setDeadline] = useState<Date | undefined>(card.dueDate);
+  
+  // Date and Reminder State
+  const [startDate, setStartDate] = useState<Date | undefined>(
+    card.startDate ? new Date(card.startDate) : undefined
+  );
+  const [dueAt, setDueAt] = useState<Date | undefined>(
+    card.dueAt ? new Date(card.dueAt) : (card.dueDate ? new Date(card.dueDate) : undefined)
+  );
+  const [dueComplete, setDueComplete] = useState(card.dueComplete || false);
+  const [reminderMinutes, setReminderMinutes] = useState<number | null>(card.reminderMinutes || null);
+  const [repeatFrequency, setRepeatFrequency] = useState<"daily" | "weekly" | "monthly" | null>(card.repeatFrequency || null);
+  const [repeatInterval, setRepeatInterval] = useState<number | null>(card.repeatInterval || null);
+
   const [isTemplate, setIsTemplate] = useState(card.isTemplate || false);
   const [isCreating, setIsCreating] = useState(false);
-
+  
+  // Pending items for create mode
+  const [pendingAttachments, setPendingAttachments] = useState<File[]>([]);
+  const [pendingComments, setPendingComments] = useState<string[]>([]);
+  const { mutateAsync: addCommentAsync } = useAddComment();
   const { mutate: updateCard } = useUpdateCard();
   const { mutate: createCard, isPending: isCreatePending } = useCreateCard();
   const { deleteImage } = useDeleteImage();
@@ -210,15 +237,42 @@ function InnerDialog({
   }, [imageFile, selectedColor, card.coverUrl, card.coverColor]);
 
   // Create a local card state for the UI (used in both modes)
-  const localCard: Card = useMemo(() => ({
-    ...card,
-    title: isCreateMode ? title : card.title,
-    description: isCreateMode ? description : card.description,
-    labels: isCreateMode ? labels : card.labels,
-    members: isCreateMode ? members : card.members,
-    dueDate: isCreateMode ? deadline : card.dueDate,
-    isTemplate: isCreateMode ? isTemplate : card.isTemplate,
-  }), [card, isCreateMode, title, description, labels, members, deadline, isTemplate]);
+  const localCard: Card = useMemo(() => {
+    // Convert pending attachments to Attachment objects for preview
+    const previewAttachments: Attachment[] = isCreateMode 
+      ? pendingAttachments.map((file, index) => ({
+          id: `pending-${index}`,
+          name: file.name,
+          url: URL.createObjectURL(file), // Create temporary URL for preview
+          type: file.type,
+          size: file.size,
+          uploadedAt: new Date(),
+          uploadedBy: "me", // Placeholder
+        }))
+      : [];
+    
+    // Combine existing (if any) and pending attachments
+    const displayedAttachments = isCreateMode 
+      ? [...(card.attachments || []), ...previewAttachments] 
+      : card.attachments;
+
+    return {
+      ...card,
+      title: isCreateMode ? title : (card.title || (card as any).name || "Untitled Card"),
+      description: isCreateMode ? description : card.description,
+      labels: isCreateMode ? labels : card.labels,
+      members: isCreateMode ? members : card.members,
+      dueDate: isCreateMode ? dueAt : card.dueDate,
+      startDate: isCreateMode ? startDate : card.startDate,
+      dueAt: isCreateMode ? dueAt : card.dueAt,
+      dueComplete: isCreateMode ? dueComplete : card.dueComplete,
+      reminderMinutes: isCreateMode ? reminderMinutes : card.reminderMinutes,
+      repeatFrequency: isCreateMode ? repeatFrequency : card.repeatFrequency,
+      repeatInterval: isCreateMode ? repeatInterval : card.repeatInterval,
+      isTemplate: isCreateMode ? isTemplate : card.isTemplate,
+      attachments: displayedAttachments,
+    };
+  }, [card, isCreateMode, title, description, labels, members, dueAt, startDate, dueComplete, reminderMinutes, repeatFrequency, repeatInterval, isTemplate, pendingAttachments]);
 
   const handleUpdate = useCallback(
     (updates: Partial<Card>) => {
@@ -228,7 +282,18 @@ function InnerDialog({
         if (updates.description !== undefined) setDescription(updates.description || "");
         if (updates.labels !== undefined) setLabels(updates.labels || []);
         if (updates.members !== undefined) setMembers(updates.members || []);
-        if (updates.dueDate !== undefined) setDeadline(updates.dueDate);
+        
+        // Handle Date Updates
+        if (updates.startDate !== undefined) setStartDate(updates.startDate ? new Date(updates.startDate) : undefined);
+        if (updates.dueAt !== undefined) setDueAt(updates.dueAt ? new Date(updates.dueAt) : undefined);
+        // Map dueDate to dueAt if dueAt is missing but dueDate is present (compatibility)
+        if (updates.dueDate !== undefined && updates.dueAt === undefined) setDueAt(updates.dueDate);
+        
+        if (updates.dueComplete !== undefined) setDueComplete(updates.dueComplete);
+        if (updates.reminderMinutes !== undefined) setReminderMinutes(updates.reminderMinutes);
+        if (updates.repeatFrequency !== undefined) setRepeatFrequency(updates.repeatFrequency);
+        if (updates.repeatInterval !== undefined) setRepeatInterval(updates.repeatInterval);
+        
         if (updates.isTemplate !== undefined) setIsTemplate(updates.isTemplate);
         return;
       }
@@ -272,15 +337,26 @@ function InnerDialog({
           description: localCard.description || undefined,
           labels: localCard.labels && localCard.labels.length > 0 ? localCard.labels : undefined,
           members: localCard.members && localCard.members.length > 0 ? localCard.members : undefined,
-          deadline: localCard.dueDate,
+          
+          // Date fields
+          deadline: localCard.dueAt ? new Date(localCard.dueAt) : undefined,
+          startDate: localCard.startDate ? new Date(localCard.startDate).toISOString() : undefined,
+          dueAt: localCard.dueAt ? new Date(localCard.dueAt).toISOString() : undefined,
+          dueComplete: localCard.dueComplete,
+          reminderMinutes: localCard.reminderMinutes,
+          repeatFrequency: localCard.repeatFrequency,
+          repeatInterval: localCard.repeatInterval,
+
           // Set cover color if provided (image covers are uploaded separately)
           coverColor: (!currentImageFile && coverColor) ? coverColor : undefined,
           isTemplate: localCard.isTemplate,
         },
         {
           onSuccess: async (newCard) => {
+            if (!newCard) return;
+
             // If there's a cover image, upload it
-            if (currentImageFile && newCard?.id) {
+            if (currentImageFile && newCard.id) {
               try {
                 await uploadImage({
                   file: currentImageFile,
@@ -291,13 +367,46 @@ function InnerDialog({
                 console.error("Error uploading card cover:", error);
               }
             }
+            
+            // Handle pending items in parallel
+            const promises = [];
+
+            // 1. Upload pending attachments
+            if (pendingAttachments.length > 0) {
+              const attachmentPromises = pendingAttachments.map(file => 
+                uploadAttachmentMutation.mutateAsync({
+                  file,
+                  boardId,
+                  cardId: newCard.id,
+                })
+              );
+              promises.push(...attachmentPromises);
+            }
+
+            try {
+              // Wait for attachments first
+              await Promise.all(promises);
+
+              // 2. Add pending comments sequentially
+              if (pendingComments.length > 0) {
+                for (const content of pendingComments) {
+                   await addCommentAsync({
+                      boardId,
+                      cardId: newCard.id,
+                      content
+                   });
+                }
+              }
+            } catch (error) {
+               console.error("Error processing pending items:", error);
+            }
 
             // Invalidate to refetch with the new cover (for both color and image covers)
             queryClient.invalidateQueries({ queryKey: ["board", boardId] });
 
             // Reset form and close
             resetForm();
-            onCreated?.();
+            onCreated?.(newCard as any);
             onClose();
           },
           onError: () => {
@@ -315,9 +424,19 @@ function InnerDialog({
     setDescription("");
     setLabels([]);
     setMembers([]);
-    setDeadline(new Date()); // Reset to today's date
+    
+    // Reset dates
+    setStartDate(undefined);
+    setDueAt(new Date()); // Reset to today's date
+    setDueComplete(false);
+    setReminderMinutes(null);
+    setRepeatFrequency(null);
+    setRepeatInterval(null);
+
     setIsCreating(false);
     resetBackground();
+    setPendingAttachments([]);
+    setPendingComments([]);
   };
 
   const handleUpdateCover = async () => {
@@ -378,6 +497,10 @@ function InnerDialog({
   };
 
   const handleAddAttachment = async (file: File) => {
+    if (isCreateMode) {
+      setPendingAttachments(prev => [...prev, file]);
+      return;
+    }
     if (boardId) {
       const newAttachment = await uploadAttachmentMutation.mutateAsync({
         file,
@@ -586,6 +709,7 @@ function InnerDialog({
                 boardId={boardId || ""}
                 isOpen={isMemberPopoverOpen}
                 onOpenChange={setIsMemberPopoverOpen}
+                ownerInfo={ownerInfo}
                 triggerButton={
                   <Button variant="outline" size="sm" className="h-8">
                     <UserPlus className="h-4 w-4 mr-1" />
@@ -593,9 +717,9 @@ function InnerDialog({
                   </Button>
                 }
               />
-              {!card.startDate && !card.dueAt && (
+              {!localCard.startDate && !localCard.dueAt && (
                 <CardDates
-                  card={card}
+                  card={localCard}
                   boardId={boardId}
                   onUpdate={handleUpdate}
                   isOpen={isDatePopoverOpen}
@@ -612,7 +736,7 @@ function InnerDialog({
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm" className="h-8">
                     <Paperclip className="h-4 w-4 mr-1" />
-                    Attachment {card.attachments && card.attachments.length > 0 && `(${card.attachments.length})`}
+                    Attachment {localCard.attachments && localCard.attachments.length > 0 && `(${localCard.attachments.length})`}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-80">
@@ -722,14 +846,14 @@ function InnerDialog({
 
             {/* Members display - only show if has members */}
             {localCard.members && localCard.members.length > 0 && (
-              <CardMembers card={localCard} onUpdate={handleUpdate} boardId={boardId || ""} />
+              <CardMembers card={localCard} onUpdate={handleUpdate} boardId={boardId || ""} ownerInfo={ownerInfo} />
             )}
 
-            {(card.startDate || card.dueAt) && (
+            {(localCard.startDate || localCard.dueAt) && (
               <div className="space-y-2">
                 <label className="text-sm font-medium text-muted-foreground">Dates</label>
                 <div className="flex flex-wrap gap-2">
-                  {card.startDate && (
+                  {localCard.startDate && (
                     <Button
                       variant="outline"
                       size="sm"
@@ -737,11 +861,11 @@ function InnerDialog({
                       onClick={() => setIsPillButtonDateOpen(true)}
                     >
                       <Clock className="h-3.5 w-3.5" />
-                      <span className="text-sm">Start: {formatDueDateVN(card.startDate)}</span>
+                      <span className="text-sm">Start: {formatDueDateVN(localCard.startDate)}</span>
                       <ChevronDown className="h-3.5 w-3.5 ml-1" />
                     </Button>
                   )}
-                  {card.dueAt && (
+                  {localCard.dueAt && (
                     <Button
                       variant="outline"
                       size="sm"
@@ -749,20 +873,32 @@ function InnerDialog({
                       onClick={() => setIsPillButtonDateOpen(true)}
                     >
                       <Clock className="h-3.5 w-3.5" />
-                      <span className="text-sm">Due: {formatDueDateVN(card.dueAt)}</span>
-                      {card.repeatFrequency && <Repeat className="h-3.5 w-3.5 opacity-70" />}
+                      <span className="text-sm">Due: {formatDueDateVN(localCard.dueAt)}</span>
+                      {localCard.repeatFrequency && <Repeat className="h-3.5 w-3.5 opacity-70" />}
                       <ChevronDown className="h-3.5 w-3.5 ml-1" />
                     </Button>
                   )}
                 </div>
+                <div className="hidden">
+                   <CardDates
+                      card={localCard}
+                      boardId={boardId}
+                      onUpdate={handleUpdate}
+                      isOpen={isPillButtonDateOpen}
+                      onOpenChange={setIsPillButtonDateOpen}
+                      createMode={isCreateMode}
+                      triggerButton={null} 
+                    />
+                </div>
               </div>
             )}
+
 
             {/* Description */}
             <CardDescription card={localCard} onUpdate={handleUpdate} />
 
             {/* CheckList */}
-            <CheckList card={localCard} boardId={boardId} onUpdate={handleUpdate} />
+            <CheckList card={localCard} boardId={boardId} onUpdate={handleUpdate} ownerInfo={ownerInfo} />
 
             {/* Attachments */}
             {localCard.attachments && localCard.attachments.length > 0 && (
@@ -869,6 +1005,9 @@ function InnerDialog({
                 boardId={boardId}
                 showActivities={showActivities}
                 onToggleActivities={() => setShowActivities(!showActivities)}
+                isCreateMode={isCreateMode}
+                pendingComments={pendingComments}
+                onAddPendingComment={(comment) => setPendingComments(prev => [...prev, comment])}
               />
 
               {/* Footer with Create button for create mode */}

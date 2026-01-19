@@ -16,6 +16,10 @@ interface CardCommentsProps {
   boardId: string;
   showActivities?: boolean; // Controlled by parent component
   onToggleActivities?: () => void;
+  // Create mode props
+  isCreateMode?: boolean;
+  pendingComments?: string[];
+  onAddPendingComment?: (comment: string) => void;
 }
 
 export function CardComments({
@@ -23,6 +27,9 @@ export function CardComments({
   boardId,
   showActivities = true,
   onToggleActivities,
+  isCreateMode = false,
+  pendingComments = [],
+  onAddPendingComment,
 }: CardCommentsProps) {
   const [commentText, setCommentText] = useState("");
   const [isComposing, setIsComposing] = useState(false);
@@ -74,6 +81,13 @@ export function CardComments({
 
   const handleSubmit = () => {
     if (!commentText.trim()) return;
+
+    if (isCreateMode && onAddPendingComment) {
+      onAddPendingComment(commentText.trim());
+      setCommentText("");
+      setIsComposing(false);
+      return;
+    }
 
     addComment(
       {
@@ -365,6 +379,29 @@ export function CardComments({
               }
             })
           )}
+        </div>
+      )}
+
+      {/* Pending comments (Create Mode) */}
+      {isCreateMode && pendingComments.length > 0 && (
+        <div className="space-y-3 mt-3 border-t pt-3">
+          <p className="text-xs font-semibold text-muted-foreground">Pending Comments (will be saved on create)</p>
+          {pendingComments.map((comment, index) => (
+            <div key={`pending-${index}`} className="flex gap-2 items-start text-sm opacity-80">
+               <Avatar className="w-6 h-6 flex-shrink-0">
+                  <AvatarFallback className="text-xs">You</AvatarFallback>
+               </Avatar>
+               <div className="flex-1 min-w-0 space-y-1">
+                 <div className="flex items-center gap-2">
+                   <span className="font-semibold truncate">You</span>
+                   <span className="text-xs text-muted-foreground">Just now</span>
+                 </div>
+                 <div className="bg-background rounded p-2 border border-dashed">
+                   <p className="text-sm whitespace-pre-wrap break-words">{comment}</p>
+                 </div>
+               </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

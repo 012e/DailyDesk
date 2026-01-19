@@ -6,6 +6,7 @@ import "./index.css";
 import Layout from "./Layout.tsx";
 import { Kanban } from "./pages/kanban";
 import Tasks from "./pages/tasks.tsx";
+import ProfilePage from "./pages/profile.tsx";
 
 import NotFound from "@/pages/not-found.tsx";
 import SignInPage from "./pages/sign-in.tsx";
@@ -20,6 +21,7 @@ createRoot(document.getElementById("root")!).render(
           <Route path="/" element={<App />} />
           <Route path="/board/:boardId" element={<Kanban />} />
           <Route path="/tasks" element={<Tasks />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/sign-in/*" element={<SignInPage />} />
           <Route path="/doc" element={<Doc />} />
           <Route path="*" element={<NotFound />} />

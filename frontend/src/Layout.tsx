@@ -8,7 +8,9 @@ import { ErrorBoundary } from "react-error-boundary";
 import PageLoader from "./components/full-page-loader";
 import { Chatbox } from "@/components/chatbox";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { UserMenu } from "@/components/user-menu";
 import { Toaster } from "@/components/ui/sonner";
+import { GlobalSearch } from "@/components/global-search";
 
 export default function Layout() {
   return (
@@ -17,10 +19,17 @@ export default function Layout() {
         <AppSidebar />
         <main className="flex flex-col w-full h-screen bg-background overflow-hidden">
           <ReactQueryDevtools initialIsOpen={false} />
-          {/* Theme Toggle - Fixed position top right */}
-          <div className="sticky top-0 right-0 flex justify-between items-center px-4 py-2 z-50 bg-background/80 backdrop-blur-sm">
+          {/* Header with Search Bar */}
+          <div className="sticky top-0 right-0 flex items-center justify-between gap-3 px-6 py-2 z-50 bg-background/80 backdrop-blur-sm w-full">
+            <div className="flex items-center gap-3 min-w-[50vw]" >
             <SidebarTrigger />
-            <ThemeToggle />
+            <GlobalSearch />
+            </div>
+            <div className="flex items-center gap-3" >
+              <UserMenu /> 
+              <ThemeToggle />
+            </div>
+        
           </div>
 
           <ErrorBoundary

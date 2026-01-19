@@ -78,11 +78,6 @@ export default function Home() {
 
   const userId = user?.sub || "";
 
-  // Debug logging
-  console.log("DEBUG - userId:", userId);
-  console.log("DEBUG - ownedBoards:", ownedBoards);
-  console.log("DEBUG - invitedBoards:", invitedBoards);
-
   // Load recent boards from localStorage on mount and when userId changes
   useEffect(() => {
     if (userId) {
@@ -173,7 +168,8 @@ export default function Home() {
   const handleBoardClick = (boardId: string) => {
     if (userId) {
       addToRecentBoards(userId, boardId);
-      setRecentBoardIds(getRecentBoards(userId));
+      // Don't update state here to avoid re-render before navigation
+      // setRecentBoardIds(getRecentBoards(userId));
     }
   };
 

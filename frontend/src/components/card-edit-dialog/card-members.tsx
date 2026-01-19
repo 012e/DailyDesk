@@ -24,9 +24,10 @@ interface CardMembersProps {
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
   triggerButton?: React.ReactNode;
+  ownerInfo?: { userId: string; name: string; email: string; avatar?: string | null };
 }
 
-export function CardMembers({ card, onUpdate, boardId, isOpen: controlledIsOpen, onOpenChange: controlledOnOpenChange, triggerButton }: CardMembersProps) {
+export function CardMembers({ card, onUpdate, boardId, isOpen: controlledIsOpen, onOpenChange: controlledOnOpenChange, triggerButton, ownerInfo }: CardMembersProps) {
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -49,6 +50,25 @@ export function CardMembers({ card, onUpdate, boardId, isOpen: controlledIsOpen,
       .toUpperCase()
       .slice(0, 2),
   }));
+
+  // Add owner to available members if not already present
+  if (ownerInfo) {
+    const isOwnerInMembers = availableMembers.some(m => m.id === ownerInfo.userId);
+    if (!isOwnerInMembers) {
+      availableMembers.unshift({
+        id: ownerInfo.userId,
+        name: ownerInfo.name,
+        email: ownerInfo.email,
+        avatar: ownerInfo.avatar || undefined,
+        initials: ownerInfo.name
+          .split(" ")
+          .map((n) => n[0])
+          .join("")
+          .toUpperCase()
+          .slice(0, 2),
+      });
+    }
+  }
 
   // Use controlled state if provided, otherwise use internal state
   const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen;

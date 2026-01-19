@@ -72,7 +72,8 @@ export default function AccessTokenProvider({
     return <PleaseLogin onClick={() => auth.loginWithRedirect()}></PleaseLogin>;
   }
 
-  // Wait for token to be ready before rendering children
+  // Wait for access token to be fetched before rendering children
+  // Wait for access token to be fetched before rendering children
   if (!isTokenReady && !accessToken) {
     return (
       <div className="flex h-screen w-full items-center justify-center">

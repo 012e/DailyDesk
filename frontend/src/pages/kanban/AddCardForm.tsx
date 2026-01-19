@@ -4,8 +4,8 @@ import {
 } from "@/components/kanban";
 import { CardEditDialog } from "@/components/card-edit-dialog";
 import { PlusIcon, LayoutTemplate, Loader2 } from "lucide-react";
-import { useAtom, useAtomValue } from "jotai";
-import { addingCardColumnIdAtom } from "./atoms";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { addingCardColumnIdAtom, selectedCardAtom, isCardDialogOpenAtom } from "./atoms";
 import { boardIdAtom } from "./atoms";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,8 @@ export function AddCardForm({ columnId, cardsCount }: AddCardFormProps) {
     addingCardColumnIdAtom
   );
   const boardId = useAtomValue(boardIdAtom);
+  const setSelectedCard = useSetAtom(selectedCardAtom);
+  const setIsCardDialogOpen = useSetAtom(isCardDialogOpenAtom);
   
   const { data: board } = useQuery({
     queryKey: ["board", boardId],
@@ -170,6 +172,12 @@ export function AddCardForm({ columnId, cardsCount }: AddCardFormProps) {
           isOpen={isDialogOpen || isCreatingTemplate}
           onClose={closeDialog}
           defaultIsTemplate={isCreatingTemplate}
+          onCreated={(card) => {
+            closeDialog();
+            // Open the global card dialog for editing
+            setSelectedCard(card);
+            setIsCardDialogOpen(true);
+          }}
         />
       )}
     </>
