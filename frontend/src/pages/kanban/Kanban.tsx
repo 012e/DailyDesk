@@ -11,6 +11,9 @@ import { useListActions } from "@/hooks/use-list";
 import { useMembers } from "@/hooks/use-member";
 import { useUploadImage } from "@/hooks/use-image";
 import type { Card as CardType } from "@/types/card";
+import { EventCalendar } from "@/components/event-calendar";
+import { listsCardsToCalendarEvents } from "@/components/event-calendar/utils";
+import { Button } from "@/components/ui/button";
 import { useAtom, useSetAtom } from "jotai";
 import { useDraggableScroll } from "@/hooks/use-draggable-scroll";
 import { useEffect, useState, useMemo } from "react";
@@ -27,6 +30,7 @@ import { cardMatchesFilters, emptyFilterState, type FilterState } from "@/compon
 import { useAuth0 } from "@auth0/auth0-react";
 import { toast } from "sonner";
 import { useSearchParams, useParams } from "react-router";
+import { BoardEventsProvider } from "@/components/board-events-provider";
 
 interface KanbanProps {
   boardId?: string;
@@ -54,6 +58,7 @@ export function Kanban({ boardId: propBoardId }: KanbanProps) {
   const [isCardDialogOpen, setIsCardDialogOpen] = useAtom(isCardDialogOpenAtom);
   const [isEditBoardOpen, setIsEditBoardOpen] = useState(false);
   const [filters, setFilters] = useState<FilterState>(emptyFilterState);
+  const [viewMode, setViewMode] = useState<"kanban" | "calendar">("kanban");
 
   const { mutate: updateCard } = useUpdateCard();
   const { mutate: deleteCard } = useDeleteCard();
@@ -181,6 +186,10 @@ export function Kanban({ boardId: propBoardId }: KanbanProps) {
        return (a.order || 0) - (b.order || 0);
     });
   }, [lists, filters]);
+
+  const calendarEvents = useMemo(() => {
+    return listsCardsToCalendarEvents(filteredLists);
+  }, [filteredLists]);
 
   // Handle board update
   const handleBoardUpdate = async (
@@ -393,79 +402,113 @@ export function Kanban({ boardId: propBoardId }: KanbanProps) {
   }, 0);
   const progress = totalCards === 0 ? 0 : (doneCards / totalCards) * 100;
 
+  const isCalendarView = viewMode === "calendar";
+
   return (
-    <KanbanBoardProvider>
+    <BoardEventsProvider boardId={boardId || ""}>
+      <KanbanBoardProvider>
       <div
-        className="p-4 w-full h-screen flex-1 flex flex-col overflow-hidden"
-        style={{
-          backgroundImage: board.backgroundUrl
-            ? `url(${board.backgroundUrl})`
-            : undefined,
-          backgroundColor: board.backgroundColor ?? undefined,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-          backgroundAttachment: "fixed",
-        }}
-      >
-        <BoardHeaderBar
-          boardId={boardId || ""}
-          boardName={board.name}
-          members={members}
-          isOwner={isOwner}
-          isAdmin={isAdmin}
-          currentUserRole={currentUserRole}
-          creatorId={board?.userId || ""}
-          currentUserId={currentUser?.sub || ""}
-          ownerInfo={ownerInfo}
-          filters={filters}
-          onFiltersChange={setFilters}
-          onEditBoard={() => setIsEditBoardOpen(true)}
-          progress={progress}
-        />
-        <KanbanBoard ref={scrollRef} {...dragEvents} className=" cursor-grab active:cursor-grabbing pb-24 flex-1 overflow-x-auto overflow-y-auto items-start">
-          {filteredLists.map((column, index) => (
-            <KanbanColumn
-              key={column.id}
-              column={column}
-              boardId={boardId || ""}
-              onDropOverColumn={(data, type) => handleDropOverColumn(column.id, data, type)}
-              onDropOverListItem={(targetCardId, data, direction) =>
-                handleDropOverListItem(column.id, targetCardId, data, direction)
-              }
-              onSaveColumnEdit={handleSaveColumnEdit}
-              onDeleteColumn={handleDeleteColumn}
-              onDeleteCard={handleDeleteCard}
-              index={index}
-            />
-          ))}
-
-          <AddListForm onAddList={handleAddList} />
-
-          <KanbanBoardExtraMargin />
-        </KanbanBoard>
-
-        <CardEditDialog
-          card={selectedCard}
-          boardId={boardId || ""}
-          isOpen={isCardDialogOpen}
-          onClose={() => {
-            setIsCardDialogOpen(false);
+        className={`relative w-full h-screen flex-1 flex flex-col overflow-hidden ${isCalendarView ? "" : "p-4"}`}
+          style={{
+            backgroundImage: board.backgroundUrl
+              ? `url(${board.backgroundUrl})`
+              : undefined,
+            backgroundColor: board.backgroundColor ?? undefined,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+            backgroundAttachment: "fixed",
           }}
-          onUpdate={handleUpdateCard}
-          onDelete={handleDeleteCard}
-          ownerInfo={ownerInfo}
-        />
+        >
+          {!isCalendarView && (
+            <BoardHeaderBar
+              boardId={boardId || ""}
+              boardName={board.name}
+              members={members}
+              isOwner={isOwner}
+              isAdmin={isAdmin}
+              currentUserRole={currentUserRole}
+              creatorId={board?.userId || ""}
+              currentUserId={currentUser?.sub || ""}
+              ownerInfo={ownerInfo}
+              filters={filters}
+              onFiltersChange={setFilters}
+              onEditBoard={() => setIsEditBoardOpen(true)}
+              progress={progress}
+            />
+          )}
+          <div className="fixed bottom-4 left-1/2 z-30 -translate-x-1/2">
+            <div className="inline-flex items-center gap-1 rounded-xl border border-border bg-background/80 p-1 shadow-lg backdrop-blur">
+              <Button
+                variant={viewMode === "kanban" ? "default" : "ghost"}
+                size="sm"
+                className="h-8 px-3 text-sm"
+                onClick={() => setViewMode("kanban")}
+              >
+                Kanban
+              </Button>
+              <Button
+                variant={viewMode === "calendar" ? "default" : "ghost"}
+                size="sm"
+                className="h-8 px-3 text-sm"
+                onClick={() => setViewMode("calendar")}
+              >
+                Calendar
+              </Button>
+            </div>
+          </div>
+          {isCalendarView ? (
+            <div className="absolute inset-0 z-20 overflow-y-auto">
+              <div className="min-h-full w-full bg-background">
+                <EventCalendar events={calendarEvents} initialView="month" />
+              </div>
+            </div>
+          ) : (
+            <KanbanBoard ref={scrollRef} {...dragEvents} className=" cursor-grab active:cursor-grabbing pb-24 flex-1 overflow-x-auto overflow-y-auto items-start">
+              {filteredLists.map((column, index) => (
+                <KanbanColumn
+                  key={column.id}
+                  column={column}
+                  boardId={boardId || ""}
+                  onDropOverColumn={(data, type) => handleDropOverColumn(column.id, data, type)}
+                  onDropOverListItem={(targetCardId, data, direction) =>
+                    handleDropOverListItem(column.id, targetCardId, data, direction)
+                  }
+                  onSaveColumnEdit={handleSaveColumnEdit}
+                  onDeleteColumn={handleDeleteColumn}
+                  onDeleteCard={handleDeleteCard}
+                  index={index}
+                />
+              ))}
 
-        <EditBoardDialog
-          open={isEditBoardOpen}
-          onOpenChange={setIsEditBoardOpen}
-          initialName={board.name}
-          initialBackgroundUrl={board.backgroundUrl ?? undefined}
-          initialBackgroundColor={board.backgroundColor ?? undefined}
-          onSave={handleBoardUpdate}
-        />
-      </div>
-    </KanbanBoardProvider>
+              <AddListForm onAddList={handleAddList} />
+
+              <KanbanBoardExtraMargin />
+            </KanbanBoard>
+          )}
+
+          <CardEditDialog
+            card={selectedCard}
+            boardId={boardId || ""}
+            isOpen={isCardDialogOpen}
+            onClose={() => {
+              setIsCardDialogOpen(false);
+            }}
+            onUpdate={handleUpdateCard}
+            onDelete={handleDeleteCard}
+            ownerInfo={ownerInfo}
+          />
+
+          <EditBoardDialog
+            open={isEditBoardOpen}
+            onOpenChange={setIsEditBoardOpen}
+            initialName={board.name}
+            initialBackgroundUrl={board.backgroundUrl ?? undefined}
+            initialBackgroundColor={board.backgroundColor ?? undefined}
+            onSave={handleBoardUpdate}
+          />
+        </div>
+      </KanbanBoardProvider>
+    </BoardEventsProvider>
   );
 }

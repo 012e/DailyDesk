@@ -54,6 +54,7 @@ import {
   Loader2,
   Search,
   X,
+  KeyRound,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -199,21 +200,30 @@ export function BoardHeaderBar({
                     {allMembers.slice(0, 5).map((member, index) => {
                       const colorClass = AVATAR_COLORS[index % AVATAR_COLORS.length];
                       const initials = getInitials(member.name);
+                      const isOwnerMember = ownerInfo?.userId === member.userId;
+
                       return (
                         <Tooltip key={member.id}>
                           <TooltipTrigger asChild>
-                            <Avatar
-                              className={`h-8 w-8 border-2 border-black/30 ring-2 ring-transparent group-hover:ring-white/30 transition-all ${colorClass}`}
-                            >
-                              {member.avatar ? (
-                                <AvatarImage src={member.avatar} alt={member.name} />
-                              ) : null}
-                              <AvatarFallback
-                                className={`${colorClass} text-white text-xs font-semibold`}
+                            <div className="relative">
+                              <Avatar
+                                className={`h-8 w-8 border-2 border-black/30 ring-2 ring-transparent group-hover:ring-white/30 transition-all ${colorClass}`}
                               >
-                                {initials}
-                              </AvatarFallback>
-                            </Avatar>
+                                {member.avatar ? (
+                                  <AvatarImage src={member.avatar} alt={member.name} />
+                                ) : null}
+                                <AvatarFallback
+                                  className={`${colorClass} text-white text-xs font-semibold`}
+                                >
+                                  {initials}
+                                </AvatarFallback>
+                              </Avatar>
+                              {isOwnerMember && (
+                                <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-400 text-amber-950 shadow-sm ring-2 ring-black/40">
+                                  <KeyRound className="h-2.5 w-2.5" />
+                                </span>
+                              )}
+                            </div>
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>{member.name}</p>
@@ -273,7 +283,6 @@ export function BoardHeaderBar({
           {/* Action Icons */}
           <TooltipProvider>
             <div className="flex items-center gap-1">
-
               {/* Search Bar - Always visible, compact */}
               <div className="flex items-center gap-1.5 bg-transparent rounded-md px-2 py-1 border border-border">
                 <Search className="h-3.5 w-3.5 text-foreground/60 shrink-0" />

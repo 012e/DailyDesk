@@ -11,6 +11,7 @@ import { ContentfulStatusCode } from "hono/utils/http-status";
 import { randomUUID } from "crypto";
 import type { CreateActivity } from "@/types/activities";
 import { checkPermission, AuthorizationError } from "./authorization.service";
+import { fetchAuth0UserInfo } from "./members.service";
 
 export class ServiceError extends Error {
   status: ContentfulStatusCode;
@@ -74,7 +75,10 @@ async function getUserInfo(userId: string, boardId: string) {
     .limit(1);
 
   if (board.length > 0 && board[0].userId === userId) {
-    // User is board owner, return basic info
+    const ownerInfo = await fetchAuth0UserInfo(userId);
+    if (ownerInfo) {
+      return ownerInfo;
+    }
     return {
       id: userId,
       name: "Board Owner",
@@ -214,13 +218,17 @@ export async function getActivitiesForCard(userSub: string, cardId: string) {
   );
 
   if (!userMap.has(result[0].boardUserId)) {
-    userMap.set(result[0].boardUserId, {
-      id: result[0].boardUserId,
-      name: "Board Owner",
-      email: "",
-      avatar: undefined,
-      initials: "BO",
-    });
+    const ownerInfo = await fetchAuth0UserInfo(result[0].boardUserId);
+    userMap.set(
+      result[0].boardUserId,
+      ownerInfo || {
+        id: result[0].boardUserId,
+        name: "Board Owner",
+        email: "",
+        avatar: undefined,
+        initials: "BO",
+      }
+    );
   }
 
   // Combine activities with user info

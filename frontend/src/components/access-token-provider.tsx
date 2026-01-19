@@ -24,6 +24,9 @@ export default function AccessTokenProvider({
       const boundGetAccessToken = () => auth.getAccessTokenSilently();
       setGetAcessTokenFn(() => boundGetAccessToken);
       getAccessTokenFnRef.current = boundGetAccessToken;
+    } else {
+      getAccessTokenFnRef.current = null;
+      setIsTokenReady(false);
     }
   }, [auth.isAuthenticated, setGetAcessTokenFn]);
 
@@ -33,27 +36,21 @@ export default function AccessTokenProvider({
     }
 
     async function updateAccessToken() {
-      const getAccessToken = getAccessTokenFnRef.current;
-
-      if (!accessToken && getAccessToken) {
-        isUpdating.current = true;
-        try {
-          const newToken = await getAccessToken();
-          setAccessToken(newToken);
-          setIsTokenReady(true);
-        } catch (error) {
-          console.error("Failed to get new access token:", error);
-          setIsTokenReady(false);
-        } finally {
-          isUpdating.current = false;
-        }
-      } else if (accessToken) {
-        // Token already exists (from localStorage)
+      isUpdating.current = true;
+      try {
+        const newToken = await auth.getAccessTokenSilently({ ignoreCache: true });
+        setAccessToken(newToken);
         setIsTokenReady(true);
+      } catch (error) {
+        console.error("Failed to refresh access token:", error);
+        setAccessToken("");
+        setIsTokenReady(false);
+      } finally {
+        isUpdating.current = false;
       }
     }
     updateAccessToken();
-  }, [auth, accessToken, setAccessToken]);
+  }, [auth, setAccessToken]);
 
   // Show loading while Auth0 is initializing
   if (auth.isLoading) {

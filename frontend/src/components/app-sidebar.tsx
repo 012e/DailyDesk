@@ -37,11 +37,6 @@ const items = [
     icon: CheckSquare,
   },
   {
-    title: "Calendar",
-    url: "#",
-    icon: Calendar,
-  },
-  {
     title: "API",
     url: "/doc",
     icon: BookOpen,
@@ -50,11 +45,6 @@ const items = [
     title: "Profile",
     url: "/profile",
     icon: User,
-  },
-  {
-    title: "Settings",
-    url: "#",
-    icon: Settings,
   },
 ];
 
