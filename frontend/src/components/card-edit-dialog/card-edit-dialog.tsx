@@ -88,7 +88,7 @@ export function CardEditDialog({
     <BackgroundPickerProvider
       initialData={{
         color: card?.coverColor,
-        imageUrl: card?.coverUrl,
+        imageUrl: card?.coverUrl || undefined,
         coverMode: card?.coverMode,
       }}
     >

@@ -4,7 +4,7 @@ import { BrowserRouter, Route, Routes } from "react-router";
 import App from "./App.tsx";
 import "./index.css";
 import Layout from "./Layout.tsx";
-import Kanban from "./pages/kanban.tsx";
+import { Kanban } from "./pages/kanban";
 import Tasks from "./pages/tasks.tsx";
 
 import NotFound from "@/pages/not-found.tsx";
