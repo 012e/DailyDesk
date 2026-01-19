@@ -75,7 +75,7 @@ export async function fetchAuth0UserInfo(userId: string): Promise<{
   id: string;
   name: string;
   email: string;
-  avatar?: string;
+  avatar: string | undefined;
   initials: string;
 } | null> {
   try {
