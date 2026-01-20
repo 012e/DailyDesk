@@ -18,6 +18,7 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -43,6 +44,16 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
+      <SidebarHeader className="px-3 py-4">
+        <Link to="/" className="flex items-center gap-2">
+          <img
+            src="/logo-dailydesk.png"
+            alt="DailyDesk"
+            className="h-12 w-12 rounded-md object-contain"
+          />
+          <span className="text-lg font-semibold">DailyDesk</span>
+        </Link>
+      </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Application</SidebarGroupLabel>

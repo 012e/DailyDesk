@@ -800,7 +800,7 @@ export async function updateCard(userSub: string, boardId: string, id: string, r
         cardId: id,
         userId: userSub,
         actionType: "card.moved",
-        description: `moved this card from "${oldListName}" to "${newListName}"`,
+        description: `đã chuyển thẻ từ "${oldListName}" sang "${newListName}"`,
         metadata: {
           oldListId: existingCard[0].listId,
           newListId: req.listId,
@@ -818,7 +818,7 @@ export async function updateCard(userSub: string, boardId: string, id: string, r
           cardId: id,
           userId: userSub,
           actionType: "deadline.set",
-          description: `set the deadline to ${new Date(req.deadline).toLocaleDateString()}`,
+          description: `đã đặt hạn chót vào ${new Date(req.deadline).toLocaleDateString()}`,
           metadata: { deadline: req.deadline },
         });
       } else if (oldDeadline && !req.deadline) {
@@ -826,14 +826,14 @@ export async function updateCard(userSub: string, boardId: string, id: string, r
           cardId: id,
           userId: userSub,
           actionType: "deadline.removed",
-          description: `removed the deadline`,
+          description: "đã xóa hạn chót",
         });
       } else if (oldDeadline && req.deadline && oldDeadline.getTime() !== new Date(req.deadline).getTime()) {
         await logActivity({
           cardId: id,
           userId: userSub,
           actionType: "deadline.changed",
-          description: `changed the deadline from ${oldDeadline.toLocaleDateString()} to ${new Date(req.deadline).toLocaleDateString()}`,
+          description: `đã đổi hạn chót từ ${oldDeadline.toLocaleDateString()} sang ${new Date(req.deadline).toLocaleDateString()}`,
           metadata: { oldDeadline, newDeadline: req.deadline },
         });
       }
@@ -1089,7 +1089,7 @@ export async function updateCardDue(
           cardId,
           userId: userSub,
           actionType: "card.due.updated",
-          description: "due date changed",
+          description: "đã đổi hạn chót",
         });
 
         publishBoardChanged(boardId, "card", cardId, "updated", userSub);
@@ -1101,12 +1101,12 @@ export async function updateCardDue(
 
   try {
     const actionDescription = dueData.dueComplete
-      ? "marked due date as complete"
+      ? "đã đánh dấu hoàn tất hạn chót"
       : dueData.dueAt
-      ? "set due date"
+      ? "đã đặt hạn chót"
       : dueData.startDate
-      ? "set start date"
-      : "updated dates";
+      ? "đã đặt ngày bắt đầu"
+      : "đã cập nhật ngày";
 
     await logActivity({
       cardId,
@@ -1168,7 +1168,7 @@ export async function clearCardDue(userSub: string, boardId: string, cardId: str
       cardId,
       userId: userSub,
       actionType: "card.due.removed",
-      description: "removed dates",
+      description: "đã xóa ngày",
     });
   } catch (error) {
     console.error("Failed to log due date removal activity:", error);
