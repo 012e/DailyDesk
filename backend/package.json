@@ -6,7 +6,6 @@
         "deploy": "wrangler deploy --minify",
         "cf-typegen": "wrangler types --env-interface CloudflareBindings",
         "db:push": "drizzle-kit push",
-        "seed": "tsx seed.ts",
         "ai-devtool": "pnpm dlx @ai-sdk/devtools",
         "test": "vitest run",
         "test:watch": "vitest",
