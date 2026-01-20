@@ -3,7 +3,7 @@ import { getAccessTokenFnAtom } from "@/stores/auth";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useAtom } from "jotai";
 import { useEffect, useRef, useState } from "react";
-import PleaseLogin from "./please-login";
+import LandingPage from "./landing-page";
 
 export default function AccessTokenProvider({
   children,
@@ -66,7 +66,7 @@ export default function AccessTokenProvider({
 
   // Show login page if not authenticated
   if (!auth.isAuthenticated) {
-    return <PleaseLogin onClick={() => auth.loginWithRedirect()}></PleaseLogin>;
+    return <LandingPage />;
   }
 
   // Wait for access token to be fetched before rendering children
