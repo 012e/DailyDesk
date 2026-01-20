@@ -9,7 +9,7 @@ import { addingCardColumnIdAtom, selectedCardAtom, isCardDialogOpenAtom } from "
 import { boardIdAtom } from "./atoms";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { useCreateCard } from "@/hooks/use-card";
+import { useCreateCard, useCreateCardFromTemplate } from "@/hooks/use-card";
 import { toast } from "sonner";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -71,26 +71,24 @@ export function AddCardForm({ columnId, cardsCount }: AddCardFormProps) {
   // to reflect the 'isTemplate' property we just added to the type definition.
   const templates = (board?.lists?.flatMap(l => l.cards) || []).filter((c: any) => c.isTemplate);
 
+  const { mutate: createCardFromTemplate } = useCreateCardFromTemplate();
+
   const handleCreateFromTemplate = (template: any) => {
     if (!boardId) return;
     setIsCreatingFromTemplate(true);
     
-    // Create new card copying properties from template but excluding specific fields like dates/comments
-    createCard(
+    // Use the backend endpoint to create card from template
+    createCardFromTemplate(
       {
         boardId,
+        templateCardId: template.id,
         listId: columnId,
-        name: template.name || template.title, // Handle both 'name' (backend) and 'title' (frontend) property names
         order: cardsCount,
-        description: template.description || undefined,
-        labels: template.labels || undefined,
-        members: template.members || undefined,
-        coverColor: template.coverColor || undefined,
-        // We don't copy dates or comments/activity
       },
       {
         onSuccess: () => {
           setIsCreatingFromTemplate(false);
+          toast.success("Card created from template");
         },
         onError: () => {
           toast.error("Failed to create card from template");

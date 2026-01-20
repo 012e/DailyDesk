@@ -405,5 +405,61 @@ export default function createCardRoutes() {
     },
   );
 
+  // POST /boards/{boardId}/cards/from-template - Create a new card from template
+  app.openapi(
+    createRoute({
+      method: "post",
+      tags: TAGS,
+      path: "/{boardId}/cards/from-template",
+      security: defaultSecurityScheme(),
+      request: {
+        params: z.object({
+          boardId: z.uuid(),
+        }),
+        body: jsonBody(
+          z.object({
+            templateCardId: z.uuid(),
+            listId: z.uuid(),
+            order: z.number().int(),
+          })
+        ),
+      },
+      responses: {
+        200: successJson(CardSchema, {
+          description: "Tạo Card từ template thành công",
+        }),
+        404: {
+          description: "Template card hoặc Board không tồn tại",
+        },
+        403: {
+          description: "Không có quyền tạo Card trong Board này",
+        },
+      },
+    }),
+
+    async (c) => {
+      const user = ensureUserAuthenticated(c);
+      const { boardId } = c.req.valid("param");
+      const { templateCardId, listId, order } = c.req.valid("json");
+
+      try {
+        const card = await cardService.createCardFromTemplate(
+          user.sub,
+          boardId,
+          templateCardId,
+          listId,
+          order
+        );
+
+        return c.json(card);
+      } catch (err: any) {
+        if (err instanceof cardService.ServiceError) {
+          return c.json({ error: err.message }, err.status);
+        }
+        throw err;
+      }
+    },
+  );
+
   return app;
 }

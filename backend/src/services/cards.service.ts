@@ -1176,5 +1176,76 @@ export async function clearCardDue(userSub: string, boardId: string, cardId: str
 
   publishBoardChanged(boardId, "card", cardId, "updated", userSub);
 
-  return { message: "Đã xóa dates" };
+  }
+
+export async function createCardFromTemplate(
+  userSub: string,
+  boardId: string,
+  templateCardId: string,
+  listId: string,
+  order: number
+) {
+  // Check authorization - need content:update permission (member, admin, owner)
+  await checkPermission(boardId, userSub, "content:update");
+
+  // 1. Fetch the template card
+  const templateCard = await db
+    .select()
+    .from(cardsTable)
+    .where(eq(cardsTable.id, templateCardId))
+    .limit(1);
+
+  if (templateCard.length === 0) {
+    throw new ServiceError("Template card not found", 404);
+  }
+
+  const template = templateCard[0];
+
+  // 2. Fetch labels and members to copy
+  const templateLabels = await db
+    .select({
+      id: labelsTable.id,
+      name: labelsTable.name,
+      color: labelsTable.color,
+    })
+    .from(cardLabelsTable)
+    .innerJoin(labelsTable, eq(cardLabelsTable.labelId, labelsTable.id))
+    .where(eq(cardLabelsTable.cardId, templateCardId));
+
+  const templateMembers = await db
+    .select({
+      id: boardMembersTable.id,
+      name: boardMembersTable.name,
+      email: boardMembersTable.email,
+      avatar: boardMembersTable.avatar,
+    })
+    .from(cardMembersTable)
+    .innerJoin(boardMembersTable, eq(cardMembersTable.memberId, boardMembersTable.id))
+    .where(eq(cardMembersTable.cardId, templateCardId));
+
+  // 3. Construct CreateCardRequest
+  const createRequest: CreateCardRequest = {
+    id: randomUUID(), // Generate new ID
+    listId: listId,
+    name: template.name,
+    order: order,
+    description: template.description || undefined,
+    coverColor: template.coverColor || undefined,
+    coverUrl: template.coverUrl || undefined,
+    isTemplate: false, // FORCE isTemplate to false
+    labels: templateLabels.map(l => ({ id: l.id, name: l.name, color: l.color })),
+    members: templateMembers.map(m => ({
+      id: m.id,
+      name: m.name,
+      email: m.email,
+      avatar: m.avatar || undefined,
+      initials: m.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
+    })),
+    // Do NOT copy dates, comments, activities
+  };
+
+  // 4. Create the new card
+  return createCard(userSub, boardId, createRequest);
 }
+
+
