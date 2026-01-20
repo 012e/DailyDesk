@@ -375,10 +375,12 @@ function InnerDialog({
         }
 
         // Sync with backend if boardId is available
+        const { title: updateTitle, ...otherUpdates } = updates;
         updateCard({
           boardId,
           cardId: card.id,
-          ...updates,
+          name: updateTitle, // Map title to name for backend
+          ...otherUpdates,
         });
       }
     },
