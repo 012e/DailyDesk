@@ -172,6 +172,8 @@ export function useCreateCard() {
             isTemplate: params.isTemplate,
             repeatFrequency: params.repeatFrequency ?? undefined,
             repeatInterval: params.repeatInterval ?? undefined,
+            coverColor: params.coverColor,
+            coverUrl: params.coverUrl,
           },
         },
       );
@@ -192,6 +194,52 @@ export function useCreateCard() {
 
     onError: (err) => {
       console.error("Failed to create card:", err);
+    },
+  });
+}
+
+/**
+ * Hook để create card từ template
+ */
+export function useCreateCardFromTemplate() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      boardId: string;
+      templateCardId: string;
+      listId: string;
+      order: number;
+    }) => {
+      const { data, error } = await api.POST(
+        "/boards/{boardId}/cards/from-template" as any,
+        {
+          params: {
+            path: {
+              boardId: params.boardId,
+            },
+          },
+          body: {
+            templateCardId: params.templateCardId,
+            listId: params.listId,
+            order: params.order,
+          },
+        }
+      );
+
+      if (error) {
+        throw new Error("Failed to create card from template");
+      }
+
+      return data;
+    },
+
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["board", variables.boardId] });
+    },
+
+    onError: (err) => {
+      console.error("Failed to create card from template:", err);
     },
   });
 }

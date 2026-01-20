@@ -306,6 +306,8 @@ export function CalendarDndProvider({
           ...calendarEvent,
           end: newEnd,
           start: newStart,
+          startDate: calendarEvent.startDate ? newStart : calendarEvent.startDate,
+          dueAt: calendarEvent.dueAt ? newEnd : calendarEvent.dueAt,
         });
       }
     } catch (error) {

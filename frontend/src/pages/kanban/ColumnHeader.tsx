@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { CheckIcon, Edit2Icon, Trash2Icon, XIcon } from "lucide-react";
 import { useAtom } from "jotai";
 import { editingListIdAtom, editingListTitleAtom } from "./atoms";
+import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 
 interface ColumnHeaderProps {
   columnId: string;
@@ -22,6 +23,7 @@ export function ColumnHeader({
 }: ColumnHeaderProps) {
   const [editingListId, setEditingListId] = useAtom(editingListIdAtom);
   const [editingListTitle, setEditingListTitle] = useAtom(editingListTitleAtom);
+  const { confirm, ConfirmDialog } = useConfirmDialog();
 
   const isEditing = editingListId === columnId;
 
@@ -42,8 +44,15 @@ export function ColumnHeader({
     cancelEdit();
   };
 
-  const handleDelete = () => {
-    if (confirm(`Delete "${columnName}" list and all its cards?`)) {
+  const handleDelete = async () => {
+    const confirmed = await confirm({
+      title: "Xóa danh sách",
+      description: `Xóa danh sách "${columnName}" và tất cả thẻ trong đó?`,
+      confirmText: "Xóa",
+      cancelText: "Hủy",
+      variant: "destructive"
+    });
+    if (confirmed) {
       onDelete(columnId);
     }
   };
@@ -90,6 +99,7 @@ export function ColumnHeader({
           <Trash2Icon className="size-3.5" />
         </KanbanBoardColumnIconButton>
       </div>
+      <ConfirmDialog />
     </>
   );
 }

@@ -25,6 +25,7 @@ import { useUpdateDue } from "@/hooks/use-due";
 import { useUpdateCard } from "@/hooks/use-card";
 import { LayoutTemplate } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useConfirmDialog } from "@/hooks/use-confirm-dialog";
 
 
 type NormalizedCard = CardType & {
@@ -119,8 +120,17 @@ export function KanbanCard({
     setIsCardDialogOpen(true);
   };
 
-  const handleDelete = () => {
-    if (confirm("Delete this card?")) {
+  const { confirm, ConfirmDialog } = useConfirmDialog();
+
+  const handleDelete = async () => {
+    const confirmed = await confirm({
+      title: "Xóa thẻ",
+      description: "Bạn có chắc chắn muốn xóa thẻ này?",
+      confirmText: "Xóa",
+      cancelText: "Hủy",
+      variant: "destructive"
+    });
+    if (confirmed) {
       onDelete(normalizedCard.id);
     }
   };
@@ -390,6 +400,7 @@ export function KanbanCard({
           <ContextMenuItem onClick={handleDelete}>Remove</ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
+      <ConfirmDialog />
     </KanbanBoardColumnListItem>
   );
 }
