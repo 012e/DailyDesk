@@ -134,7 +134,7 @@ export async function processRecurringDueDates() {
         cardId: card.id,
         userId: card.boardUserId,
         actionType: "card.due.updated",
-        description: "due date changed",
+        description: "đã đổi hạn chót",
       });
 
       // Notify connected clients

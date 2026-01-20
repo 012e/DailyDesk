@@ -426,12 +426,15 @@ export function Kanban({ boardId: propBoardId }: KanbanProps) {
     const nextStartDate = event.startDate ? new Date(event.startDate) : null;
     const nextDueAt = event.dueAt ? new Date(event.dueAt) : null;
     if (nextDueAt && nextDueAt.getTime() < Date.now()) {
-      toast.error("Due date cannot be in the past", { position: "bottom-left" });
-      return;
+      toast.error("Failed: due date cannot be earlier than today", {
+        position: "bottom-left",
+        className: "text-base",
+      });
+      return false;
     }
     if (nextStartDate && nextDueAt && nextStartDate.getTime() > nextDueAt.getTime()) {
       toast.error("Start date cannot be after due date", { position: "bottom-left" });
-      return;
+      return false;
     }
 
     updateCard({
@@ -454,6 +457,7 @@ export function Kanban({ boardId: propBoardId }: KanbanProps) {
       repeatFrequency: event.repeatFrequency ?? null,
       repeatInterval: event.repeatInterval ?? null,
     });
+    return true;
   };
 
   const handleEventDelete = (eventId: string) => {

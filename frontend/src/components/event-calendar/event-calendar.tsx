@@ -50,7 +50,7 @@ import {
 export interface EventCalendarProps {
   events?: CalendarEvent[];
   onEventAdd?: (event: CalendarEvent) => void;
-  onEventUpdate?: (event: CalendarEvent) => void;
+  onEventUpdate?: (event: CalendarEvent) => boolean | void;
   onEventDelete?: (eventId: string) => void;
   onEventSelect?: (event: CalendarEvent) => boolean | void;
   createLabel?: string;
@@ -231,13 +231,20 @@ export function EventCalendar({
   };
 
   const handleEventUpdate = (updatedEvent: CalendarEvent) => {
-    onEventUpdate?.(updatedEvent);
+    const handled = onEventUpdate?.(updatedEvent);
+    if (handled === false) {
+      return;
+    }
 
     // Show toast notification when an event is updated via drag and drop
-    toast(`Event "${updatedEvent.title}" moved`, {
-      description: format(new Date(updatedEvent.start), "MMM d, yyyy"),
-      position: "bottom-left",
-    });
+    const listLabel = updatedEvent.location || "Unknown list";
+    toast(
+      `Card "${updatedEvent.title}" from list "${listLabel}" moved to ${format(
+        new Date(updatedEvent.start),
+        "MMM d, yyyy",
+      )}`,
+      { position: "bottom-left", className: "text-base" },
+    );
   };
 
   const viewTitle = useMemo(() => {
