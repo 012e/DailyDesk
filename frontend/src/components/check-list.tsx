@@ -214,10 +214,14 @@ export default function CheckList({
                   </p>
                 </div>
                 <div className="max-h-48 overflow-y-auto space-y-1">
-                  {boardMembers.length === 0 ? (
-                    <p className="text-xs text-muted-foreground">Không có thành viên</p>
+                  {(!card.members || card.members.length === 0) ? (
+                    <p className="text-xs text-muted-foreground p-2">
+                       No members assigned to this card.
+                       <br />
+                       Assign members to the card first.
+                    </p>
                   ) : (
-                    boardMembers.map((member) => {
+                    card.members.map((member) => {
                       const isMember = item.members?.some((m) => m.id === member.id);
                       return (
                         <button
